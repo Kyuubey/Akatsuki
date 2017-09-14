@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project version="4">
+  <component name="ProjectModuleManager">
+    <modules>
+      <module fileurl="file://$PROJECT_DIR$/.idea/modules/akatsuki.iml" filepath="$PROJECT_DIR$/.idea/modules/akatsuki.iml" />
+      <module fileurl="file://$PROJECT_DIR$/.idea/modules/akatsuki_main.iml" filepath="$PROJECT_DIR$/.idea/modules/akatsuki_main.iml" group="akatsuki" />
+      <module fileurl="file://$PROJECT_DIR$/.idea/modules/akatsuki_test.iml" filepath="$PROJECT_DIR$/.idea/modules/akatsuki_test.iml" group="akatsuki" />
+    </modules>
+  </component>
+</project>
