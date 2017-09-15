@@ -7,7 +7,7 @@ class CommandHandler(private val client: Akatsuki) {
     private val commands: MutableMap<String, Command> = mutableMapOf()
 
     init {
-        this.commands["ping"] = Ping()
+        commands["ping"] = Ping()
     }
 
     fun handle(event: MessageReceivedEvent) {
@@ -22,13 +22,31 @@ class CommandHandler(private val client: Akatsuki) {
 
             var ctx = Context(event, args)
 
-            if (args.isNotEmpty() && this.commands[cmd]?.subcommands?.get(args[0]) is Command) {
+            // TODO: Finish checkArguments
+
+            if (args.isNotEmpty() && commands[cmd]?.subcommands?.get(args[0]) is Command) {
                 val subcmd = args[0]
                 args = args.drop(1)
+                // checkArguments(commands[cmd]?.subcommands?.get(subcmd), args)
                 ctx = Context(event, args)
-                this.commands[cmd]?.subcommands?.get(subcmd)?.run(ctx)
-            } else
-                this.commands[cmd]?.run(ctx)
+                commands[cmd]?.subcommands?.get(subcmd)?.run(ctx)
+            } else {
+                // checkArguments(args)
+                commands[cmd]?.run(ctx)
+            }
+        }
+    }
+
+    private fun checkArguments(cmd: Command?, args: List<String>) {
+        if (cmd === null)
+            return
+
+        for (arg in cmd.args) {
+            val i = cmd.args.indexOf(arg)
+            val arg2: String? = args[i]
+
+            if (arg2 === null && !arg.optional)
+                throw Error("Argument at pos $i is required, but was not specified.")
         }
     }
 }
