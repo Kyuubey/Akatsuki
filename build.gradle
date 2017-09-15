@@ -23,12 +23,17 @@ mainClassName = 'me.noud02.akatsuki.Akatsuki'
 repositories {
     mavenCentral()
     jcenter()
+    maven {
+        url = "http://dl.bintray.com/kotlin/exposed"
+    }
 }
 
 dependencies {
     compile "org.jetbrains.kotlin:kotlin-stdlib-jre8:$kotlin_version"
     compile "net.dv8tion:JDA:3.3.0_266"
     compile 'com.sedmelluq:lavaplayer:1.2.42'
+    compile 'org.jetbrains.exposed:exposed:0.8.5'
+    compile 'org.postgresql:postgresql:42.1.4'
 }
 
 compileKotlin {
