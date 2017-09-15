@@ -9,6 +9,7 @@ import net.dv8tion.jda.core.events.message.MessageReceivedEvent
 import net.dv8tion.jda.core.hooks.EventListener
 
 fun main (args: Array<String>) {
+    // TODO: Read token from a config file
     if (args.isEmpty())
         return println("Please provide a (valid) token!")
     val bot = Akatsuki(args[0])

@@ -3,7 +3,7 @@ package akatsuki
 open class Command {
     val subcommands: MutableMap<String, Command> = mutableMapOf()
 
-    fun run(ctx: Context) {
+    open fun run(ctx: Context) {
         ctx.send("Empty command")
     }
 
