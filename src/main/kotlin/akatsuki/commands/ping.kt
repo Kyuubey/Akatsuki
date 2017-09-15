@@ -5,7 +5,7 @@ import akatsuki.Context
 
 class Pong : Command() {
     override fun run(ctx: Context) {
-        ctx.send("Pong!")
+        ctx.send("Ping!")
     }
 }
 

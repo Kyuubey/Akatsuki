@@ -14,13 +14,21 @@ class CommandHandler constructor(private val client: Akatsuki) {
         if (event.author.isBot)
             return
         if (event.message.content.startsWith(client.botPrefix)) {
-            // TODO: Actually run the command here
-
             val cmd: String = event.message.content.substring(client.botPrefix.length).split(" ")[0]
-            val args: List<String> = event.message.content.substring(client.botPrefix.length).split("").drop(0)
-            val ctx = Context(event, args)
+            var args: List<String> = event.message.content.substring(client.botPrefix.length).split(" ")
 
-            this.commands[cmd]?.run(ctx)
+            if (args.isNotEmpty())
+                args = args.drop(1)
+
+            var ctx = Context(event, args)
+
+            if (args.isNotEmpty() && this.commands[cmd]?.subcommands?.get(args[0]) is Command) {
+                val subcmd = args[0]
+                args = args.drop(1)
+                ctx = Context(event, args)
+                this.commands[cmd]?.subcommands?.get(subcmd)?.run(ctx)
+            } else
+                this.commands[cmd]?.run(ctx)
         }
     }
 }
