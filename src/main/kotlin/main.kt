@@ -1,6 +1,5 @@
 package me.noud02.akatsuki
 
-import me.noud02.akatsuki.CommandHandler
 import net.dv8tion.jda.core.AccountType
 import net.dv8tion.jda.core.JDA
 import net.dv8tion.jda.core.JDABuilder
