@@ -4,11 +4,12 @@ package me.noud02.akatsuki
 import me.noud02.akatsuki.bot.Akatsuki
 
 fun main (args: Array<String>) {
+    val token = (if (args.isEmpty())
+        System.getenv()["TOKEN"]
+    else
+        args[0]) ?: return println("No token specified!")
 
-    if (args.isEmpty())
-        throw Error("Token not specified!")
-
-    val bot = Akatsuki(args[0])
+    val bot = Akatsuki(token)
 
     bot.setPrefix("awoo!")
     bot.setGame("awoo~")
