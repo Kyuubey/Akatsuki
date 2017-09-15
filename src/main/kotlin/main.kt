@@ -1,17 +1,48 @@
+package me.noud02.akatsuki
+
+import me.noud02.akatsuki.CommandHandler
 import net.dv8tion.jda.core.AccountType
 import net.dv8tion.jda.core.JDA
 import net.dv8tion.jda.core.JDABuilder
-import java.util.*
+import net.dv8tion.jda.core.events.Event
+import net.dv8tion.jda.core.events.ReadyEvent
+import net.dv8tion.jda.core.events.message.MessageReceivedEvent
+import net.dv8tion.jda.core.hooks.EventListener
+
+fun main (args: Array<String>) {
+    if (args.isEmpty())
+        return println("Please provide a (valid) token!")
+    val bot = Akatsuki(args[0])
+
+    bot.setPrefix("awoo!")
+    bot.init()
+}
 
 class Akatsuki constructor(token: String) : EventListener {
 
-    val jda: JDA = JDABuilder(AccountType.BOT)
+    private val jda: JDA = JDABuilder(AccountType.BOT)
             .setToken(token)
             .addEventListener(this)
             .buildBlocking()
+    private val handler: CommandHandler = CommandHandler(this)
 
-    @Override
-    fun onEvent() {
-        println("Ready!")
+    var botPrefix: String = ""
+
+    fun init() {
+        this.handler.init()
+        return
     }
+
+    fun setPrefix(prefix: String) {
+        this.botPrefix = prefix;
+    }
+
+    override fun onEvent(event: Event) {
+        when (event) {
+            is ReadyEvent -> println("Ready!")
+            is MessageReceivedEvent -> this.handler.handle(event)
+        }
+    }
+
+
 }
