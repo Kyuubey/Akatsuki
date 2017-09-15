@@ -1,6 +1,6 @@
-package me.noud02.akatsuki
+package akatsuki
 
-class Command {
+open class Command {
     val subcommands: MutableMap<String, Command> = mutableMapOf()
 
     fun run(ctx: Context) {

@@ -1,4 +1,4 @@
-package me.noud02.akatsuki
+package akatsuki
 
 import net.dv8tion.jda.core.AccountType
 import net.dv8tion.jda.core.JDA
@@ -14,7 +14,6 @@ fun main (args: Array<String>) {
     val bot = Akatsuki(args[0])
 
     bot.setPrefix("awoo!")
-    bot.init()
 }
 
 class Akatsuki constructor(token: String) : EventListener {
@@ -26,11 +25,6 @@ class Akatsuki constructor(token: String) : EventListener {
     private val handler: CommandHandler = CommandHandler(this)
 
     var botPrefix: String = ""
-
-    fun init() {
-        this.handler.init()
-        return
-    }
 
     fun setPrefix(prefix: String) {
         this.botPrefix = prefix;
