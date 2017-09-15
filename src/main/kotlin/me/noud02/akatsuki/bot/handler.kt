@@ -1,9 +1,9 @@
-package akatsuki
+package me.noud02.akatsuki.bot
 
-import akatsuki.commands.Ping
+import me.noud02.akatsuki.commands.Ping
 import net.dv8tion.jda.core.events.message.MessageReceivedEvent
 
-class CommandHandler constructor(private val client: Akatsuki) {
+class CommandHandler(private val client: Akatsuki) {
     private val commands: MutableMap<String, Command> = mutableMapOf()
 
     init {
