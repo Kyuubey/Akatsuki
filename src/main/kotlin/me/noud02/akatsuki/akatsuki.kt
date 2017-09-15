@@ -5,7 +5,7 @@ import me.noud02.akatsuki.bot.Akatsuki
 
 fun main (args: Array<String>) {
     val token = (if (args.isEmpty())
-        System.getenv()["TOKEN"]
+        System.getenv()["AKATSUKI_TOKEN"]
     else
         args[0]) ?: return println("No token specified!")
 
