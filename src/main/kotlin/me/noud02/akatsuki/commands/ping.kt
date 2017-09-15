@@ -1,7 +1,7 @@
-package akatsuki.commands
+package me.noud02.akatsuki.commands
 
-import akatsuki.Command
-import akatsuki.Context
+import me.noud02.akatsuki.bot.Command
+import me.noud02.akatsuki.bot.Context
 
 class Pong : Command() {
     override fun run(ctx: Context) {

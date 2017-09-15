@@ -1,4 +1,4 @@
-package akatsuki
+package me.noud02.akatsuki.bot
 
 open class Command {
     val subcommands: MutableMap<String, Command> = mutableMapOf()

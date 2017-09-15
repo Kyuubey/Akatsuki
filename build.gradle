@@ -13,6 +13,10 @@ buildscript {
 }
 
 apply plugin: 'kotlin'
+apply plugin: 'com.github.johnrengelman.shadow'
+apply plugin: 'application'
+
+mainClassName = 'me.noud02.akatsuki.Akatsuki'
 
 repositories {
     mavenCentral()
@@ -22,6 +26,7 @@ repositories {
 dependencies {
     compile "org.jetbrains.kotlin:kotlin-stdlib-jre8:$kotlin_version"
     compile "net.dv8tion:JDA:3.3.0_266"
+    compile 'com.sedmelluq:lavaplayer:1.2.42'
 }
 
 compileKotlin {
