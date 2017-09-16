@@ -6,6 +6,7 @@ import net.dv8tion.jda.core.entities.Member
 
 class Pong : Command() {
     override val name = "pong"
+    override val desc = "Ping!"
 
     override fun run(ctx: Context) {
        ctx.send("Ping!")
@@ -14,10 +15,11 @@ class Pong : Command() {
 
 class Ping : Command() {
     override val name = "ping"
+    override val desc = "Pings a user if specified"
 
     init {
         addSubcommand(Pong())
-        setArgument("meme", "user")
+        setArgument("meme", "user", true)
     }
 
     override fun run(ctx: Context) {
