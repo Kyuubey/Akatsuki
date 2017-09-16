@@ -92,8 +92,8 @@ class CommandHandler(private val client: Akatsuki) {
         val newPerms = mutableMapOf<Permission, Boolean>()
 
         for (perm in perms) {
-            newPerms[perm.name] = event.member?.hasPermission(event.channel as Channel, perm.name) ?: false
-            if (!perm.optional && newPerms.contains(perm.name))
+            newPerms[perm.name] = event.member?.hasPermission(event.channel as Channel, perm.name) ?: event.member?.hasPermission(Permission.ADMINISTRATOR) ?: false
+            if (!perm.optional && !newPerms[perm.name]!! && !event.member?.hasPermission(Permission.ADMINISTRATOR)!!)
                 throw Exception("Permission `${perm.name.name}` is required but was not found!")
         }
     }

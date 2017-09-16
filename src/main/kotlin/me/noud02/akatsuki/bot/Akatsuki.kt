@@ -1,5 +1,6 @@
 package me.noud02.akatsuki.bot
 
+import me.aurieh.ares.exposed.async.asyncTransaction
 import me.noud02.akatsuki.bot.schema.Guilds
 import me.noud02.akatsuki.bot.schema.Users
 import net.dv8tion.jda.core.AccountType
@@ -17,8 +18,18 @@ import org.jetbrains.exposed.sql.insert
 import org.jetbrains.exposed.sql.select
 import org.jetbrains.exposed.sql.transactions.transaction
 import org.slf4j.LoggerFactory
+import java.util.concurrent.ExecutorService
+import java.util.concurrent.Executors
 
 class Akatsuki(token: String, db_name: String, db_user: String, db_password: String) : ListenerAdapter() {
+    val pool: ExecutorService by lazy {
+        Executors.newCachedThreadPool {
+            Thread(it, "Akatsuki-Pool-Thread").apply {
+                isDaemon = true
+            }
+        }
+    }
+
     val jda: JDA = JDABuilder(AccountType.BOT)
             .setToken(token)
             .addEventListener(this)
@@ -49,7 +60,7 @@ class Akatsuki(token: String, db_name: String, db_user: String, db_password: Str
             prefixes = arrayListOf("!")
 
         if (event.guild != null)
-            transaction {
+            asyncTransaction(pool) {
                 val res = Guilds.select {
                     Guilds.id.eq(event.guild.id)
                 }
