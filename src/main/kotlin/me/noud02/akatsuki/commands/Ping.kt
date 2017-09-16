@@ -1,5 +1,6 @@
 package me.noud02.akatsuki.commands
 
+import me.noud02.akatsuki.bot.entities.Argument
 import me.noud02.akatsuki.bot.entities.Command
 import me.noud02.akatsuki.bot.entities.Context
 import net.dv8tion.jda.core.entities.Member
@@ -13,13 +14,13 @@ class Pong : Command() {
     }
 }
 
+@Argument("meme", "user", true)
 class Ping : Command() {
     override val name = "ping"
     override val desc = "Pings a user if specified"
 
     init {
         addSubcommand(Pong())
-        setArgument("meme", "user", true)
     }
 
     override fun run(ctx: Context) {

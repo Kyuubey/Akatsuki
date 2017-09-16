@@ -1,5 +1,6 @@
 package me.noud02.akatsuki.bot
 
+import me.noud02.akatsuki.bot.entities.Argument
 import me.noud02.akatsuki.bot.entities.Command
 import me.noud02.akatsuki.bot.entities.Context
 import net.dv8tion.jda.core.entities.Member
@@ -82,8 +83,10 @@ class CommandHandler(private val client: Akatsuki) {
 
         val newArgs: MutableMap<String, Any> = mutableMapOf()
 
-        for (arg in cmd.args) {
-            val i = cmd.args.indexOf(arg)
+        val cmdArgs: List<Argument> = cmd::class.annotations.filterIsInstance(Argument::class.java)
+
+        for (arg in cmdArgs) {
+            val i = cmdArgs.indexOf(arg)
             val arg2: String?
             try {
                 arg2 = args[i]
