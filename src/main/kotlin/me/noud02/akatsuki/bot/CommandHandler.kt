@@ -66,6 +66,8 @@ class CommandHandler(private val client: Akatsuki) {
                     return
                 }
 
+
+
                 ctx = Context(event, client, newArgs, args)
                 commands[cmd]?.subcommands?.get(subcmd)?.run(ctx)
             } else {
