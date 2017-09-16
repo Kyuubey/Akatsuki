@@ -42,6 +42,12 @@ class CommandHandler(private val client: Akatsuki) {
             val ctx: Context
             val newArgs: MutableMap<String, Any>
 
+            if (!commands.contains(cmd))
+                return
+
+            if ((commands[cmd] as Command).ownerOnly && !client.owners.contains(event.author.id))
+                return
+
             if (args.isNotEmpty() && commands[cmd]?.subcommands?.get(args[0]) is Command) {
                 val subcmd = args[0]
                 args = args.drop(1)
@@ -53,7 +59,7 @@ class CommandHandler(private val client: Akatsuki) {
                     return
                 }
 
-                ctx = Context(event, newArgs)
+                ctx = Context(event, newArgs, args)
                 commands[cmd]?.subcommands?.get(subcmd)?.run(ctx)
             } else {
                 try {
@@ -63,7 +69,7 @@ class CommandHandler(private val client: Akatsuki) {
                     return
                 }
 
-                ctx = Context(event, newArgs)
+                ctx = Context(event, newArgs, args)
 
                 commands[cmd]?.run(ctx)
             }

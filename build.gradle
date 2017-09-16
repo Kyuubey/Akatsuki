@@ -10,7 +10,7 @@ buildscript {
     }
     dependencies {
         classpath "org.jetbrains.kotlin:kotlin-gradle-plugin:$kotlin_version"
-        classpath "com.github.jengelman.gradle.plugins:shadow:2.0.1"
+        classpath 'com.github.jengelman.gradle.plugins:shadow:2.0.1'
     }
 }
 
@@ -24,7 +24,7 @@ repositories {
     mavenCentral()
     jcenter()
     maven {
-        url = "http://dl.bintray.com/kotlin/exposed"
+        url = 'http://dl.bintray.com/kotlin/exposed'
     }
 }
 
@@ -32,7 +32,8 @@ dependencies {
     compile "org.jetbrains.kotlin:kotlin-stdlib-jre8:$kotlin_version"
     compile 'org.jetbrains.kotlinx:kotlinx-coroutines-core:0.18'
     compile 'org.jetbrains.kotlinx:kotlinx-coroutines-jdk8:0.18'
-    compile "net.dv8tion:JDA:3.3.0_266"
+    compile 'khttp:khttp:0.1.0'
+    compile 'net.dv8tion:JDA:3.3.0_266'
     compile 'com.sedmelluq:lavaplayer:1.2.42'
     compile 'org.jetbrains.exposed:exposed:0.8.5'
     compile 'org.postgresql:postgresql:42.1.4'
