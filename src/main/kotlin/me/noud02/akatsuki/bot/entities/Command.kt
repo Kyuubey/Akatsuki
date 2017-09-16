@@ -1,18 +1,19 @@
-package me.noud02.akatsuki.bot
+package me.noud02.akatsuki.bot.entities
 
 open class Command {
     val subcommands: MutableMap<String, Command> = mutableMapOf()
-    val args: Array<Argument> = arrayOf()
+    val args: MutableList<Argument> = mutableListOf()
+    open val name = "awoo"
 
     open fun run(ctx: Context) {
         ctx.send("Empty command")
     }
 
-    fun setSubcommand(name: String, cmd: Command) {
-        subcommands[name] = cmd
+    fun addSubcommand(cmd: Command) {
+        subcommands[cmd.name] = cmd
     }
 
     fun setArgument(name: String, type: String, optional: Boolean = false) {
-        args.plusElement(Argument(name, type, optional))
+        args.add(Argument(name, type, optional))
     }
 }
