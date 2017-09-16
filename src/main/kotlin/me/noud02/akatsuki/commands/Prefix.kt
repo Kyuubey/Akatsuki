@@ -29,7 +29,40 @@ class AddPrefix : Command() {
                 }) {
                     it[prefixes] = guild[Guilds.prefixes].plus(ctx.args["prefix"].toString())
                 }
-                ctx.send("Added prefix `${ctx.args["prefix"].toString()}`")
+                ctx.send("Added prefix `${ctx.args["prefix"]}`")
+            } catch (e: Throwable) {
+                ctx.send("Error while trying to update prefixes: ${e.message}")
+            }
+        }
+    }
+}
+
+@Perm(Permission.MANAGE_SERVER)
+@Argument("prefix", "string")
+class RemPrefix : Command() {
+    override val name = "rem"
+    override val desc = "Remove a prefix"
+
+    override fun run(ctx: Context) {
+        transaction {
+            val guild = Guilds.select {
+                Guilds.id.eq(ctx.guild?.id)
+            }.first()
+
+            if (guild[Guilds.prefixes].isEmpty()) {
+                ctx.send("No prefixes to remove!")
+                return@transaction
+            }
+
+            try {
+                Guilds.update({
+                    Guilds.id.eq(ctx.guild?.id)
+                }) {
+                    val list = mutableListOf(*guild[Guilds.prefixes])
+                    list.remove(ctx.args["prefix"])
+                    it[prefixes] = list.toTypedArray()
+                }
+                ctx.send("Removed prefix `${ctx.args["prefix"]}`")
             } catch (e: Throwable) {
                 ctx.send("Error while trying to update prefixes: ${e.message}")
             }
@@ -43,6 +76,7 @@ class Prefix : Command() {
 
     init {
         addSubcommand(AddPrefix())
+        addSubcommand(RemPrefix())
     }
 
     override fun run(ctx: Context) {
