@@ -1,8 +1,18 @@
 # Akatsuki
 
 #### Compiling and running the bot
-1. Make sure to have JRE/JDK 8 or above installed
-2. `git clone https://github.com/noud02/Akatsuki && cd Akatsuki`
-3. `./gradlew clean build`
-4. `export AKATSUKI_TOKEN=YOUR_SUPER_SECRET_DISCORD_TOKEN`
-5. `cd build.libs && java -jar akatsuki-VERSION-all.jar`
+
+```bash
+# Clone and build
+$ git clone https://github.com/noud02/Akatsuki && cd Akatsuki
+$ ./gradlew clean build
+
+# Set ENV
+$ export AKATSUKI_TOKEN=YOUR_SUPER_SECRET_DISCORD_TOKEN
+$ export AKATSUKI_DB_NAME=YOUR_POSTGRESQL_DB_NAME
+$ export AKATSUKI_DB_USER=USER_THAT_HAS_ACCESS_TO_THE_DB
+$ export AKATSUKI_OWNER_ID=YOUR_DISCORD_ID
+
+# Run it
+$ cd build/libs && java -jar akatsuki-VERSION-all.jar
+```
