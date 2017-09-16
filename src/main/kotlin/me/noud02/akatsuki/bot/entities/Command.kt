@@ -4,6 +4,8 @@ open class Command {
     val subcommands: MutableMap<String, Command> = mutableMapOf()
     val args: MutableList<Argument> = mutableListOf()
     open val name = "awoo"
+    open val desc = "awoo~"
+    open val ownerOnly = false
 
     open fun run(ctx: Context) {
         ctx.send("Empty command")
