@@ -1,9 +1,11 @@
 package me.noud02.akatsuki.commands
 
+import me.noud02.akatsuki.bot.entities.Argument
 import me.noud02.akatsuki.bot.entities.Command
 import me.noud02.akatsuki.bot.entities.Context
 import javax.script.ScriptEngineManager
 
+@Argument("code", "string")
 class Eval : Command() {
     override val name = "eval"
     override val desc = "Evaluate (js) code"

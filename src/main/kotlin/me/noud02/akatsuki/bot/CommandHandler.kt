@@ -3,6 +3,9 @@ package me.noud02.akatsuki.bot
 import me.noud02.akatsuki.bot.entities.Argument
 import me.noud02.akatsuki.bot.entities.Command
 import me.noud02.akatsuki.bot.entities.Context
+import me.noud02.akatsuki.bot.entities.Perm
+import net.dv8tion.jda.core.Permission
+import net.dv8tion.jda.core.entities.Channel
 import net.dv8tion.jda.core.entities.Member
 import net.dv8tion.jda.core.events.message.MessageReceivedEvent
 import org.reflections.Reflections
@@ -10,7 +13,7 @@ import org.reflections.util.ClasspathHelper
 import org.reflections.util.ConfigurationBuilder
 
 class CommandHandler(private val client: Akatsuki) {
-    private val commands: MutableMap<String, Command> = mutableMapOf()
+    private val commands = mutableMapOf<String, Command>()
 
     init {
         loadAll()
@@ -33,9 +36,11 @@ class CommandHandler(private val client: Akatsuki) {
         if (event.author.isBot)
             return
 
-        if (event.message.content.startsWith(client.botPrefix)) {
-            val cmd: String = event.message.content.substring(client.botPrefix.length).split(" ")[0]
-            var args: List<String> = event.message.content.substring(client.botPrefix.length).split(" ")
+        val usedPrefix: String? = client.prefixes.lastOrNull { event.message.content.startsWith(it) }
+
+        if (usedPrefix != null) {
+            val cmd: String = event.message.content.substring(usedPrefix.length).split(" ")[0]
+            var args: List<String> = event.message.content.substring(usedPrefix.length).split(" ")
 
             if (args.isNotEmpty())
                 args = args.drop(1)
@@ -54,26 +59,42 @@ class CommandHandler(private val client: Akatsuki) {
                 args = args.drop(1)
 
                 try {
+                    checkPermissions(event, commands[cmd]?.subcommands?.get(subcmd))
                     newArgs = checkArguments(event, commands[cmd]?.subcommands?.get(subcmd), args)
                 } catch (err: Exception) {
                     event.channel.sendMessage(err.message).complete()
                     return
                 }
 
-                ctx = Context(event, newArgs, args)
+                ctx = Context(event, client, newArgs, args)
                 commands[cmd]?.subcommands?.get(subcmd)?.run(ctx)
             } else {
                 try {
+                    checkPermissions(event, commands[cmd])
                     newArgs = checkArguments(event, commands[cmd], args)
                 } catch (err: Exception) {
                     event.channel.sendMessage(err.message).complete()
                     return
                 }
 
-                ctx = Context(event, newArgs, args)
+                ctx = Context(event, client, newArgs, args)
 
                 commands[cmd]?.run(ctx)
             }
+        }
+    }
+
+    private fun checkPermissions(event: MessageReceivedEvent, cmd: Command?) {
+        if (cmd == null)
+            throw Exception("Command is null")
+
+        val perms: List<Perm> = cmd::class.annotations.filterIsInstance(Perm::class.java)
+        val newPerms = mutableMapOf<Permission, Boolean>()
+
+        for (perm in perms) {
+            newPerms[perm.name] = event.member?.hasPermission(event.channel as Channel, perm.name) ?: false
+            if (!perm.optional && newPerms.contains(perm.name))
+                throw Exception("Permission `${perm.name.name}` is required but was not found!")
         }
     }
 
@@ -81,7 +102,7 @@ class CommandHandler(private val client: Akatsuki) {
         if (cmd == null)
             throw Exception("Command is null")
 
-        val newArgs: MutableMap<String, Any> = mutableMapOf()
+        val newArgs = mutableMapOf<String, Any>()
 
         val cmdArgs: List<Argument> = cmd::class.annotations.filterIsInstance(Argument::class.java)
 

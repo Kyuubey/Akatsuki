@@ -9,9 +9,7 @@ class Pong : Command() {
     override val name = "pong"
     override val desc = "Ping!"
 
-    override fun run(ctx: Context) {
-       ctx.send("Ping!")
-    }
+    override fun run(ctx: Context) = ctx.send("Ping!")
 }
 
 @Argument("meme", "user", true)
