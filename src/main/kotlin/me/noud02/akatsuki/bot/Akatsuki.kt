@@ -21,6 +21,7 @@ class Akatsuki(token: String, db_name: String, db_user: String, db_password: Str
     private val eventHandler: EventHandler = EventHandler(this)
 
     var botPrefix: String = "!"
+    var owners: MutableList<String> = mutableListOf()
     val db = Database.connect(db_name, driver = "org.postgresql.Driver", password = db_password, user = db_user)
 
     fun setPrefix(prefix: String) {
@@ -29,6 +30,10 @@ class Akatsuki(token: String, db_name: String, db_user: String, db_password: Str
 
     fun setGame(text: String, idle: Boolean = false) {
         jda.presence.setPresence(Game.of(text), idle)
+    }
+
+    fun addOwner(id: String) {
+        owners.add(id)
     }
 
     override fun onMessageReceived(event: MessageReceivedEvent) {
