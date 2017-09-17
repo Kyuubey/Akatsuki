@@ -35,7 +35,7 @@ class Akatsuki(token: String, db_name: String, db_user: String, db_password: Str
             .addEventListener(this)
             .buildBlocking()
 
-    private val cmdHandler = CommandHandler(this)
+    val cmdHandler = CommandHandler(this)
     private val eventHandler = EventHandler(this)
     private val loggr = LoggerFactory.getLogger(this::class.java)
 
