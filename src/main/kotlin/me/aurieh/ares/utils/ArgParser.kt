@@ -22,24 +22,49 @@ object ArgParser {
         val characterIterator = str.iterator()
         var intermediateStringBuilder = StringBuilder()
         var eatRest = false
+        var blockEatRest = false
+        var eatingSingleQuotePair = false
         while (characterIterator.hasNext()) {
             val character = characterIterator.nextChar()
-            if (eatRest && character == '"') {
+            // TODO clean up logic
+            if (eatRest && ((!eatingSingleQuotePair && character == '\'') || (eatingSingleQuotePair && character == '"'))) {
+                // that super rare case where another eatable quote-paired token follows after an unmatched quote
+                intermediateStringBuilder.insert(0, if (character == '\'') '"' else '\'')
+                intermediateStringBuilder.toString().trim().split(" ").forEach {
+                    tokenList.add(it)
+                }
+                intermediateStringBuilder = StringBuilder()
+                eatingSingleQuotePair = character == '\''
+                continue
+            } else if (!blockEatRest && eatRest && ((eatingSingleQuotePair && character == '\'') || (!eatingSingleQuotePair && character == '"'))) {
                 eatRest = false
+                eatingSingleQuotePair = false
                 tokenList.add(intermediateStringBuilder.toString())
                 intermediateStringBuilder = StringBuilder()
                 continue
-            } else if (character == '"') {
+            } else if (characterIterator.hasNext() && !blockEatRest && (character == '"' || character == '\'')) {
                 eatRest = true
+                eatingSingleQuotePair = character == '\''
                 continue
             } else if (!eatRest && character == ' ' && intermediateStringBuilder.isNotEmpty()) {
                 tokenList.add(intermediateStringBuilder.toString())
                 intermediateStringBuilder = StringBuilder()
                 continue
+            } else if (!blockEatRest && character == '\\') {
+                blockEatRest = true
+                continue
             } else if (!eatRest && character == ' ') continue
+            // FIXME \\"foo bar" transforms into [\foo bar]
+            blockEatRest = false
             intermediateStringBuilder.append(character)
         }
-        if (intermediateStringBuilder.isNotEmpty()) {
+        if (eatRest) {
+            // Unmatched quote at the beginning of the last token
+            intermediateStringBuilder.insert(0, if (eatingSingleQuotePair) '\'' else '"')
+            intermediateStringBuilder.toString().split(" ").forEach {
+                tokenList.add(it)
+            }
+        } else if (intermediateStringBuilder.isNotEmpty()) {
             tokenList.add(intermediateStringBuilder.toString())
         }
         return tokenList
