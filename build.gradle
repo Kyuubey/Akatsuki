@@ -32,6 +32,8 @@ dependencies {
     compile "org.jetbrains.kotlin:kotlin-stdlib-jre8:$kotlin_version"
     compile 'org.jetbrains.kotlinx:kotlinx-coroutines-core:0.18'
     compile 'org.jetbrains.kotlinx:kotlinx-coroutines-jdk8:0.18'
+    compile group: 'org.slf4j', name: 'slf4j-api', version: '1.8.0-alpha2'
+    compile group: 'org.slf4j', name: 'slf4j-simple', version: '1.8.0-alpha2'
     compile 'khttp:khttp:0.1.0'
     compile 'net.dv8tion:JDA:3.3.0_266'
     compile 'com.sedmelluq:lavaplayer:1.2.42'
