@@ -3,8 +3,6 @@
   <component name="ProjectModuleManager">
     <modules>
       <module fileurl="file://$PROJECT_DIR$/.idea/modules/me.noud02.akatsuki.iml" filepath="$PROJECT_DIR$/.idea/modules/me.noud02.akatsuki.iml" />
-      <module fileurl="file://$PROJECT_DIR$/.idea/modules/me.noud02.akatsuki_main.iml" filepath="$PROJECT_DIR$/.idea/modules/me.noud02.akatsuki_main.iml" group="me.noud02.akatsuki" />
-      <module fileurl="file://$PROJECT_DIR$/.idea/modules/me.noud02.akatsuki_test.iml" filepath="$PROJECT_DIR$/.idea/modules/me.noud02.akatsuki_test.iml" group="me.noud02.akatsuki" />
     </modules>
   </component>
 </project>

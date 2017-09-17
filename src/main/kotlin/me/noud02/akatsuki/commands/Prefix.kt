@@ -1,9 +1,6 @@
 package me.noud02.akatsuki.commands
 
-import me.noud02.akatsuki.bot.entities.Argument
-import me.noud02.akatsuki.bot.entities.Command
-import me.noud02.akatsuki.bot.entities.Context
-import me.noud02.akatsuki.bot.entities.Perm
+import me.noud02.akatsuki.bot.entities.*
 import me.noud02.akatsuki.bot.schema.Guilds
 import net.dv8tion.jda.core.Permission
 import org.jetbrains.exposed.sql.SqlExpressionBuilder
@@ -49,6 +46,11 @@ class RemPrefix : Command() {
                 Guilds.id.eq(ctx.guild?.id)
             }.first()
 
+            if (guild[Guilds.prefixes].size == 1) {
+                ctx.send("You need to have at least 1 custom prefix!")
+                return@transaction
+            }
+
             if (guild[Guilds.prefixes].isEmpty()) {
                 ctx.send("No prefixes to remove!")
                 return@transaction
@@ -70,6 +72,7 @@ class RemPrefix : Command() {
     }
 }
 
+@Load
 class Prefix : Command() {
     override val name = "prefix"
     override val desc = "Add, view or delete the guild's prefixes"

@@ -6,6 +6,7 @@ open class Command {
     open val desc = "awoo~"
     open val ownerOnly = false
     open val noHelp = false
+    open val guildOnly = false
 
     open fun run(ctx: Context) = ctx.send("Empty command")
 
