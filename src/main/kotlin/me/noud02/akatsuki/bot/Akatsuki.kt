@@ -78,7 +78,6 @@ class Akatsuki(token: String, db_name: String, db_user: String, db_password: Str
                         loggr.error("Error while trying to insert guild ${event.guild.name} in DB", e)
                     }
             }
-
         cmdHandler.handle(event)
     }
 

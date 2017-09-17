@@ -1,10 +1,7 @@
 package me.noud02.akatsuki.commands
 
 import khttp.get
-import me.noud02.akatsuki.bot.entities.Argument
-import me.noud02.akatsuki.bot.entities.Command
-import me.noud02.akatsuki.bot.entities.Context
-import me.noud02.akatsuki.bot.entities.Flag
+import me.noud02.akatsuki.bot.entities.*
 import net.dv8tion.jda.core.entities.Member
 import java.util.*
 
@@ -28,6 +25,7 @@ class Pong : Command() {
     }
 }
 
+@Load
 @Argument("meme", "user", true)
 class Ping : Command() {
     override val name = "ping"

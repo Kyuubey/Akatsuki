@@ -4,17 +4,22 @@ import me.aurieh.ares.utils.ArgParser
 import me.noud02.akatsuki.bot.Akatsuki
 import net.dv8tion.jda.core.entities.*
 import net.dv8tion.jda.core.events.message.MessageReceivedEvent
+import org.apache.commons.validator.routines.UrlValidator
 
-class Context(private val event: MessageReceivedEvent, private val client: Akatsuki, private val cmd: Command, val args: MutableMap<String, Any>, val rawArgs: List<String>, val flags: ArgParser.ParsedResult) {
-    val guild: Guild? = this.event.guild
-    val author: User = this.event.author
-    val channel: MessageChannel = this.event.channel
-    val msg: Message = this.event.message
-    val member: Member? = this.event.member
+class Context(val event: MessageReceivedEvent, val client: Akatsuki, private val cmd: Command, val args: MutableMap<String, Any>, val rawArgs: List<String>, val flags: ArgParser.ParsedResult, val perms: MutableMap<String, Boolean>) {
+    val guild: Guild? = event.guild
+    val author: User = event.author
+    val channel: MessageChannel = event.channel
+    val msg: Message = event.message
+    val member: Member? = event.member
+    val selfMember: Member? = event.guild.selfMember
 
-    fun send(arg: Any) = this.event.channel.sendMessage(arg.toString()).queue()
+    val urlValidator = UrlValidator()
 
-    fun sendCode(lang: String, arg: Any) = this.event.channel.sendMessage("```$lang\n$arg```").queue()
+    fun send(arg: String) = event.channel.sendMessage(arg).queue()
+    fun send(arg: MessageEmbed) = event.channel.sendMessage(arg).queue()
+
+    fun sendCode(lang: String, arg: Any) = event.channel.sendMessage("```$lang\n$arg```").queue()
 
     fun help() = client.cmdHandler.help(cmd)
 

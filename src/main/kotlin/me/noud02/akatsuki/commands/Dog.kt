@@ -3,7 +3,9 @@ package me.noud02.akatsuki.commands
 import khttp.get
 import me.noud02.akatsuki.bot.entities.Command
 import me.noud02.akatsuki.bot.entities.Context
+import me.noud02.akatsuki.bot.entities.Load
 
+@Load
 class Dog: Command() {
     override val name = "dog"
     override val desc = "Get a random dog"
