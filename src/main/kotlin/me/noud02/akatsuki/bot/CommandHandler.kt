@@ -162,13 +162,13 @@ class CommandHandler(private val client: Akatsuki) {
                     return newArgs
             }
             when (arg.type) {
-                // TODO: do these later
+                // TODO do these later
                 // "guild" ->
                 // "channel" ->
                 // "role" ->
                 // "voicechannel" ->
                 "user" -> {
-                    // TODO: Add mention using regex
+                    // TODO Add mention using regex
                     if (event.guild != null) {
                         val user: Member = when {
                             event.guild.getMembersByName(arg2, true).isNotEmpty() -> event.guild.getMembersByName(arg2, true)[0]
