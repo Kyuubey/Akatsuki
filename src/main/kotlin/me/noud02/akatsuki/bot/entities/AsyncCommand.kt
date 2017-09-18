@@ -13,7 +13,13 @@ open class AsyncCommand {
     open suspend fun asyncRun(ctx: Context) = ctx.send("Empty command")
 
     fun run(ctx: Context) {
-        async()
+        async(ctx.client.coroutineDispatcher) {
+            try {
+                asyncRun(ctx)
+            } catch (e: Throwable) {
+                ctx.sendError(e)
+            }
+        }
     }
 
     fun addSubcommand(cmd: Command) {
