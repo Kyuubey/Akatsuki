@@ -1,5 +1,6 @@
 package me.noud02.akatsuki.bot
 
+import me.aurieh.ares.exposed.async.asyncTransaction
 import me.aurieh.ares.utils.ArgParser
 import me.noud02.akatsuki.bot.entities.*
 import me.noud02.akatsuki.bot.schema.Guilds
@@ -8,7 +9,6 @@ import net.dv8tion.jda.core.entities.Channel
 import net.dv8tion.jda.core.entities.Member
 import net.dv8tion.jda.core.events.message.MessageReceivedEvent
 import org.jetbrains.exposed.sql.select
-import org.jetbrains.exposed.sql.transactions.transaction
 import org.reflections.Reflections
 import org.reflections.util.ClasspathHelper
 import org.reflections.util.ConfigurationBuilder
@@ -40,14 +40,17 @@ class CommandHandler(private val client: Akatsuki) {
         if (event.author.isBot)
             return
 
-        if (event.guild != null && guildPrefixes.isEmpty())
-            return transaction {
+        /*if (event.guild != null && guildPrefixes.isEmpty())
+            asyncTransaction(client.pool) {
                 val guild = Guilds.select {
                     Guilds.id.eq(event.guild.id)
-                }.first()
+                }
 
-                handle(event, guild[Guilds.prefixes])
-            }
+                if (guild.count() == 0)
+                    return@asyncTransaction
+
+                handle(event, guild.first()[Guilds.prefixes])
+            }.await()*/
 
         val usedPrefix: String? = client.prefixes.lastOrNull { event.message.content.startsWith(it) } ?: guildPrefixes.lastOrNull { event.message.content.startsWith(it) }
 

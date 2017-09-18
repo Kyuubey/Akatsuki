@@ -60,8 +60,8 @@ class Akatsuki(token: String, db_name: String, db_user: String, db_password: Str
             prefixes = arrayListOf("!")
 
         if (event.guild != null)
-            asyncTransaction(pool) {
-                val res = Guilds.select {
+            transaction {
+                var res = Guilds.select {
                     Guilds.id.eq(event.guild.id)
                 }
 
@@ -73,12 +73,19 @@ class Akatsuki(token: String, db_name: String, db_user: String, db_password: Str
                             it[lang] = "en_US"
                             it[prefixes] = arrayOf("awoo!")
                         }
-                        loggr.info("Add guild ${event.guild.name} to the database!")
+
+                        res = Guilds.select {
+                            Guilds.id.eq(event.guild.id)
+                        }
+
+                        loggr.info("Added guild ${event.guild.name} to the database!")
                     } catch (e: Throwable) {
                         loggr.error("Error while trying to insert guild ${event.guild.name} in DB", e)
                     }
+                cmdHandler.handle(event, res.first()[Guilds.prefixes])
             }
-        cmdHandler.handle(event)
+        else
+            cmdHandler.handle(event)
     }
 
     override fun onReady(event: ReadyEvent) {
