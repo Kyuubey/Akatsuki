@@ -11,7 +11,7 @@ class Awwnime : Command() {
     override val desc = "Get a random post from /r/awwnime"
 
     override fun run(ctx: Context) {
-        val res = get("https://www.reddit.com/r/awwnime.json")
+        val res = get("https://www.reddit.com/r/awwnime/random.json")
                 .jsonObject
                 .getJSONObject("data")
                 .getJSONArray("children")
