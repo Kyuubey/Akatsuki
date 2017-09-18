@@ -21,6 +21,8 @@ class Context(val event: MessageReceivedEvent, val client: Akatsuki, private val
 
     fun sendCode(lang: String, arg: Any) = event.channel.sendMessage("```$lang\n$arg```").queue()
 
+    fun sendError(e: Throwable) = event.channel.sendMessage("```diff\n- ${e.stackTrace}```").queue()
+
     fun help() = client.cmdHandler.help(cmd)
 
     fun help(cmdd: String): String {

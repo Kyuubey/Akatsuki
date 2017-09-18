@@ -1,5 +1,6 @@
 package me.noud02.akatsuki.bot
 
+import kotlinx.coroutines.experimental.async
 import me.aurieh.ares.exposed.async.asyncTransaction
 import me.noud02.akatsuki.bot.schema.Guilds
 import me.noud02.akatsuki.bot.schema.Users
@@ -30,6 +31,10 @@ class Akatsuki(token: String, db_name: String, db_user: String, db_password: Str
         }
     }
 
+    val coroutineDispatcher by lazy {
+        me.noud02.akatsuki.bot.entities.CoroutineDispatcher(pool)
+    }
+
     val jda: JDA = JDABuilder(AccountType.BOT)
             .setToken(token)
             .addEventListener(this)
@@ -44,9 +49,15 @@ class Akatsuki(token: String, db_name: String, db_user: String, db_password: Str
     val db = Database.connect("jdbc:postgresql:$db_name", "org.postgresql.Driver", db_user, db_password)
 
     init {
-        transaction {
-            SchemaUtils.create(Guilds, Users)
+        async(coroutineDispatcher) {
+            init()
         }
+    }
+
+    suspend fun init() {
+        asyncTransaction(pool) {
+            SchemaUtils.create(Guilds, Users)
+        }.await()
     }
 
     fun setGame(text: String, idle: Boolean = false) = jda.presence.setPresence(Game.of(text), idle)
@@ -60,32 +71,39 @@ class Akatsuki(token: String, db_name: String, db_user: String, db_password: Str
             prefixes = arrayListOf("!")
 
         if (event.guild != null)
-            transaction {
-                var res = Guilds.select {
-                    Guilds.id.eq(event.guild.id)
-                }
-
-                if (res.count() == 0)
-                    try {
-                        Guilds.insert {
-                            it[id] = event.guild.id
-                            it[name] = event.guild.name
-                            it[lang] = "en_US"
-                            it[prefixes] = arrayOf("awoo!")
-                        }
-
-                        res = Guilds.select {
-                            Guilds.id.eq(event.guild.id)
-                        }
-
-                        loggr.info("Added guild ${event.guild.name} to the database!")
-                    } catch (e: Throwable) {
-                        loggr.error("Error while trying to insert guild ${event.guild.name} in DB", e)
-                    }
-                cmdHandler.handle(event, res.first()[Guilds.prefixes])
+            async(coroutineDispatcher) {
+                handleGuildMessage(event)
             }
         else
             cmdHandler.handle(event)
+    }
+
+    suspend fun handleGuildMessage(event: MessageReceivedEvent) {
+        asyncTransaction(pool) {
+            var res = Guilds.select {
+                Guilds.id.eq(event.guild.id)
+            }
+
+            if (res.count() == 0)
+                try {
+                    Guilds.insert {
+                        it[id] = event.guild.id
+                        it[name] = event.guild.name
+                        it[lang] = "en_US"
+                        it[prefixes] = arrayOf("awoo!")
+                    }
+
+                    res = Guilds.select {
+                        Guilds.id.eq(event.guild.id)
+                    }
+
+                    loggr.info("Added guild ${event.guild.name} to the database!")
+                } catch (e: Throwable) {
+                    loggr.error("Error while trying to insert guild ${event.guild.name} in DB", e)
+                }
+
+            cmdHandler.handle(event, res.first()[Guilds.prefixes])
+        }.await()
     }
 
     override fun onReady(event: ReadyEvent) {
