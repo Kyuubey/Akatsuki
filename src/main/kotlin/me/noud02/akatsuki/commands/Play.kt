@@ -26,20 +26,23 @@ class Play : Command() {
         if (!ctx.guild!!.audioManager.isConnected)
             return ctx.send("You must be in a voice channel to execute this command!")
 
-        var search = if (ctx.args.size > 1) ctx.args.map { entry: Map.Entry<String, Any> -> entry.value.toString()  }.joinToString(" ") else ctx.args["url|query"] as String
+        var search = ctx.rawArgs.joinToString(" ")
 
-        if (!ctx.urlValidator.isValid(search))
-            search = "ytsearch:$search"
-
-        // TODO load one item instead of all results
         MusicManager.playerManager.loadItemOrdered(manager, search, object : AudioLoadResultHandler {
             override fun loadFailed(exception: FriendlyException) = ctx.send("Failed to add song to queue: ${exception.message}")
-            override fun noMatches() = ctx.send("Could not find that song!")
-            /*override fun noMatches() {
-                MusicManager.playerManager.loadItem(search, object : AudioLoadResultHandler {
+            override fun noMatches() {
+                MusicManager.playerManager.loadItem("ytsearch:$search", object : AudioLoadResultHandler {
+                    override fun loadFailed(exception: FriendlyException) = ctx.send("Failed to add song to queue: ${exception.message}")
                     override fun noMatches() = ctx.send("Could not find that song!")
+                    override fun trackLoaded(track: AudioTrack) {
+                        manager.scheduler.add(track)
+                        ctx.send("Added ${track.info.title} to the queue!")
+                    }
+                    override fun playlistLoaded(playlist: AudioPlaylist) {
+                        trackLoaded(playlist.tracks.first())
+                    }
                 })
-            }*/
+            }
             override fun trackLoaded(track: AudioTrack) {
                 manager.scheduler.add(track)
                 ctx.send("Added ${track.info.title} to the queue!")
