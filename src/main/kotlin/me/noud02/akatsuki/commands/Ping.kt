@@ -3,7 +3,8 @@ package me.noud02.akatsuki.commands
 import khttp.get
 import me.noud02.akatsuki.bot.entities.*
 import net.dv8tion.jda.core.entities.Member
-import java.util.*
+import net.dv8tion.jda.core.entities.Message
+import java.time.temporal.ChronoUnit
 
 @Flag("meme", 'm', "this is a meme")
 class Pong : Command() {
@@ -39,7 +40,10 @@ class Ping : Command() {
         if (ctx.args["meme"] != null && ctx.args["meme"] is Member) {
             val user = ctx.args["meme"] as Member
             ctx.send(user.asMention)
-        } else
-            ctx.send("Pong!")
+        } else {
+            ctx.event.channel.sendMessage("Pong!").queue({ message: Message ->
+                message.editMessage("Pong! `${ctx.msg.creationTime.until(message.creationTime, ChronoUnit.MILLIS)}ms`").queue()
+            })
+        }
     }
 }
