@@ -14,4 +14,8 @@ open class AsyncCommand : Command() {
             }
         }
     }
+
+    fun addCommand(cmd: AsyncCommand) {
+        subcommands[cmd.name] = cmd
+    }
 }
