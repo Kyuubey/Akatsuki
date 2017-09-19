@@ -7,3 +7,7 @@ cache:
   directories:
     - $HOME/.gradle/caches/
     - $HOME/.gradle/wrapper/
+
+notifications:
+  webhooks:
+    - https://kyubey-ci.herokuapp.com/hooks/travisci
