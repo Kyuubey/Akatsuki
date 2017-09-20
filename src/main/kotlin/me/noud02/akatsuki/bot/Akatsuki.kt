@@ -13,40 +13,40 @@ import net.dv8tion.jda.core.events.guild.GuildJoinEvent
 import net.dv8tion.jda.core.events.guild.GuildLeaveEvent
 import net.dv8tion.jda.core.events.message.MessageReceivedEvent
 import net.dv8tion.jda.core.hooks.ListenerAdapter
+import net.dv8tion.jda.core.requests.SessionReconnectQueue
 import org.jetbrains.exposed.sql.Database
 import org.jetbrains.exposed.sql.SchemaUtils
 import org.jetbrains.exposed.sql.insert
 import org.jetbrains.exposed.sql.select
-import org.jetbrains.exposed.sql.transactions.transaction
 import org.slf4j.LoggerFactory
 import java.util.concurrent.ExecutorService
 import java.util.concurrent.Executors
 
 class Akatsuki(token: String, db_name: String, db_user: String, db_password: String) : ListenerAdapter() {
-    val pool: ExecutorService by lazy {
+    private val eventHandler = EventHandler(this)
+    private val loggr = LoggerFactory.getLogger(this::class.java)
+
+    private val pool: ExecutorService by lazy {
         Executors.newCachedThreadPool {
             Thread(it, "Akatsuki-Pool-Thread").apply {
                 isDaemon = true
             }
         }
     }
-
     val coroutineDispatcher by lazy {
         me.noud02.akatsuki.bot.entities.CoroutineDispatcher(pool)
     }
-
-    val jda: JDA = JDABuilder(AccountType.BOT)
+    private val builder: JDABuilder = JDABuilder(AccountType.BOT)
             .setToken(token)
             .addEventListener(this)
-            .buildBlocking()
+            .setReconnectQueue(SessionReconnectQueue())
 
     val cmdHandler = CommandHandler(this)
-    private val eventHandler = EventHandler(this)
-    private val loggr = LoggerFactory.getLogger(this::class.java)
+    val db = Database.connect("jdbc:postgresql:$db_name", "org.postgresql.Driver", db_user, db_password)
 
     var owners = mutableListOf<String>()
     var prefixes = mutableListOf<String>()
-    val db = Database.connect("jdbc:postgresql:$db_name", "org.postgresql.Driver", db_user, db_password)
+    var jda: JDA? = null
 
     init {
         async(coroutineDispatcher) {
@@ -60,7 +60,25 @@ class Akatsuki(token: String, db_name: String, db_user: String, db_password: Str
         }.await()
     }
 
-    fun setGame(text: String, idle: Boolean = false) = jda.presence.setPresence(Game.of(text), idle)
+    fun build() {
+        jda = builder.buildBlocking()
+    }
+
+    fun buildSharded(shards: Int, shard: Int? = null) {
+        if (shard != null)
+            jda = builder
+                    .useSharding(shard, shards)
+                    .buildAsync()
+        else
+            for (i in 0 until shards) {
+                jda = builder
+                        .useSharding(i, shards)
+                        .buildAsync()
+                Thread.sleep(5000)
+            }
+    }
+
+    fun setGame(text: String, idle: Boolean = false) = jda!!.presence.setPresence(Game.of(text), idle)
 
     fun addPrefix(prefix: String) = prefixes.add(prefix)
 
@@ -78,7 +96,7 @@ class Akatsuki(token: String, db_name: String, db_user: String, db_password: Str
             cmdHandler.handle(event)
     }
 
-    suspend fun handleGuildMessage(event: MessageReceivedEvent) {
+    private suspend fun handleGuildMessage(event: MessageReceivedEvent) {
         asyncTransaction(pool) {
             var res = Guilds.select {
                 Guilds.id.eq(event.guild.id)
