@@ -38,9 +38,7 @@ class Play : Command() {
                         manager.scheduler.add(track)
                         ctx.send("Added ${track.info.title} to the queue!")
                     }
-                    override fun playlistLoaded(playlist: AudioPlaylist) {
-                        trackLoaded(playlist.tracks.first())
-                    }
+                    override fun playlistLoaded(playlist: AudioPlaylist) = trackLoaded(playlist.tracks.first())
                 })
             }
             override fun trackLoaded(track: AudioTrack) {
