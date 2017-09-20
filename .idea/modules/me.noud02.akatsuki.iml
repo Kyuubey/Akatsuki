@@ -49,6 +49,7 @@
     <orderEntry type="library" scope="PROVIDED" name="Gradle: org.slf4j:slf4j-simple:1.8.0-alpha2" level="project" />
     <orderEntry type="library" scope="PROVIDED" name="Gradle: org.jruby:jruby-complete:9.1.13.0" level="project" />
     <orderEntry type="library" scope="PROVIDED" name="Gradle: commons-validator:commons-validator:1.6" level="project" />
+    <orderEntry type="library" scope="PROVIDED" name="Gradle: org.openpnp:opencv:3.2.0-0" level="project" />
     <orderEntry type="library" scope="PROVIDED" name="Gradle: khttp:khttp:0.1.0" level="project" />
     <orderEntry type="library" scope="PROVIDED" name="Gradle: net.dv8tion:JDA:3.3.0_266" level="project" />
     <orderEntry type="library" scope="PROVIDED" name="Gradle: com.sedmelluq:lavaplayer:1.2.42" level="project" />
@@ -92,6 +93,7 @@
     <orderEntry type="library" scope="RUNTIME" name="Gradle: org.slf4j:slf4j-simple:1.8.0-alpha2" level="project" />
     <orderEntry type="library" scope="RUNTIME" name="Gradle: org.jruby:jruby-complete:9.1.13.0" level="project" />
     <orderEntry type="library" scope="RUNTIME" name="Gradle: commons-validator:commons-validator:1.6" level="project" />
+    <orderEntry type="library" scope="RUNTIME" name="Gradle: org.openpnp:opencv:3.2.0-0" level="project" />
     <orderEntry type="library" scope="RUNTIME" name="Gradle: khttp:khttp:0.1.0" level="project" />
     <orderEntry type="library" scope="RUNTIME" name="Gradle: net.dv8tion:JDA:3.3.0_266" level="project" />
     <orderEntry type="library" scope="RUNTIME" name="Gradle: com.sedmelluq:lavaplayer:1.2.42" level="project" />
@@ -135,6 +137,7 @@
     <orderEntry type="library" scope="TEST" name="Gradle: org.slf4j:slf4j-simple:1.8.0-alpha2" level="project" />
     <orderEntry type="library" scope="TEST" name="Gradle: org.jruby:jruby-complete:9.1.13.0" level="project" />
     <orderEntry type="library" scope="TEST" name="Gradle: commons-validator:commons-validator:1.6" level="project" />
+    <orderEntry type="library" scope="TEST" name="Gradle: org.openpnp:opencv:3.2.0-0" level="project" />
     <orderEntry type="library" scope="TEST" name="Gradle: khttp:khttp:0.1.0" level="project" />
     <orderEntry type="library" scope="TEST" name="Gradle: net.dv8tion:JDA:3.3.0_266" level="project" />
     <orderEntry type="library" scope="TEST" name="Gradle: com.sedmelluq:lavaplayer:1.2.42" level="project" />

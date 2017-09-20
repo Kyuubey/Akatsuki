@@ -42,6 +42,7 @@ dependencies {
     compile group: 'org.slf4j', name: 'slf4j-simple', version: '1.8.0-alpha2'
     compile group: 'org.jruby', name: 'jruby-complete', version: '9.1.13.0'
     compile group: 'commons-validator', name: 'commons-validator', version: '1.6'
+    compile group: 'org.openpnp', name: 'opencv', version: '3.2.0-0'
     compile 'khttp:khttp:0.1.0'
     compile 'net.dv8tion:JDA:3.3.0_266'
     compile 'com.sedmelluq:lavaplayer:1.2.42'
