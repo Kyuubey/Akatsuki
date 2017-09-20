@@ -44,13 +44,15 @@ class TrackScheduler(private val player: AudioPlayer, private val manager: Guild
 
             if (nextTrack != null)
                 embed.setFooter("Next: ${nextTrack.info.title}", null)
-            else {
+            /* TODO impl autoplay from yt
+            if (manager.autoplay && track.info.uri.indexOf("youtube") > -1) {
+
+            }*/ else
                 MusicManager.inactivityScheduler.schedule(timerTask {
                     if (player.playingTrack != null || !manager.textChannel.guild.audioManager.isConnected) return@timerTask
                     manager.textChannel.sendMessage("Left voicechannel because of inactivity").queue()
                     MusicManager.leave(manager.textChannel.guild.id)
                 }, 300000L)
-            }
             manager.textChannel.sendMessage(embed.build()).queue()
             next()
         }

@@ -15,7 +15,8 @@ fun main (args: Array<String>) {
 
     val bot = Akatsuki(token, db_name, db_user, db_pass)
 
-    bot.buildSharded(3)
+    // bot.buildSharded(3)
+    bot.build()
     bot.addOwner(System.getenv("AKATSUKI_OWNER_ID") ?: "")
     bot.addPrefix("awoo!")
     bot.setGame("awoo~ | ${bot.jda!!.guilds.size} Guild(s)!")

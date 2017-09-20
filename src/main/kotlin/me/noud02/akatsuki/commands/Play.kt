@@ -26,7 +26,7 @@ class Play : Command() {
         if (!ctx.guild!!.audioManager.isConnected)
             return ctx.send("You must be in a voice channel to execute this command!")
 
-        var search = ctx.rawArgs.joinToString(" ")
+        val search = ctx.rawArgs.joinToString(" ")
 
         MusicManager.playerManager.loadItemOrdered(manager, search, object : AudioLoadResultHandler {
             override fun loadFailed(exception: FriendlyException) = ctx.send("Failed to add song to queue: ${exception.message}")
