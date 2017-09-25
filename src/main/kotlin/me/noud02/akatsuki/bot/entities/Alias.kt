@@ -1,4 +1,3 @@
 package me.noud02.akatsuki.bot.entities
 
-class Alias {
-}
+annotation class Alias(val aliases: Array<String>)
