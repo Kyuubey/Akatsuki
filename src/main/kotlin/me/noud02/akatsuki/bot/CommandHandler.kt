@@ -1,20 +1,19 @@
 package me.noud02.akatsuki.bot
 
-import me.aurieh.ares.exposed.async.asyncTransaction
 import me.aurieh.ares.utils.ArgParser
 import me.noud02.akatsuki.bot.entities.*
-import me.noud02.akatsuki.bot.schema.Guilds
 import net.dv8tion.jda.core.Permission
 import net.dv8tion.jda.core.entities.Channel
 import net.dv8tion.jda.core.entities.Member
 import net.dv8tion.jda.core.events.message.MessageReceivedEvent
-import org.jetbrains.exposed.sql.select
+import org.apache.commons.validator.routines.UrlValidator
 import org.reflections.Reflections
 import org.reflections.util.ClasspathHelper
 import org.reflections.util.ConfigurationBuilder
 
 class CommandHandler(private val client: Akatsuki) {
     val commands = mutableMapOf<String, Command>()
+    val aliases = mutableMapOf<String, String>()
 
     init {
         loadAll()
@@ -30,8 +29,15 @@ class CommandHandler(private val client: Akatsuki) {
                 .forEach {
                     if (!it.isInterface) {
                         val ann = it.annotations.filterIsInstance<Load>()
-                        if (ann.isNotEmpty() && ann.first().bool)
-                            addCommand(it.newInstance() as Command)
+                        val aliases = it.annotations.filterIsInstance<Alias>()
+                        if (ann.isNotEmpty() && ann.first().bool) {
+                            val cmd = it.newInstance() as Command
+                            addCommand(cmd)
+                            if (aliases.isNotEmpty())
+                                for (alias in aliases.first().aliases) {
+                                    this.aliases[alias] = cmd.name
+                                }
+                        }
                     }
                 }
     }
@@ -40,23 +46,11 @@ class CommandHandler(private val client: Akatsuki) {
         if (event.author.isBot)
             return
 
-        /*if (event.guild != null && guildPrefixes.isEmpty())
-            asyncTransaction(client.pool) {
-                val guild = Guilds.select {
-                    Guilds.id.eq(event.guild.id)
-                }
-
-                if (guild.count() == 0)
-                    return@asyncTransaction
-
-                handle(event, guild.first()[Guilds.prefixes])
-            }.await()*/
-
-        val usedPrefix: String? = client.prefixes.lastOrNull { event.message.content.startsWith(it) } ?: guildPrefixes.lastOrNull { event.message.content.startsWith(it) }
+        val usedPrefix: String? = client.prefixes.lastOrNull { event.message.rawContent.startsWith(it) } ?: guildPrefixes.lastOrNull { event.message.rawContent.startsWith(it) }
 
         if (usedPrefix != null) {
-            val cmd: String = event.message.content.substring(usedPrefix.length).split(" ")[0]
-            var args: List<String> = event.message.content.substring(usedPrefix.length).split(" ")
+            var cmd: String = event.message.rawContent.substring(usedPrefix.length).split(" ")[0]
+            var args: List<String> = event.message.rawContent.substring(usedPrefix.length).split(" ")
 
             if (args.isNotEmpty())
                 args = args.drop(1)
@@ -66,7 +60,10 @@ class CommandHandler(private val client: Akatsuki) {
             val newPerms: MutableMap<String, Boolean>
 
             if (!commands.contains(cmd))
-                return
+                if (aliases.contains(cmd))
+                    cmd = aliases[cmd] as String
+                else
+                    return
 
             if ((commands[cmd] as Command).ownerOnly && !client.owners.contains(event.author.id))
                 return
@@ -167,10 +164,16 @@ class CommandHandler(private val client: Akatsuki) {
                 // "channel" ->
                 // "role" ->
                 // "voicechannel" ->
+                "url" -> {
+                    if (!UrlValidator().isValid(arg2))
+                        throw Exception("Argument is not a valid URL!")
+                    else
+                        newArgs[arg.name] = arg2
+                }
                 "user" -> {
-                    // TODO Add mention using regex
                     if (event.guild != null) {
                         val user: Member = when {
+                            "<@!?\\d+>".toRegex().matches(arg2) -> try { event.guild.getMemberById("<@!?(\\d+)>".toRegex().matchEntire(arg2)?.groupValues?.get(1)) } catch (e: Throwable) { throw Exception("Couldn't find that user!") }
                             event.guild.getMembersByName(arg2, true).isNotEmpty() -> event.guild.getMembersByName(arg2, true)[0]
                             event.guild.getMembersByEffectiveName(arg2, true).isNotEmpty() -> event.guild.getMembersByEffectiveName(arg2, true)[0]
                             event.guild.getMemberById(arg2) != null -> event.guild.getMemberById(arg2)
