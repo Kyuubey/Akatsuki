@@ -10,7 +10,8 @@ import java.io.*
 import java.net.URL
 import javax.imageio.ImageIO
 
-@Load
+// @Load
+// TODO fix this command
 @Argument("text", "string")
 class ILikeThat : Command() {
     override val name = "ilikethat"
