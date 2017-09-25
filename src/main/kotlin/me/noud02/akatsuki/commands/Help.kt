@@ -1,11 +1,12 @@
 package me.noud02.akatsuki.commands
 
-import me.noud02.akatsuki.bot.entities.Argument
-import me.noud02.akatsuki.bot.entities.Command
-import me.noud02.akatsuki.bot.entities.Context
-import me.noud02.akatsuki.bot.entities.Load
+import me.noud02.akatsuki.bot.entities.*
 
 @Load
+@Alias([
+    "--help",
+    "-h"
+])
 @Argument("command", "string", true)
 class Help : Command() {
     override val name = "help"
@@ -16,7 +17,7 @@ class Help : Command() {
             return ctx.send(ctx.help(ctx.args["command"] as String))
         else {
             val commands: List<String> = ctx.client.cmdHandler.commands.toSortedMap().map { entry: Map.Entry<String, Command> -> "\t${entry.value.name}" + " ".repeat(20 - entry.value.name.length) + entry.value.desc }
-            val text = "Commands:\n\n${commands.joinToString("\n")}"
+            val text = "Flags:\n\n\t-h, --help${" ".repeat(10)}Get help on a command!\n\nCommands:\n\n${commands.joinToString("\n")}"
             val partSize = 40
             val parts = mutableListOf<String>()
             val lines = text.split("\n")
