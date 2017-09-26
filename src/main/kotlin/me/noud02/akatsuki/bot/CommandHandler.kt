@@ -10,6 +10,7 @@ import org.apache.commons.validator.routines.UrlValidator
 import org.reflections.Reflections
 import org.reflections.util.ClasspathHelper
 import org.reflections.util.ConfigurationBuilder
+import java.util.*
 
 class CommandHandler(private val client: Akatsuki) {
     val commands = mutableMapOf<String, Command>()
@@ -42,9 +43,11 @@ class CommandHandler(private val client: Akatsuki) {
                 }
     }
 
-    fun handle(event: MessageReceivedEvent, guildPrefixes: Array<String> = arrayOf()) {
+    fun handle(event: MessageReceivedEvent, guildPrefixes: Array<String> = arrayOf(), locale: Locale = Locale("en", "US")) {
         if (event.author.isBot)
             return
+
+        val lang = ResourceBundle.getBundle("i18n.Kyubey", locale)
 
         val usedPrefix: String? = client.prefixes.lastOrNull { event.message.rawContent.startsWith(it) } ?: guildPrefixes.lastOrNull { event.message.rawContent.startsWith(it) }
 
@@ -94,7 +97,7 @@ class CommandHandler(private val client: Akatsuki) {
                     return event.channel.sendMessage(err.message).queue()
                 }
 
-                ctx = Context(event, client, command, newArgs, raw, flags, newPerms)
+                ctx = Context(event, client, command, newArgs, raw, flags, newPerms, lang)
 
                 if (!command.noHelp && (flags.argMap.contains("h") || flags.argMap.contains("help")))
                     return ctx.send(ctx.help())
@@ -118,7 +121,7 @@ class CommandHandler(private val client: Akatsuki) {
                     return event.channel.sendMessage(err.message).queue()
                 }
 
-                ctx = Context(event, client, commands[cmd] as Command, newArgs, raw, flags, newPerms)
+                ctx = Context(event, client, commands[cmd] as Command, newArgs, raw, flags, newPerms, lang)
 
                 command.run(ctx)
             }
