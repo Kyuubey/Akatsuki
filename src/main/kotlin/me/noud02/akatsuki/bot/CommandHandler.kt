@@ -2,6 +2,7 @@ package me.noud02.akatsuki.bot
 
 import me.aurieh.ares.utils.ArgParser
 import me.noud02.akatsuki.bot.entities.*
+import me.noud02.akatsuki.bot.extensions.UTF8Control
 import net.dv8tion.jda.core.Permission
 import net.dv8tion.jda.core.entities.Channel
 import net.dv8tion.jda.core.entities.Member
@@ -47,7 +48,7 @@ class CommandHandler(private val client: Akatsuki) {
         if (event.author.isBot)
             return
 
-        val lang = ResourceBundle.getBundle("i18n.Kyubey", locale)
+        val lang = ResourceBundle.getBundle("i18n.Kyubey", locale, UTF8Control())
 
         val usedPrefix: String? = client.prefixes.lastOrNull { event.message.rawContent.startsWith(it) } ?: guildPrefixes.lastOrNull { event.message.rawContent.startsWith(it) }
 
