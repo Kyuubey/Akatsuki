@@ -3,10 +3,7 @@ package me.noud02.akatsuki.commands
 import me.noud02.akatsuki.bot.entities.*
 
 @Load
-@Alias([
-    "--help",
-    "-h"
-])
+@Alias("--help", "-h")
 @Argument("command", "string", true)
 class Help : Command() {
     override val name = "help"
