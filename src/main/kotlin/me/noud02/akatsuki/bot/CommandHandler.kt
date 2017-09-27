@@ -11,11 +11,13 @@ import org.apache.commons.validator.routines.UrlValidator
 import org.reflections.Reflections
 import org.reflections.util.ClasspathHelper
 import org.reflections.util.ConfigurationBuilder
+import org.slf4j.LoggerFactory
 import java.util.*
 
 class CommandHandler(private val client: Akatsuki) {
     val commands = mutableMapOf<String, Command>()
-    val aliases = mutableMapOf<String, String>()
+    private val aliases = mutableMapOf<String, String>()
+    private val logger = LoggerFactory.getLogger(this::class.java)
 
     init {
         loadAll()
@@ -69,11 +71,16 @@ class CommandHandler(private val client: Akatsuki) {
                 else
                     return
 
+            if (event.guild != null)
+                logger.info("[Command] (Guild ${event.guild.name} (${event.guild.id})) - ${event.author.name}#${event.author.discriminator} (${event.author.id}): ${event.message.content}")
+            else
+                logger.info("[Command] (DM) - ${event.author.name}#${event.author.discriminator} (${event.author.id}): ${event.message.content}")
+
             if ((commands[cmd] as Command).ownerOnly && !client.owners.contains(event.author.id))
                 return
 
             if ((commands[cmd] as Command).guildOnly && event.guild == null)
-                return event.channel.sendMessage("This command can only be used in a server!").queue()
+                return event.channel.sendMessage("This command can only be used in a server!").queue() // TODO add translations for this
 
             var command = commands[cmd] as Command
 
@@ -92,8 +99,8 @@ class CommandHandler(private val client: Akatsuki) {
                     return event.channel.sendMessage(help(command)).queue()
 
                 try {
-                    newPerms = checkPermissions(event, command)
-                    newArgs = checkArguments(event, command, args)
+                    newPerms = checkPermissions(event, command, lang)
+                    newArgs = checkArguments(event, command, args, lang)
                 } catch (err: Exception) {
                     return event.channel.sendMessage(err.message).queue()
                 }
@@ -116,8 +123,8 @@ class CommandHandler(private val client: Akatsuki) {
                     return event.channel.sendMessage(help(command)).queue()
 
                 try {
-                    newPerms = checkPermissions(event, commands[cmd] as Command)
-                    newArgs = checkArguments(event, commands[cmd] as Command, args)
+                    newPerms = checkPermissions(event, commands[cmd] as Command, lang)
+                    newArgs = checkArguments(event, commands[cmd] as Command, args, lang)
                 } catch (err: Exception) {
                     return event.channel.sendMessage(err.message).queue()
                 }
@@ -129,20 +136,20 @@ class CommandHandler(private val client: Akatsuki) {
         }
     }
 
-    private fun checkPermissions(event: MessageReceivedEvent, cmd: Command): MutableMap<String, Boolean> {
+    private fun checkPermissions(event: MessageReceivedEvent, cmd: Command, lang: ResourceBundle): MutableMap<String, Boolean> {
         val perms: List<Perm> = cmd::class.annotations.filterIsInstance(Perm::class.java)
         val newPerms = mutableMapOf<String, Boolean>()
 
         for (perm in perms) {
             newPerms[perm.name.name] = event.member?.hasPermission(event.channel as Channel, perm.name) ?: event.member?.hasPermission(Permission.ADMINISTRATOR) ?: false
             if (!perm.optional && !newPerms[perm.name.name]!! && !event.member?.hasPermission(Permission.ADMINISTRATOR)!!)
-                throw Exception("Permission `${perm.name.name}` is required but was not found!")
+                throw Exception(i18n.parse(lang.getString("user_lack_perms"), mapOf("username" to event.author.name, "permission" to i18n.permission(lang, perm.name.name))))
         }
 
         return newPerms
     }
 
-    private fun checkArguments(event: MessageReceivedEvent, cmd: Command, args: List<String>): MutableMap<String, Any> {
+    private fun checkArguments(event: MessageReceivedEvent, cmd: Command, args: List<String>, lang: ResourceBundle): MutableMap<String, Any> {
         val newArgs = mutableMapOf<String, Any>()
 
         val cmdArgs = cmd::class.annotations.filterIsInstance(Argument::class.java).toMutableList()
@@ -158,7 +165,7 @@ class CommandHandler(private val client: Akatsuki) {
                 arg2 = args[i]
             } catch (e: IndexOutOfBoundsException) {
                 if (!arg.optional)
-                    throw Exception("Argument at pos ${i + 1} is required, but was not specified.")
+                    throw Exception(i18n.parse(lang.getString("argument_not_specified"), mapOf("argument" to arg.name, "username" to event.author.name)))
                 else
                     return newArgs
             }
@@ -181,13 +188,13 @@ class CommandHandler(private val client: Akatsuki) {
                             event.guild.getMembersByName(arg2, true).isNotEmpty() -> event.guild.getMembersByName(arg2, true)[0]
                             event.guild.getMembersByEffectiveName(arg2, true).isNotEmpty() -> event.guild.getMembersByEffectiveName(arg2, true)[0]
                             event.guild.getMemberById(arg2) != null -> event.guild.getMemberById(arg2)
-                            else -> throw Exception("Couldn't find that user!")
+                            else -> throw Exception(i18n.parse(lang.getString("user_not_found"), mapOf("username" to event.author.name)))
                         }
 
                         newArgs[arg.name] = user
                     }
                 }
-                "number" -> newArgs[arg.name] = arg2.toIntOrNull() ?: throw Exception("Argument at pos ${i + 1} needs type 'number' but type 'string' was given")
+                "number" -> newArgs[arg.name] = arg2.toIntOrNull() ?: throw Exception("Argument at pos ${i + 1} needs type 'number' but type 'string' was given") // TODO translate this
                 "string" -> newArgs[arg.name] = arg2
                 else -> newArgs[arg.name] = arg2
             }
@@ -222,8 +229,7 @@ class CommandHandler(private val client: Akatsuki) {
         return "```\n${cmd.name} ${usage.joinToString(" ")}\n\n${cmd.desc}\n$formattedSubs$formattedFlags```"
     }
 
-    fun help(cmdd: Command): String {
-        val cmd = cmdd
+    fun help(cmd: Command): String {
         val args = cmd::class.annotations.filterIsInstance(Argument::class.java).toMutableList()
         val otherArgs = cmd::class.annotations.filterIsInstance(Arguments::class.java)
 
