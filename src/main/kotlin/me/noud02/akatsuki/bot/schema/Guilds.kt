@@ -8,4 +8,5 @@ object Guilds : Table() {
     val name = varchar("name", 100)
     val lang = text("lang")
     val prefixes = pgArray<String>("prefixes", "varchar")
+    val forceLang = bool("forceLang")
 }
