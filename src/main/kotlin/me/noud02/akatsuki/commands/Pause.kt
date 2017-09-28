@@ -19,8 +19,8 @@ class Pause : Command() {
         manager.player.isPaused = !state
 
         if (!state)
-            ctx.send("Paused the music!")
+            ctx.send(ctx.lang.getString("paused"))
         else
-            ctx.send("Resumed the music!")
+            ctx.send("Resumed the music!") // TODO add translations for "resumed"
     }
 }

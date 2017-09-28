@@ -11,6 +11,7 @@ import me.noud02.akatsuki.bot.entities.Argument
 import me.noud02.akatsuki.bot.entities.Command
 import me.noud02.akatsuki.bot.entities.Context
 import me.noud02.akatsuki.bot.entities.Load
+import me.noud02.akatsuki.bot.i18n
 import me.noud02.akatsuki.bot.music.MusicManager
 
 @Load
@@ -24,9 +25,11 @@ class Play : Command() {
         val manager = MusicManager.musicManagers[ctx.guild?.id] ?: return ctx.send("Not connected!")
 
         if (!ctx.guild!!.audioManager.isConnected)
-            return ctx.send("You must be in a voice channel to execute this command!")
+            return ctx.send(i18n.parse(ctx.lang.getString("join_voice_channel_fail"), mapOf("username" to ctx.author.name)))
 
         val search = ctx.rawArgs.joinToString(" ")
+
+        // TODO change translations from "download" to "add"
 
         MusicManager.playerManager.loadItemOrdered(manager, search, object : AudioLoadResultHandler {
             override fun loadFailed(exception: FriendlyException) = ctx.send("Failed to add song to queue: ${exception.message}")
