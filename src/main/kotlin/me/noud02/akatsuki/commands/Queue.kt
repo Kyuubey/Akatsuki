@@ -27,6 +27,7 @@ class Clear : Command() {
 class Queue : Command() {
     override val name = "queue"
     override val desc = "View the queue!"
+    override val guildOnly = true
 
     init {
         addSubcommand(Clear())
@@ -40,7 +41,7 @@ class Queue : Command() {
         val embed = EmbedBuilder()
 
         embed.setColor(Color.CYAN)
-        embed.setTitle("Queue:")
+        embed.setTitle("${ctx.lang.getString("queue")}:")
         val desc = embed.descriptionBuilder.append(formatted)
         embed.setDescription(desc)
 

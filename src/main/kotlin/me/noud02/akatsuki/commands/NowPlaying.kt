@@ -10,15 +10,16 @@ import net.dv8tion.jda.core.EmbedBuilder
 class NowPlaying : Command() {
     override val name = "np"
     override val desc = "Get the current song"
+    override val guildOnly = true
 
     override fun run(ctx: Context) {
-        val manager = MusicManager.musicManagers[ctx.guild?.id] ?: return ctx.send("Not connected!")
+        val manager = MusicManager.musicManagers[ctx.guild?.id] ?: return ctx.send("Not connected!") // TODO add translations for "not connected"
         val embed = EmbedBuilder()
 
-        embed.setAuthor("Now playing", null, null)
+        embed.setAuthor(ctx.lang.getString("now_playing"), null, null)
         embed.setTitle(manager.player.playingTrack.info.title)
         if (manager.scheduler.queue.isNotEmpty())
-            embed.setFooter("Next: ${manager.scheduler.queue.peek().info.title}", null)
+            embed.setFooter("Next: ${manager.scheduler.queue.peek().info.title}", null) // TODO add translations for "next"
 
         ctx.send(embed.build())
     }

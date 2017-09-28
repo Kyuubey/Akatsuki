@@ -1,21 +1,20 @@
 package me.noud02.akatsuki.commands
 
+import me.aurieh.ares.exposed.async.asyncTransaction
 import me.noud02.akatsuki.bot.entities.*
 import me.noud02.akatsuki.bot.schema.Guilds
 import net.dv8tion.jda.core.Permission
-import org.jetbrains.exposed.sql.SqlExpressionBuilder
 import org.jetbrains.exposed.sql.select
-import org.jetbrains.exposed.sql.transactions.transaction
 import org.jetbrains.exposed.sql.update
 
 @Perm(Permission.MANAGE_SERVER)
 @Argument("prefix", "string")
-class AddPrefix : Command() {
+class AddPrefix : AsyncCommand() {
     override val name = "add"
     override val desc = "Add a prefix"
 
-    override fun run(ctx: Context) {
-        transaction {
+    override suspend fun asyncRun(ctx: Context) {
+        asyncTransaction(ctx.client.pool) {
             val guild = Guilds.select {
                 Guilds.id.eq(ctx.guild?.id)
             }.first()
@@ -36,31 +35,27 @@ class AddPrefix : Command() {
 
 @Perm(Permission.MANAGE_SERVER)
 @Argument("prefix", "string")
-class RemPrefix : Command() {
+class RemPrefix : AsyncCommand() {
     override val name = "rem"
     override val desc = "Remove a prefix"
 
-    override fun run(ctx: Context) {
-        transaction {
-            val guild = Guilds.select {
+    override suspend fun asyncRun(ctx: Context) {
+        asyncTransaction(ctx.client.pool) {
+            val guild = Guilds.select { // TODO add guild from db to Context class
                 Guilds.id.eq(ctx.guild?.id)
             }.first()
 
-            if (guild[Guilds.prefixes].size == 1) {
-                ctx.send("You need to have at least 1 custom prefix!")
-                return@transaction
-            }
+            if (guild[Guilds.prefixes].size == 1)
+                return@asyncTransaction ctx.send("You need to have at least 1 custom prefix!") // TODO add translations for this
 
-            if (guild[Guilds.prefixes].isEmpty()) {
-                ctx.send("No prefixes to remove!")
-                return@transaction
-            }
+            if (guild[Guilds.prefixes].isEmpty())
+                return@asyncTransaction ctx.send("No prefixes to remove!") // TODO add translations for this
 
             try {
                 Guilds.update({
                     Guilds.id.eq(ctx.guild?.id)
                 }) {
-                    val list = mutableListOf(*guild[Guilds.prefixes])
+                    val list = guild[Guilds.prefixes].toMutableList()
                     list.remove(ctx.args["prefix"])
                     it[prefixes] = list.toTypedArray()
                 }
@@ -73,7 +68,7 @@ class RemPrefix : Command() {
 }
 
 @Load
-class Prefix : Command() {
+class Prefix : AsyncCommand() {
     override val name = "prefix"
     override val desc = "Add, view or delete the guild's prefixes"
 
@@ -82,13 +77,13 @@ class Prefix : Command() {
         addSubcommand(RemPrefix())
     }
 
-    override fun run(ctx: Context) {
-        transaction {
+    override suspend fun asyncRun(ctx: Context) {
+        asyncTransaction(ctx.client.pool) {
             val guild = Guilds.select {
                 Guilds.id.eq(ctx.guild?.id)
             }.first()
 
-            ctx.send("Current prefixes: ${guild[Guilds.prefixes].joinToString(", ")}")
+            ctx.send("Current prefixes: ${guild[Guilds.prefixes].joinToString(", ")}") // TODO change this translation to allow more prefixes
         }
     }
 }
