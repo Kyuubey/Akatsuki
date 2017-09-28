@@ -107,7 +107,7 @@ class CommandHandler(private val client: Akatsuki) {
             val guild = if (guilds != null && !guilds.empty()) guilds.first() else null
             val user = users.first()
 
-            val locale = if (guild != null)
+            val locale = if (guild != null && guild[Guilds.forceLang])
                 Locale(guild[Guilds.lang].split("_")[0], guild[Guilds.lang].split("_")[1])
             else
                 Locale(user[Users.lang].split("_")[0], user[Users.lang].split("_")[1])
