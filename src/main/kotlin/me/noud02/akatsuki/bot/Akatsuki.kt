@@ -14,19 +14,16 @@ import net.dv8tion.jda.core.events.guild.GuildLeaveEvent
 import net.dv8tion.jda.core.events.message.MessageReceivedEvent
 import net.dv8tion.jda.core.hooks.ListenerAdapter
 import net.dv8tion.jda.core.requests.SessionReconnectQueue
-import org.jetbrains.exposed.sql.Database
-import org.jetbrains.exposed.sql.SchemaUtils
-import org.jetbrains.exposed.sql.insert
-import org.jetbrains.exposed.sql.select
+import org.jetbrains.exposed.sql.*
 import org.slf4j.LoggerFactory
 import java.util.concurrent.ExecutorService
 import java.util.concurrent.Executors
 
 class Akatsuki(token: String, db_name: String, db_user: String, db_password: String) : ListenerAdapter() {
     private val eventHandler = EventHandler(this)
-    private val loggr = LoggerFactory.getLogger(this::class.java)
+    private val logger = LoggerFactory.getLogger(this::class.java)
 
-    private val pool: ExecutorService by lazy {
+    val pool: ExecutorService by lazy {
         Executors.newCachedThreadPool {
             Thread(it, "Akatsuki-Pool-Thread").apply {
                 isDaemon = true
@@ -54,7 +51,7 @@ class Akatsuki(token: String, db_name: String, db_user: String, db_password: Str
         }
     }
 
-    suspend fun init() {
+    private suspend fun init() {
         asyncTransaction(pool) {
             SchemaUtils.create(Guilds, Users)
         }.await()
@@ -88,45 +85,19 @@ class Akatsuki(token: String, db_name: String, db_user: String, db_password: Str
         if (prefixes.size == 0)
             prefixes = arrayListOf("!")
 
-        if (event.guild != null)
-            async(coroutineDispatcher) {
-                handleGuildMessage(event)
+        if (event.author.isBot)
+            return
+
+        async(coroutineDispatcher) {
+            try {
+                cmdHandler.handleMessage(event)
+            } catch (e: Exception) {
+                this@Akatsuki.logger.error("Error while trying to handle message", e)
             }
-        else
-            cmdHandler.handle(event)
+        }
     }
 
-    private suspend fun handleGuildMessage(event: MessageReceivedEvent) {
-        asyncTransaction(pool) {
-            var res = Guilds.select {
-                Guilds.id.eq(event.guild.id)
-            }
-
-            if (res.count() == 0)
-                try {
-                    Guilds.insert {
-                        it[id] = event.guild.id
-                        it[name] = event.guild.name
-                        it[lang] = "en_US"
-                        it[prefixes] = arrayOf("awoo!")
-                    }
-
-                    res = Guilds.select {
-                        Guilds.id.eq(event.guild.id)
-                    }
-
-                    loggr.info("Added guild ${event.guild.name} to the database!")
-                } catch (e: Throwable) {
-                    loggr.error("Error while trying to insert guild ${event.guild.name} in DB", e)
-                }
-
-            cmdHandler.handle(event, res.first()[Guilds.prefixes])
-        }.await()
-    }
-
-    override fun onReady(event: ReadyEvent) {
-        loggr?.info("Ready!")
-    }
+    override fun onReady(event: ReadyEvent) = logger.info("Ready!")
 
     override fun onGuildJoin(event: GuildJoinEvent) = eventHandler.guildJoin(event)
 
