@@ -29,7 +29,7 @@ class AddPrefix : AsyncCommand() {
             } catch (e: Throwable) {
                 ctx.send("Error while trying to update prefixes: ${e.message}")
             }
-        }
+        }.await()
     }
 }
 
@@ -63,7 +63,7 @@ class RemPrefix : AsyncCommand() {
             } catch (e: Throwable) {
                 ctx.send("Error while trying to update prefixes: ${e.message}")
             }
-        }
+        }.await()
     }
 }
 
@@ -84,6 +84,6 @@ class Prefix : AsyncCommand() {
             }.first()
 
             ctx.send("Current prefixes: ${guild[Guilds.prefixes].joinToString(", ")}") // TODO change this translation to allow more prefixes
-        }
+        }.await()
     }
 }
