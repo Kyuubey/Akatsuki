@@ -45,7 +45,6 @@ dependencies {
     compile group: 'org.openpnp', name: 'opencv', version: '3.2.0-0'
     compile 'khttp:khttp:0.1.0'
     compile 'net.dv8tion:JDA:3.3.1_284'
-    compile 'com.jagrosh:JDA-Utilities:1.7'
     compile 'com.sedmelluq:lavaplayer:1.2.42'
     compile 'org.jetbrains.exposed:exposed:0.8.5'
     compile 'org.postgresql:postgresql:42.1.4'
