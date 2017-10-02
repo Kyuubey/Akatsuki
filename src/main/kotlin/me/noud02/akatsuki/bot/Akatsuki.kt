@@ -1,5 +1,6 @@
 package me.noud02.akatsuki.bot
 
+import com.jagrosh.jdautilities.waiter.EventWaiter
 import kotlinx.coroutines.experimental.async
 import me.aurieh.ares.exposed.async.asyncTransaction
 import me.noud02.akatsuki.bot.schema.Guilds
@@ -33,9 +34,11 @@ class Akatsuki(token: String, db_name: String, db_user: String, db_password: Str
     val coroutineDispatcher by lazy {
         me.noud02.akatsuki.bot.entities.CoroutineDispatcher(pool)
     }
+    private val waiter = EventWaiter()
     private val builder: JDABuilder = JDABuilder(AccountType.BOT)
             .setToken(token)
             .addEventListener(this)
+            .addEventListener(waiter)
             .setReconnectQueue(SessionReconnectQueue())
 
     val cmdHandler = CommandHandler(this)
