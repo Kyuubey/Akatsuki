@@ -1,7 +1,7 @@
 package me.noud02.akatsuki.bot
 
-import com.jagrosh.jdautilities.waiter.EventWaiter
 import kotlinx.coroutines.experimental.async
+import me.aurieh.ares.core.entities.EventWaiter
 import me.aurieh.ares.exposed.async.asyncTransaction
 import me.noud02.akatsuki.bot.schema.Guilds
 import me.noud02.akatsuki.bot.schema.Users
@@ -9,10 +9,13 @@ import net.dv8tion.jda.core.AccountType
 import net.dv8tion.jda.core.JDA
 import net.dv8tion.jda.core.JDABuilder
 import net.dv8tion.jda.core.entities.Game
+import net.dv8tion.jda.core.events.Event
 import net.dv8tion.jda.core.events.ReadyEvent
 import net.dv8tion.jda.core.events.guild.GuildJoinEvent
 import net.dv8tion.jda.core.events.guild.GuildLeaveEvent
 import net.dv8tion.jda.core.events.message.MessageReceivedEvent
+import net.dv8tion.jda.core.events.message.react.MessageReactionAddEvent
+import net.dv8tion.jda.core.events.message.react.MessageReactionRemoveEvent
 import net.dv8tion.jda.core.hooks.ListenerAdapter
 import net.dv8tion.jda.core.requests.SessionReconnectQueue
 import org.jetbrains.exposed.sql.*
@@ -34,11 +37,11 @@ class Akatsuki(token: String, db_name: String, db_user: String, db_password: Str
     val coroutineDispatcher by lazy {
         me.noud02.akatsuki.bot.entities.CoroutineDispatcher(pool)
     }
+
     private val waiter = EventWaiter()
     private val builder: JDABuilder = JDABuilder(AccountType.BOT)
             .setToken(token)
             .addEventListener(this)
-            .addEventListener(waiter)
             .setReconnectQueue(SessionReconnectQueue())
 
     val cmdHandler = CommandHandler(this)
@@ -83,6 +86,8 @@ class Akatsuki(token: String, db_name: String, db_user: String, db_password: Str
     fun addPrefix(prefix: String) = prefixes.add(prefix)
 
     fun addOwner(id: String) = owners.add(id)
+
+    override fun onGenericEvent(event: Event) = waiter.emit(event)
 
     override fun onMessageReceived(event: MessageReceivedEvent) {
         if (prefixes.size == 0)
