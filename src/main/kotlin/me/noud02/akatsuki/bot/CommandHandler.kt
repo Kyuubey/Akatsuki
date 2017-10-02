@@ -1,6 +1,5 @@
 package me.noud02.akatsuki.bot
 
-import kotlinx.coroutines.experimental.async
 import me.aurieh.ares.exposed.async.asyncTransaction
 import me.aurieh.ares.utils.ArgParser
 import me.noud02.akatsuki.bot.entities.*
@@ -13,8 +12,6 @@ import net.dv8tion.jda.core.entities.Member
 import net.dv8tion.jda.core.events.message.MessageReceivedEvent
 import org.apache.commons.validator.routines.UrlValidator
 import org.jetbrains.exposed.sql.Query
-import org.jetbrains.exposed.sql.ResultRow
-import org.jetbrains.exposed.sql.SqlExpressionBuilder.eq
 import org.jetbrains.exposed.sql.insert
 import org.jetbrains.exposed.sql.select
 import org.reflections.Reflections
