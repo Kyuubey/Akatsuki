@@ -1,5 +1,6 @@
 package me.noud02.akatsuki.commands
 
+import me.noud02.akatsuki.bot.entities.Alias
 import me.noud02.akatsuki.bot.entities.Command
 import me.noud02.akatsuki.bot.entities.Context
 import me.noud02.akatsuki.bot.entities.Load
@@ -7,8 +8,9 @@ import me.noud02.akatsuki.bot.music.MusicManager
 import net.dv8tion.jda.core.EmbedBuilder
 
 @Load
+@Alias("np")
 class NowPlaying : Command() {
-    override val name = "np"
+    override val name = "nowplaying"
     override val desc = "Get the current song"
     override val guildOnly = true
 
