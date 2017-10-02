@@ -21,6 +21,7 @@
             <array />
           </option>
           <option name="coroutinesState" value="enable" />
+          <option name="version" value="true" />
         </compilerArguments>
       </configuration>
     </facet>
@@ -52,7 +53,6 @@
     <orderEntry type="library" scope="PROVIDED" name="Gradle: org.openpnp:opencv:3.2.0-0" level="project" />
     <orderEntry type="library" scope="PROVIDED" name="Gradle: khttp:khttp:0.1.0" level="project" />
     <orderEntry type="library" scope="PROVIDED" name="Gradle: net.dv8tion:JDA:3.3.1_284" level="project" />
-    <orderEntry type="library" scope="PROVIDED" name="Gradle: com.jagrosh:JDA-Utilities:1.7" level="project" />
     <orderEntry type="library" scope="PROVIDED" name="Gradle: com.sedmelluq:lavaplayer:1.2.42" level="project" />
     <orderEntry type="library" scope="PROVIDED" name="Gradle: org.jetbrains.exposed:exposed:0.8.5" level="project" />
     <orderEntry type="library" scope="PROVIDED" name="Gradle: org.postgresql:postgresql:42.1.4" level="project" />
@@ -97,7 +97,6 @@
     <orderEntry type="library" scope="RUNTIME" name="Gradle: org.openpnp:opencv:3.2.0-0" level="project" />
     <orderEntry type="library" scope="RUNTIME" name="Gradle: khttp:khttp:0.1.0" level="project" />
     <orderEntry type="library" scope="RUNTIME" name="Gradle: net.dv8tion:JDA:3.3.1_284" level="project" />
-    <orderEntry type="library" scope="RUNTIME" name="Gradle: com.jagrosh:JDA-Utilities:1.7" level="project" />
     <orderEntry type="library" scope="RUNTIME" name="Gradle: com.sedmelluq:lavaplayer:1.2.42" level="project" />
     <orderEntry type="library" scope="RUNTIME" name="Gradle: org.jetbrains.exposed:exposed:0.8.5" level="project" />
     <orderEntry type="library" scope="RUNTIME" name="Gradle: org.postgresql:postgresql:42.1.4" level="project" />
@@ -142,7 +141,6 @@
     <orderEntry type="library" scope="TEST" name="Gradle: org.openpnp:opencv:3.2.0-0" level="project" />
     <orderEntry type="library" scope="TEST" name="Gradle: khttp:khttp:0.1.0" level="project" />
     <orderEntry type="library" scope="TEST" name="Gradle: net.dv8tion:JDA:3.3.1_284" level="project" />
-    <orderEntry type="library" scope="TEST" name="Gradle: com.jagrosh:JDA-Utilities:1.7" level="project" />
     <orderEntry type="library" scope="TEST" name="Gradle: com.sedmelluq:lavaplayer:1.2.42" level="project" />
     <orderEntry type="library" scope="TEST" name="Gradle: org.jetbrains.exposed:exposed:0.8.5" level="project" />
     <orderEntry type="library" scope="TEST" name="Gradle: org.postgresql:postgresql:42.1.4" level="project" />
