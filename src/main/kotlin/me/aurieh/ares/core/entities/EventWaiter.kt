@@ -64,14 +64,12 @@ class EventWaiter {
                 if (!fut.isDone) fut.cancel(true)
             }, timeout)
         }
-        if (listeners[listenerType] == null) listeners[listenerType] = mutableListOf<EventListenerWrapper<*>>()
+        if (listeners[listenerType] == null) listeners[listenerType] = mutableListOf()
         listeners[listenerType]?.add(listener)
         return fut
     }
 
-    inline fun<reified T : Event> await(count: Int, timeout: Long, noinline predicate: (T) -> Boolean): CompletableFuture<List<T>> {
-        return awaitEvent(T::class.java, count, timeout, predicate)
-    }
+    inline fun<reified T : Event> await(count: Int, timeout: Long, noinline predicate: (T) -> Boolean): CompletableFuture<List<T>> = awaitEvent(T::class.java, count, timeout, predicate)
 
     open class EventListenerWrapper<T : Event>(val type: Class<T>, private val target: (T, EventListenerWrapper<T>) -> Unit) {
         open operator fun invoke(payload: T) {
