@@ -1,11 +1,15 @@
 package me.noud02.akatsuki.bot
 
+import kotlinx.coroutines.experimental.async
+import kotlinx.coroutines.experimental.future.await
 import me.aurieh.ares.exposed.async.asyncTransaction
 import me.aurieh.ares.utils.ArgParser
 import me.noud02.akatsuki.bot.entities.*
 import me.noud02.akatsuki.bot.extensions.UTF8Control
+import me.noud02.akatsuki.bot.extensions.await
 import me.noud02.akatsuki.bot.schema.Guilds
 import me.noud02.akatsuki.bot.schema.Users
+import me.noud02.akatsuki.bot.utils.UserPicker
 import net.dv8tion.jda.core.Permission
 import net.dv8tion.jda.core.entities.Channel
 import net.dv8tion.jda.core.entities.Member
@@ -115,84 +119,86 @@ class CommandHandler(private val client: Akatsuki) {
 
             val usedPrefix: String? = client.prefixes.lastOrNull { event.message.rawContent.startsWith(it) } ?: guildPrefixes.lastOrNull { event.message.rawContent.startsWith(it) }
 
-            if (usedPrefix != null) {
-                var cmd: String = event.message.rawContent.substring(usedPrefix.length).split(" ")[0]
-                var args: List<String> = event.message.rawContent.substring(usedPrefix.length).split(" ")
+            async(client.coroutineDispatcher) {
+                if (usedPrefix != null) {
+                    var cmd: String = event.message.rawContent.substring(usedPrefix.length).split(" ")[0]
+                    var args: List<String> = event.message.rawContent.substring(usedPrefix.length).split(" ")
 
-                if (args.isNotEmpty())
-                    args = args.drop(1)
+                    if (args.isNotEmpty())
+                        args = args.drop(1)
 
-                val ctx: Context
-                val newArgs: MutableMap<String, Any>
-                val newPerms: MutableMap<String, Boolean>
+                    val ctx: Context
+                    val newArgs: MutableMap<String, Any>
+                    val newPerms: MutableMap<String, Boolean>
 
-                if (!commands.contains(cmd))
-                    if (aliases.contains(cmd))
-                        cmd = aliases[cmd] as String
+                    if (!commands.contains(cmd))
+                        if (aliases.contains(cmd))
+                            cmd = aliases[cmd] as String
+                        else
+                            return@async
+
+                    if (event.guild != null)
+                        this@CommandHandler.logger.info("[Command] (Guild ${event.guild.name} (${event.guild.id})) - ${event.author.name}#${event.author.discriminator} (${event.author.id}): ${event.message.content}")
                     else
-                        return@asyncTransaction
+                        this@CommandHandler.logger.info("[Command] (DM) - ${event.author.name}#${event.author.discriminator} (${event.author.id}): ${event.message.content}")
 
-                if (event.guild != null)
-                    this@CommandHandler.logger.info("[Command] (Guild ${event.guild.name} (${event.guild.id})) - ${event.author.name}#${event.author.discriminator} (${event.author.id}): ${event.message.content}")
-                else
-                    this@CommandHandler.logger.info("[Command] (DM) - ${event.author.name}#${event.author.discriminator} (${event.author.id}): ${event.message.content}")
+                    if ((commands[cmd] as Command).ownerOnly && !client.owners.contains(event.author.id))
+                        return@async
 
-                if ((commands[cmd] as Command).ownerOnly && !client.owners.contains(event.author.id))
-                    return@asyncTransaction
+                    if ((commands[cmd] as Command).guildOnly && event.guild == null)
+                        return@async event.channel.sendMessage("This command can only be used in a server!").queue() // TODO add translations for this
 
-                if ((commands[cmd] as Command).guildOnly && event.guild == null)
-                    return@asyncTransaction event.channel.sendMessage("This command can only be used in a server!").queue() // TODO add translations for this
+                    var command = commands[cmd] as Command
 
-                var command = commands[cmd] as Command
+                    if (args.isNotEmpty() && commands[cmd]?.subcommands?.get(args[0]) is Command) {
+                        val subcmd = args[0]
+                        command = commands[cmd]?.subcommands?.get(subcmd) as Command
+                        args = args.drop(1)
 
-                if (args.isNotEmpty() && commands[cmd]?.subcommands?.get(args[0]) is Command) {
-                    val subcmd = args[0]
-                    command = commands[cmd]?.subcommands?.get(subcmd) as Command
-                    args = args.drop(1)
+                        val raw = args
 
-                    val raw = args
+                        val flags = ArgParser.untypedParseSplit(ArgParser.tokenize(args.joinToString(" ")))
 
-                    val flags = ArgParser.untypedParseSplit(ArgParser.tokenize(args.joinToString(" ")))
+                        args = flags.unmatched
 
-                    args = flags.unmatched
+                        if (!command.noHelp && (flags.argMap.contains("h") || flags.argMap.contains("help")))
+                            return@async event.channel.sendMessage(help(command)).queue()
 
-                    if (!command.noHelp && (flags.argMap.contains("h") || flags.argMap.contains("help")))
-                        return@asyncTransaction event.channel.sendMessage(help(command)).queue()
+                        try {
+                            newPerms = checkPermissions(event, command, lang)
+                            newArgs = checkArguments(event, command, args, lang)
+                        } catch (err: Exception) {
+                            return@async event.channel.sendMessage(err.message).queue()
+                        }
 
-                    try {
-                        newPerms = checkPermissions(event, command, lang)
-                        newArgs = checkArguments(event, command, args, lang)
-                    } catch (err: Exception) {
-                        return@asyncTransaction event.channel.sendMessage(err.message).queue()
+                        ctx = Context(event, client, command, newArgs, raw, flags, newPerms, lang)
+
+                        if (!command.noHelp && (flags.argMap.contains("h") || flags.argMap.contains("help")))
+                            return@async ctx.send(ctx.help())
+
+
+                        command.run(ctx)
+                    } else {
+                        val raw = args
+
+                        val flags = ArgParser.untypedParseSplit(ArgParser.tokenize(args.joinToString(" ")))
+
+                        args = flags.unmatched
+
+                        if (!command.noHelp && (flags.argMap.contains("h") || flags.argMap.contains("help")))
+                            return@async event.channel.sendMessage(help(command)).queue()
+
+                        try {
+                            newPerms = checkPermissions(event, commands[cmd] as Command, lang)
+                            newArgs = checkArguments(event, commands[cmd] as Command, args, lang)
+                        } catch (err: Exception) {
+                            return@async event.channel.sendMessage(err.message).queue()
+                        }
+
+                        ctx = Context(event, client, commands[cmd] as Command, newArgs, raw, flags, newPerms, lang)
+
+                        command.run(ctx)
                     }
-
-                    ctx = Context(event, client, command, newArgs, raw, flags, newPerms, lang)
-
-                    if (!command.noHelp && (flags.argMap.contains("h") || flags.argMap.contains("help")))
-                        return@asyncTransaction ctx.send(ctx.help())
-
-
-                    command.run(ctx)
-                } else {
-                    val raw = args
-
-                    val flags = ArgParser.untypedParseSplit(ArgParser.tokenize(args.joinToString(" ")))
-
-                    args = flags.unmatched
-
-                    if (!command.noHelp && (flags.argMap.contains("h") || flags.argMap.contains("help")))
-                        return@asyncTransaction event.channel.sendMessage(help(command)).queue()
-
-                    try {
-                        newPerms = checkPermissions(event, commands[cmd] as Command, lang)
-                        newArgs = checkArguments(event, commands[cmd] as Command, args, lang)
-                    } catch (err: Exception) {
-                        return@asyncTransaction event.channel.sendMessage(err.message).queue()
-                    }
-
-                    ctx = Context(event, client, commands[cmd] as Command, newArgs, raw, flags, newPerms, lang)
-
-                    command.run(ctx)
                 }
             }
         }.await()
@@ -211,7 +217,7 @@ class CommandHandler(private val client: Akatsuki) {
         return newPerms
     }
 
-    private fun checkArguments(event: MessageReceivedEvent, cmd: Command, args: List<String>, lang: ResourceBundle): MutableMap<String, Any> {
+    private suspend fun checkArguments(event: MessageReceivedEvent, cmd: Command, args: List<String>, lang: ResourceBundle): MutableMap<String, Any> {
         val newArgs = mutableMapOf<String, Any>()
 
         val cmdArgs = cmd::class.annotations.filterIsInstance(Argument::class.java).toMutableList()
@@ -222,7 +228,7 @@ class CommandHandler(private val client: Akatsuki) {
 
         for (arg in cmdArgs) {
             val i = cmdArgs.indexOf(arg)
-            val arg2: String?
+            var arg2: String?
             try {
                 arg2 = args[i]
             } catch (e: IndexOutOfBoundsException) {
@@ -231,12 +237,14 @@ class CommandHandler(private val client: Akatsuki) {
                 else
                     return newArgs
             }
+
+            if (cmdArgs.size == 1)
+                arg2 = args.joinToString(" ")
+
             when (arg.type) {
                 // TODO do these later
-                // "guild" ->
-                // "channel" ->
-                // "role" ->
-                // "voicechannel" ->
+                // "channel" -> TODO()
+                // "role" -> TODO()
                 "url" -> {
                     if (!UrlValidator().isValid(arg2))
                         throw Exception("Argument is not a valid URL!")
@@ -246,10 +254,34 @@ class CommandHandler(private val client: Akatsuki) {
                 "user" -> {
                     if (event.guild != null) {
                         val user: Member = when {
-                            "<@!?\\d+>".toRegex().matches(arg2) -> try { event.guild.getMemberById("<@!?(\\d+)>".toRegex().matchEntire(arg2)?.groupValues?.get(1)) } catch (e: Throwable) { throw Exception("Couldn't find that user!") }
-                            event.guild.getMembersByName(arg2, true).isNotEmpty() -> event.guild.getMembersByName(arg2, true)[0]
-                            event.guild.getMembersByEffectiveName(arg2, true).isNotEmpty() -> event.guild.getMembersByEffectiveName(arg2, true)[0]
-                            event.guild.getMemberById(arg2) != null -> event.guild.getMemberById(arg2)
+                            "<@!?\\d+>".toRegex().matches(arg2) -> try {
+                                event.guild.getMemberById("<@!?(\\d+)>".toRegex().matchEntire(arg2)?.groupValues?.get(1))
+                            } catch (e: Throwable) {
+                                throw Exception("Couldn't find that user!")
+                            }
+
+                            event.guild.getMembersByEffectiveName(arg2, true).isNotEmpty() -> {
+                                val users = event.guild.getMembersByEffectiveName(arg2, true)
+                                if (users.size > 1) {
+                                    val picker = UserPicker(client.waiter, event.member, users, event.guild)
+
+                                    picker.build(event.channel).await()
+                                } else
+                                    users[0]
+                            }
+
+                            event.guild.getMembersByName(arg2, true).isNotEmpty() -> {
+                                val users = event.guild.getMembersByName(arg2, true)
+                                if (users.size > 1) {
+                                    val picker = UserPicker(client.waiter, event.member, users, event.guild)
+
+                                    picker.build(event.channel).await()
+                                } else
+                                    users[0]
+                            }
+
+                            arg2.toLongOrNull() != null && event.guild.getMemberById(arg2) != null -> event.guild.getMemberById(arg2)
+
                             else -> throw Exception(i18n.parse(lang.getString("user_not_found"), mapOf("username" to event.author.name)))
                         }
 
