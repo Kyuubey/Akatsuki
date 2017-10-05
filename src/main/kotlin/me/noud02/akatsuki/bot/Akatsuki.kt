@@ -38,7 +38,7 @@ class Akatsuki(token: String, db_name: String, db_user: String, db_password: Str
         me.noud02.akatsuki.bot.entities.CoroutineDispatcher(pool)
     }
 
-    private val waiter = EventWaiter()
+    val waiter = EventWaiter()
     private val builder: JDABuilder = JDABuilder(AccountType.BOT)
             .setToken(token)
             .addEventListener(this)
