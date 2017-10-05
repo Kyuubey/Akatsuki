@@ -43,8 +43,8 @@ class UserPicker(private val waiter: EventWaiter, private val user: Member, priv
         msg.addReaction(cancelEmote).await()
         msg.addReaction(downEmote).await()
 
-        waiter.await<MessageReactionAddEvent>(10, timeout) {
-            if (it.channel.id == msg.channel.id && it.user.id == user.user.id) {
+        waiter.await<MessageReactionAddEvent>(20, timeout) {
+            if (it.messageId == msg.id && it.user.id == user.user.id) {
                 when (it.reaction.emote.name) {
                     upEmote -> {
                         it.reaction.removeReaction(it.user).queue()
@@ -87,10 +87,10 @@ class UserPicker(private val waiter: EventWaiter, private val user: Member, priv
             if (it.channel.id == msg.channel.id && it.author.id == user.user.id) {
                 if (it.message.rawContent.toIntOrNull() == null)
                     msg.channel.sendMessage("Invalid number").queue()
-                else if (it.message.rawContent.toInt() > users.size || it.message.rawContent.toInt() < 0)
+                else if (it.message.rawContent.toInt() - 1 > users.size || it.message.rawContent.toInt() - 1 < 0)
                     msg.channel.sendMessage("Number out of bounds!")
                 else {
-                    index = it.message.rawContent.toInt()
+                    index = it.message.rawContent.toInt() - 1
                     msg.delete().queue()
                     fut.complete(users[index])
                 }
