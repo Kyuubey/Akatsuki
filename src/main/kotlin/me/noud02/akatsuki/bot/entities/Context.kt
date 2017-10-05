@@ -14,6 +14,8 @@ class Context(val event: MessageReceivedEvent, val client: Akatsuki, private val
     val member: Member? = event.member
     val selfMember: Member? = event.guild.selfMember
 
+    // TODO use await here instead of queue
+
     fun send(arg: String) = event.channel.sendMessage(arg).queue()
     fun send(arg: MessageEmbed) = event.channel.sendMessage(arg).queue()
 
