@@ -2,7 +2,7 @@ group 'me.noud02'
 version '1.0-SNAPSHOT'
 
 buildscript {
-    ext.kotlin_version = '1.2.0-beta-31'
+    ext.kotlin_version = '1.2.0-beta-88'
 
     repositories {
         mavenCentral()
@@ -36,17 +36,17 @@ repositories {
 
 dependencies {
     compile "org.jetbrains.kotlin:kotlin-stdlib-jre8:$kotlin_version"
-    compile 'org.jetbrains.kotlinx:kotlinx-coroutines-core:0.18'
-    compile 'org.jetbrains.kotlinx:kotlinx-coroutines-jdk8:0.18'
+    compile 'org.jetbrains.kotlinx:kotlinx-coroutines-core:0.19.3'
+    compile 'org.jetbrains.kotlinx:kotlinx-coroutines-jdk8:0.19.3'
     compile group: 'org.slf4j', name: 'slf4j-api', version: '1.8.0-alpha2'
     compile group: 'org.slf4j', name: 'slf4j-simple', version: '1.8.0-alpha2'
     compile group: 'org.jruby', name: 'jruby-complete', version: '9.1.13.0'
     compile group: 'commons-validator', name: 'commons-validator', version: '1.6'
     compile group: 'org.openpnp', name: 'opencv', version: '3.2.0-0'
     compile 'khttp:khttp:0.1.0'
-    compile 'net.dv8tion:JDA:3.3.1_284'
-    compile 'com.sedmelluq:lavaplayer:1.2.42'
-    compile 'org.jetbrains.exposed:exposed:0.8.5'
+    compile 'net.dv8tion:JDA:3.3.1_300'
+    compile 'com.sedmelluq:lavaplayer:1.2.44'
+    compile 'org.jetbrains.exposed:exposed:0.8.7'
     compile 'org.postgresql:postgresql:42.1.4'
     compile 'org.reflections:reflections:0.9.11'
     compile 'org.python:jython:2.7.1b3'
