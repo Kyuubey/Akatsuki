@@ -35,6 +35,7 @@ open class AsyncCommand : Command() {
             try {
                 asyncRun(ctx)
             } catch (e: Throwable) {
+                e.printStackTrace()
                 ctx.sendError(e)
             }
         }
