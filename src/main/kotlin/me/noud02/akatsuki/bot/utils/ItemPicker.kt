@@ -36,22 +36,27 @@ import net.dv8tion.jda.core.events.message.react.MessageReactionAddEvent
 import java.awt.Color
 import java.util.concurrent.CompletableFuture
 
-class ItemPicker(private val waiter: EventWaiter, private val user: Member, private val guild: Guild, private val timeout: Long = 60000) {
+class ItemPicker(private val waiter: EventWaiter, private val user: Member, private val guild: Guild, private val confirm: Boolean = false, private val timeout: Long = 60000) {
     private var index = 0
     private val embeds = mutableListOf<MessageEmbed>()
+    private val items = mutableListOf<PickerItem>()
 
     private val rightEmote = "\u27A1"
     private val leftEmote = "\u2B05"
     private val confirmEmote = "\u2705"
     private val cancelEmote = "\u23F9"
 
-    var color = Color.CYAN
-    val items = mutableListOf<PickerItem>()
+    var color: Color = Color.CYAN
+
+    fun addItem(item: PickerItem): ItemPicker {
+        items.add(item)
+        return this
+    }
 
     suspend fun build(msg: Message): CompletableFuture<PickerItem> = build(msg.channel)
 
     suspend fun build(channel: MessageChannel): CompletableFuture<PickerItem> {
-        return if (user.hasPermission(Permission.MESSAGE_ADD_REACTION))
+        return if (guild.selfMember.hasPermission(Permission.MESSAGE_ADD_REACTION) || guild.selfMember.hasPermission(Permission.ADMINISTRATOR))
             buildReactions(channel)
         else
             buildInput(channel)
@@ -85,26 +90,32 @@ class ItemPicker(private val waiter: EventWaiter, private val user: Member, priv
 
         val msg = channel.sendMessage(embeds[index]).await()
 
+        msg.addReaction(leftEmote).await()
+        if (confirm)
+            msg.addReaction(confirmEmote).await()
+        msg.addReaction(cancelEmote).await()
+        msg.addReaction(rightEmote).await()
+
         waiter.await<MessageReactionAddEvent>(30, timeout) {
             if (it.messageId == msg.id && it.user.id == user.user.id) {
                 when (it.reaction.emote.name) {
-                    rightEmote -> {
-                        it.reaction.removeReaction(it.user).queue()
-                        if (index - 1 >= 0) {
-                            index--
-                        }
-                    }
-
                     leftEmote -> {
                         it.reaction.removeReaction(it.user).queue()
-                        if (index + 1 <= items.size) {
-                            index++
-                        }
+                        if (index - 1 >= 0)
+                            msg.editMessage(embeds[--index]).queue()
+                    }
+
+                    rightEmote -> {
+                        it.reaction.removeReaction(it.user).queue()
+                        if (index + 1 <= items.size)
+                            msg.editMessage(embeds[++index]).queue()
                     }
 
                     confirmEmote -> {
-                        msg.delete().queue()
-                        fut.complete(items[index])
+                        if (confirm) {
+                            msg.delete().queue()
+                            fut.complete(items[index])
+                        }
                     }
 
                     cancelEmote -> {
