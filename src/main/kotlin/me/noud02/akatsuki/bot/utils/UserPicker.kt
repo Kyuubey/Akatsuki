@@ -53,7 +53,7 @@ class UserPicker(private val waiter: EventWaiter, private val user: Member, priv
     suspend fun build(msg: Message): CompletableFuture<Member> = build(msg.channel)
 
     suspend fun build(channel: MessageChannel): CompletableFuture<Member> {
-        return if (guild.selfMember.hasPermission(Permission.MESSAGE_ADD_REACTION))
+        return if (guild.selfMember.hasPermission(Permission.MESSAGE_ADD_REACTION) || guild.selfMember.hasPermission(Permission.ADMINISTRATOR))
             buildReactions(channel)
         else
             buildInput(channel)
