@@ -1,0 +1,6 @@
+token: TOKEN
+owners: [OWNER_1, OWNER_2]
+database:
+  name: NAME
+  user: USER
+  pass: ""

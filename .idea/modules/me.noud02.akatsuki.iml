@@ -58,6 +58,7 @@
     <orderEntry type="library" scope="PROVIDED" name="Gradle: org.reflections:reflections:0.9.11" level="project" />
     <orderEntry type="library" scope="PROVIDED" name="Gradle: org.python:jython:2.7.1b3" level="project" />
     <orderEntry type="library" scope="PROVIDED" name="Gradle: com.github.Frederikam:Lavalink:master-SNAPSHOT" level="project" />
+    <orderEntry type="library" scope="PROVIDED" name="Gradle: org.yaml:snakeyaml:1.19" level="project" />
     <orderEntry type="library" scope="PROVIDED" name="Gradle: org.jetbrains.kotlin:kotlin-stdlib:1.2.0-beta-88" level="project" />
     <orderEntry type="library" scope="PROVIDED" name="Gradle: org.jetbrains.kotlin:kotlin-stdlib-jre7:1.2.0-beta-88" level="project" />
     <orderEntry type="library" scope="PROVIDED" name="Gradle: commons-beanutils:commons-beanutils:1.9.2" level="project" />
@@ -105,6 +106,7 @@
     <orderEntry type="library" scope="RUNTIME" name="Gradle: org.reflections:reflections:0.9.11" level="project" />
     <orderEntry type="library" scope="RUNTIME" name="Gradle: org.python:jython:2.7.1b3" level="project" />
     <orderEntry type="library" scope="RUNTIME" name="Gradle: com.github.Frederikam:Lavalink:master-SNAPSHOT" level="project" />
+    <orderEntry type="library" scope="RUNTIME" name="Gradle: org.yaml:snakeyaml:1.19" level="project" />
     <orderEntry type="library" scope="RUNTIME" name="Gradle: org.jetbrains.kotlin:kotlin-stdlib:1.2.0-beta-88" level="project" />
     <orderEntry type="library" scope="RUNTIME" name="Gradle: org.jetbrains.kotlin:kotlin-stdlib-jre7:1.2.0-beta-88" level="project" />
     <orderEntry type="library" scope="RUNTIME" name="Gradle: commons-beanutils:commons-beanutils:1.9.2" level="project" />
@@ -152,6 +154,7 @@
     <orderEntry type="library" scope="TEST" name="Gradle: org.reflections:reflections:0.9.11" level="project" />
     <orderEntry type="library" scope="TEST" name="Gradle: org.python:jython:2.7.1b3" level="project" />
     <orderEntry type="library" scope="TEST" name="Gradle: com.github.Frederikam:Lavalink:master-SNAPSHOT" level="project" />
+    <orderEntry type="library" scope="TEST" name="Gradle: org.yaml:snakeyaml:1.19" level="project" />
     <orderEntry type="library" scope="TEST" name="Gradle: org.jetbrains.kotlin:kotlin-stdlib:1.2.0-beta-88" level="project" />
     <orderEntry type="library" scope="TEST" name="Gradle: org.jetbrains.kotlin:kotlin-stdlib-jre7:1.2.0-beta-88" level="project" />
     <orderEntry type="library" scope="TEST" name="Gradle: commons-beanutils:commons-beanutils:1.9.2" level="project" />

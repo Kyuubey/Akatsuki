@@ -27,22 +27,35 @@
 package me.noud02.akatsuki
 
 import me.noud02.akatsuki.bot.Akatsuki
+import org.yaml.snakeyaml.Yaml
+import java.io.File
+import java.io.FileInputStream
 
 fun main (args: Array<String>) {
-    val token = (if (args.isEmpty())
+    val config = Yaml().load<Map<String, Any>>(FileInputStream(File("./config.yml")))
+
+    val token = config["token"] as String? ?: (if (args.isEmpty())
         System.getenv("AKATSUKI_TOKEN")
     else
         args[0]) ?: return println("No token specified!")
 
-    val db_name: String = System.getenv("AKATSUKI_DB_NAME") ?: return println("No database name specified")
-    val db_user: String = System.getenv("AKATSUKI_DB_USER") ?: ""
-    val db_pass: String = System.getenv("AKATSUKI_DB_PASS") ?: ""
+    val dbConf = config["database"] as Map<String, Any>
 
-    val bot = Akatsuki(token, db_name, db_user, db_pass)
+    val dbName: String = dbConf["name"] as String? ?: System.getenv("AKATSUKI_DB_NAME") ?: return println("No database name specified")
+    val dbUser: String = dbConf["user"] as String? ?: System.getenv("AKATSUKI_DB_USER") ?: ""
+    val dbPass: String = dbConf["pass"] as String? ?: System.getenv("AKATSUKI_DB_PASS") ?: ""
+
+    val bot = Akatsuki(token, dbName, dbUser, dbPass)
 
     // bot.buildSharded(3)
     bot.build()
-    bot.addOwner(System.getenv("AKATSUKI_OWNER_ID") ?: "")
+    if (System.getenv("AKATSUKI_OWNER_ID").isNullOrBlank())
+        bot.addOwner(System.getenv("AKATSUKI_OWNER_ID") ?: "")
+
+    for (id in config["owners"] as Array<String>) {
+        bot.addOwner(id)
+    }
+
     bot.addPrefix("awoo!")
     bot.setGame("awoo~ | ${bot.jda!!.guilds.size} Guild(s)!")
 }
