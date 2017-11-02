@@ -50,7 +50,7 @@ fun main (args: Array<String>) {
     // bot.buildSharded(3)
     bot.build()
     if (!System.getenv("AKATSUKI_OWNER_ID").isNullOrBlank())
-        bot.addOwner(System.getenv("AKATSUKI_OWNER_ID") ?: "")
+        bot.addOwner(System.getenv("AKATSUKI_OWNER_ID"))
 
     for (id in config["owners"] as Array<String>) {
         bot.addOwner(id)
