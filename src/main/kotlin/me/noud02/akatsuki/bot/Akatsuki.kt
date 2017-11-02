@@ -26,6 +26,7 @@
 package me.noud02.akatsuki.bot
 
 import kotlinx.coroutines.experimental.async
+import lavalink.client.io.Lavalink
 import me.aurieh.ares.core.entities.EventWaiter
 import me.aurieh.ares.exposed.async.asyncTransaction
 import me.noud02.akatsuki.bot.schema.Guilds
@@ -39,8 +40,6 @@ import net.dv8tion.jda.core.events.ReadyEvent
 import net.dv8tion.jda.core.events.guild.GuildJoinEvent
 import net.dv8tion.jda.core.events.guild.GuildLeaveEvent
 import net.dv8tion.jda.core.events.message.MessageReceivedEvent
-import net.dv8tion.jda.core.events.message.react.MessageReactionAddEvent
-import net.dv8tion.jda.core.events.message.react.MessageReactionRemoveEvent
 import net.dv8tion.jda.core.hooks.ListenerAdapter
 import net.dv8tion.jda.core.requests.SessionReconnectQueue
 import org.jetbrains.exposed.sql.*
@@ -75,35 +74,36 @@ class Akatsuki(token: String, db_name: String, db_user: String, db_password: Str
     var owners = mutableListOf<String>()
     var prefixes = mutableListOf<String>()
     var jda: JDA? = null
+    var lavalink: Lavalink? = null
 
     init {
         async(coroutineDispatcher) {
-            init()
+            asyncTransaction(pool) {
+                SchemaUtils.create(Guilds, Users)
+            }.await()
         }
-    }
-
-    private suspend fun init() {
-        asyncTransaction(pool) {
-            SchemaUtils.create(Guilds, Users)
-        }.await()
     }
 
     fun build() {
         jda = builder.buildBlocking()
+        lavalink = Lavalink(jda!!.selfUser.id, jda!!.shardInfo.shardTotal, { jda as JDA })
     }
 
     fun buildSharded(shards: Int, shard: Int? = null) {
-        if (shard != null)
+        if (shard != null) {
             jda = builder
                     .useSharding(shard, shards)
                     .buildAsync()
-        else
+            lavalink = Lavalink(jda!!.selfUser.id, jda!!.shardInfo.shardTotal, { jda as JDA })
+        } else {
             for (i in 0 until shards) {
                 jda = builder
                         .useSharding(i, shards)
                         .buildAsync()
                 Thread.sleep(5000)
+                lavalink = Lavalink(jda!!.selfUser.id, jda!!.shardInfo.shardTotal, { jda as JDA })
             }
+        }
     }
 
     fun setGame(text: String, idle: Boolean = false) = jda!!.presence.setPresence(Game.of(text), idle)
@@ -125,7 +125,7 @@ class Akatsuki(token: String, db_name: String, db_user: String, db_password: Str
             try {
                 cmdHandler.handleMessage(event)
             } catch (e: Exception) {
-                this@Akatsuki.logger.error("Error while trying to handle message", e)
+                logger.error("Error while trying to handle message", e)
             }
         }
     }
