@@ -12,7 +12,8 @@ $ export AKATSUKI_TOKEN=YOUR_SUPER_SECRET_DISCORD_TOKEN
 $ export AKATSUKI_DB_NAME=YOUR_POSTGRESQL_DB_NAME
 $ export AKATSUKI_DB_USER=USER_THAT_HAS_ACCESS_TO_THE_DB
 $ export AKATSUKI_OWNER_ID=YOUR_DISCORD_ID
+$ exprot AKATSUKI_GOOGLE_KEY=YOUR_GOOGLE_API_KEY
 
 # Run it
-$ cd build/libs && java -jar akatsuki-VERSION-all.jar
+$ cd build/libs && java -jar Akatsuki.jar
 ```
