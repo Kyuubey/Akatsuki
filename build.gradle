@@ -32,6 +32,9 @@ repositories {
     maven {
         url = 'https://dl.bintray.com/kotlin/kotlin-dev'
     }
+    maven {
+        url = 'https://jitpack.io'
+    }
 }
 
 dependencies {
@@ -50,6 +53,9 @@ dependencies {
     compile 'org.postgresql:postgresql:42.1.4'
     compile 'org.reflections:reflections:0.9.11'
     compile 'org.python:jython:2.7.1b3'
+    compile ('com.github.Frederikam:Lavalink:master-SNAPSHOT') {
+        exclude(module: 'Lavalink-Server')
+    }
 }
 
 compileKotlin {
