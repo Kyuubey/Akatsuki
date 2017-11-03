@@ -32,6 +32,7 @@ import com.fasterxml.jackson.module.kotlin.KotlinModule
 import com.fasterxml.jackson.module.kotlin.readValue
 import me.noud02.akatsuki.bot.Akatsuki
 import me.noud02.akatsuki.bot.entities.Config
+import java.io.File
 import java.nio.file.FileSystems
 import java.nio.file.Files
 
@@ -40,16 +41,9 @@ fun main (args: Array<String>) {
 
     mapper.registerModule(KotlinModule())
 
-    var config: Config? = null
+    val config: Config = mapper.readValue(File("./config.yml"))
 
-    Files.newBufferedReader(FileSystems.getDefault().getPath("config.yml")).use {
-        config = mapper.readValue(it)
-    }
-
-    if (config == null)
-        return println("Config is null")
-
-    val bot = Akatsuki(config!!)
+    val bot = Akatsuki(config)
 
     // bot.buildSharded(3)
     bot.build()
