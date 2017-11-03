@@ -93,7 +93,8 @@ class Akatsuki(config: Config) : ListenerAdapter() {
 
     fun build() {
         jda = builder.buildBlocking()
-        lavalink = Lavalink(jda!!.selfUser.id, jda!!.shardInfo.shardTotal, { jda as JDA })
+        val shards = if (jda!!.shardInfo != null) jda!!.shardInfo.shardTotal else 1
+        lavalink = Lavalink(jda!!.selfUser.id, shards, { jda as JDA })
     }
 
     fun buildSharded(shards: Int, shard: Int? = null) {

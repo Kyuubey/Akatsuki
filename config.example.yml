@@ -1,10 +1,16 @@
-token: "super secret token"
-owners: ["owner", "other owner"]
-prefixes: ["<insert prefix>"]
-games: ["aaa", "bbb", "ccc"]
+token: super secret token
+owners:
+  - owner
+  - other owner
+prefixes:
+  - unique prefix
+games:
+  - aaa
+  - bbb
+  - ccc
 database:
-  name: "db name"
-  user: "db user"
-  pass: "db password"
+  name: db name
+  user: db user
+  pass: db password
 api:
-  google: "google api key"
+  google: google api key
