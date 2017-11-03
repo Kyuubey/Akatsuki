@@ -29,6 +29,7 @@ import kotlinx.coroutines.experimental.async
 import lavalink.client.io.Lavalink
 import me.aurieh.ares.core.entities.EventWaiter
 import me.aurieh.ares.exposed.async.asyncTransaction
+import me.noud02.akatsuki.bot.entities.Config
 import me.noud02.akatsuki.bot.schema.Guilds
 import me.noud02.akatsuki.bot.schema.Users
 import net.dv8tion.jda.core.AccountType
@@ -47,7 +48,7 @@ import org.slf4j.LoggerFactory
 import java.util.concurrent.ExecutorService
 import java.util.concurrent.Executors
 
-class Akatsuki(token: String, db_name: String, db_user: String, db_password: String) : ListenerAdapter() {
+class Akatsuki(config: Config) : ListenerAdapter() {
     private val eventHandler = EventHandler(this)
     private val logger = LoggerFactory.getLogger(this::class.java)
 
@@ -58,21 +59,27 @@ class Akatsuki(token: String, db_name: String, db_user: String, db_password: Str
             }
         }
     }
+
     val coroutineDispatcher by lazy {
         me.noud02.akatsuki.bot.entities.CoroutineDispatcher(pool)
     }
 
     val waiter = EventWaiter()
     private val builder: JDABuilder = JDABuilder(AccountType.BOT)
-            .setToken(token)
+            .setToken(config.token)
             .addEventListener(this)
             .setReconnectQueue(SessionReconnectQueue())
 
     val cmdHandler = CommandHandler(this)
-    val db = Database.connect("jdbc:postgresql:$db_name", "org.postgresql.Driver", db_user, db_password)
+    val db = Database.connect(
+            "jdbc:postgresql:${config.database.name}",
+            "org.postgresql.Driver",
+            config.database.user,
+            config.database.pass
+    )
 
-    var owners = mutableListOf<String>()
-    var prefixes = mutableListOf<String>()
+    var owners = config.owners
+    var prefixes = config.prefixes
     var jda: JDA? = null
     var lavalink: Lavalink? = null
 
@@ -108,15 +115,11 @@ class Akatsuki(token: String, db_name: String, db_user: String, db_password: Str
 
     fun setGame(text: String, idle: Boolean = false) = jda!!.presence.setPresence(Game.of(text), idle)
 
-    fun addPrefix(prefix: String) = prefixes.add(prefix)
-
-    fun addOwner(id: String) = owners.add(id)
-
     override fun onGenericEvent(event: Event) = waiter.emit(event)
 
     override fun onMessageReceived(event: MessageReceivedEvent) {
-        if (prefixes.size == 0)
-            prefixes = arrayListOf("!")
+        if (prefixes.isEmpty())
+            prefixes = listOf("akatsuki ")
 
         if (event.author.isBot)
             return

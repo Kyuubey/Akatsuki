@@ -31,7 +31,16 @@ import net.dv8tion.jda.core.entities.*
 import net.dv8tion.jda.core.events.message.MessageReceivedEvent
 import java.util.*
 
-class Context(val event: MessageReceivedEvent, val client: Akatsuki, private val cmd: Command, val args: MutableMap<String, Any>, val rawArgs: List<String>, val flags: ArgParser.ParsedResult, val perms: MutableMap<String, Boolean>, val lang: ResourceBundle) {
+class Context(
+        val event: MessageReceivedEvent,
+        val client: Akatsuki,
+        val cmd: Command,
+        val args: MutableMap<String, Any>,
+        val rawArgs: List<String>,
+        val flags: ArgParser.ParsedResult,
+        val perms: MutableMap<String, Boolean>,
+        val lang: ResourceBundle
+) {
     val guild: Guild? = event.guild
     val author: User = event.author
     val channel: MessageChannel = event.channel
