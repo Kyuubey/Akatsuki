@@ -23,36 +23,23 @@
  *  OTHER DEALINGS IN THE SOFTWARE.
  */
 
-@file:JvmName("Akatsuki")
-package me.noud02.akatsuki
+package me.noud02.akatsuki.bot.entities
 
-import com.fasterxml.jackson.databind.ObjectMapper
-import com.fasterxml.jackson.dataformat.yaml.YAMLFactory
-import com.fasterxml.jackson.module.kotlin.KotlinModule
-import com.fasterxml.jackson.module.kotlin.readValue
-import me.noud02.akatsuki.bot.Akatsuki
-import me.noud02.akatsuki.bot.entities.Config
-import java.nio.file.FileSystems
-import java.nio.file.Files
+data class APIConfig(
+        val google: String
+)
 
-fun main (args: Array<String>) {
-    val mapper = ObjectMapper(YAMLFactory())
+data class DatabaseConfig(
+        val name: String,
+        val user: String,
+        val pass: String
+)
 
-    mapper.registerModule(KotlinModule())
-
-    var config: Config? = null
-
-    Files.newBufferedReader(FileSystems.getDefault().getPath("config.yml")).use {
-        config = mapper.readValue(it)
-    }
-
-    if (config == null)
-        return println("Config is null")
-
-    val bot = Akatsuki(config!!)
-
-    // bot.buildSharded(3)
-    bot.build()
-
-    bot.setGame("awoo~ | ${bot.jda!!.guilds.size} Guild(s)!")
-}
+data class Config(
+        val token: String,
+        val owners: List<String>,
+        val prefixes: List<String>,
+        val games: List<String>,
+        val database: DatabaseConfig,
+        val api: APIConfig
+)

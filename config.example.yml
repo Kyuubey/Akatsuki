@@ -1,6 +1,10 @@
-token: TOKEN
-owners: [OWNER_1, OWNER_2]
+token: "super secret token"
+owners: ["owner", "other owner"]
+prefixes: ["<insert prefix>"]
+games: ["aaa", "bbb", "ccc"]
 database:
-  name: NAME
-  user: USER
-  pass: ""
+  name: "db name"
+  user: "db user"
+  pass: "db password"
+api:
+  google: "google api key"
