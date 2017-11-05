@@ -42,9 +42,7 @@ class TrackScheduler(private val player: AudioPlayer, private val manager: Guild
         if (!player.startTrack(track, true)) queue.offer(track)
     }
 
-    fun next() {
-        player.startTrack(queue.poll(), false)
-    }
+    fun next() = player.startTrack(queue.poll(), false)
 
     override fun onTrackStart(player: AudioPlayer, track: AudioTrack) {
         val nextTrack = queue.peek()
@@ -74,7 +72,9 @@ class TrackScheduler(private val player: AudioPlayer, private val manager: Guild
 
             }*/ else
                 MusicManager.inactivityScheduler.schedule(timerTask {
-                    if (player.playingTrack != null || !manager.textChannel.guild.audioManager.isConnected) return@timerTask
+                    if (player.playingTrack != null || !manager.textChannel.guild.audioManager.isConnected)
+                        return@timerTask
+                    
                     manager.textChannel.sendMessage("Left voicechannel because of inactivity").queue()
                     MusicManager.leave(manager.textChannel.guild.id)
                 }, 300000L)

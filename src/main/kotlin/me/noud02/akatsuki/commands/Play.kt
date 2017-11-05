@@ -48,7 +48,7 @@ class Play : Command() {
 
     override fun run(ctx: Context) {
         val manager = MusicManager.musicManagers[ctx.guild?.id] ?: return ctx.send("Not connected!")
-
+        
         if (!ctx.guild!!.audioManager.isConnected)
             return ctx.send(i18n.parse(ctx.lang.getString("join_voice_channel_fail"), mapOf("username" to ctx.author.name)))
 

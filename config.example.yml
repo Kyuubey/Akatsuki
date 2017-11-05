@@ -1,9 +1,9 @@
 token: super secret token
 owners:
-  - owner
-  - other owner
+  - owner1
+  - owner2
 prefixes:
-  - unique prefix
+  - unique_prefix
 games:
   - aaa
   - bbb
@@ -14,3 +14,8 @@ database:
   pass: db password
 api:
   google: google api key
+musicNodes:
+  - host: example.com
+    pass: mypass123
+  - host: example.org
+    pass: mypass123

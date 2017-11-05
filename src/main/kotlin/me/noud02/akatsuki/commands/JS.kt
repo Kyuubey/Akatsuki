@@ -29,6 +29,7 @@ import me.noud02.akatsuki.bot.entities.Argument
 import me.noud02.akatsuki.bot.entities.Command
 import me.noud02.akatsuki.bot.entities.Context
 import me.noud02.akatsuki.bot.entities.Load
+import me.noud02.akatsuki.bot.music.MusicManager
 import javax.script.ScriptEngineManager
 
 @Load
