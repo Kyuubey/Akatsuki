@@ -27,9 +27,10 @@ package me.noud02.akatsuki.bot
 
 import kotlinx.coroutines.experimental.async
 import lavalink.client.io.Lavalink
+import lavalink.client.LavalinkUtil
 import me.aurieh.ares.core.entities.EventWaiter
-import me.aurieh.ares.exposed.async.asyncTransaction
 import me.noud02.akatsuki.bot.entities.Config
+import me.noud02.akatsuki.bot.entities.CoroutineDispatcher
 import me.noud02.akatsuki.bot.schema.Guilds
 import me.noud02.akatsuki.bot.schema.Users
 import net.dv8tion.jda.core.AccountType
@@ -44,13 +45,19 @@ import net.dv8tion.jda.core.events.message.MessageReceivedEvent
 import net.dv8tion.jda.core.hooks.ListenerAdapter
 import net.dv8tion.jda.core.requests.SessionReconnectQueue
 import org.jetbrains.exposed.sql.*
+import org.jetbrains.exposed.sql.transactions.transaction
 import org.slf4j.LoggerFactory
+import java.net.URI
 import java.util.concurrent.ExecutorService
 import java.util.concurrent.Executors
 
-class Akatsuki(config: Config) : ListenerAdapter() {
+class Akatsuki(private val config: Config) : ListenerAdapter() {
     private val eventHandler = EventHandler(this)
     private val logger = LoggerFactory.getLogger(this::class.java)
+    private val builder = JDABuilder(AccountType.BOT)
+            .setToken(config.token)
+            .addEventListener(this)
+            .setReconnectQueue(SessionReconnectQueue())
 
     val pool: ExecutorService by lazy {
         Executors.newCachedThreadPool {
@@ -59,17 +66,10 @@ class Akatsuki(config: Config) : ListenerAdapter() {
             }
         }
     }
-
     val coroutineDispatcher by lazy {
-        me.noud02.akatsuki.bot.entities.CoroutineDispatcher(pool)
+        CoroutineDispatcher(pool)
     }
-
     val waiter = EventWaiter()
-    private val builder: JDABuilder = JDABuilder(AccountType.BOT)
-            .setToken(config.token)
-            .addEventListener(this)
-            .setReconnectQueue(SessionReconnectQueue())
-
     val cmdHandler = CommandHandler(this)
     val db = Database.connect(
             "jdbc:postgresql:${config.database.name}",
@@ -77,24 +77,38 @@ class Akatsuki(config: Config) : ListenerAdapter() {
             config.database.user,
             config.database.pass
     )
+    val lavalinkUtil = LavalinkUtil()
 
     var owners = config.owners
     var prefixes = config.prefixes
     var jda: JDA? = null
     var lavalink: Lavalink? = null
+    
 
     init {
-        async(coroutineDispatcher) {
-            asyncTransaction(pool) {
-                SchemaUtils.create(Guilds, Users)
-            }.await()
+        transaction { 
+            SchemaUtils.create(Guilds, Users)
         }
     }
 
     fun build() {
         jda = builder.buildBlocking()
-        val shards = if (jda!!.shardInfo != null) jda!!.shardInfo.shardTotal else 1
-        lavalink = Lavalink(jda!!.selfUser.id, shards, { jda as JDA })
+        
+        lavalink = Lavalink(
+                jda!!.selfUser.id,
+                if (jda!!.shardInfo != null) jda!!.shardInfo.shardTotal else 1,
+                { jda!! }
+        )
+        
+        for (node in config.musicNodes) {
+            try {
+                lavalink!!.addNode(URI(node.host), node.pass)
+            } catch(e: Exception) {
+                e.printStackTrace()
+            }
+        }
+        
+        jda!!.addEventListener(lavalink!!)
     }
 
     fun buildSharded(shards: Int, shard: Int? = null) {
@@ -102,16 +116,39 @@ class Akatsuki(config: Config) : ListenerAdapter() {
             jda = builder
                     .useSharding(shard, shards)
                     .buildAsync()
-            lavalink = Lavalink(jda!!.selfUser.id, jda!!.shardInfo.shardTotal, { jda as JDA })
-        } else {
+            
+            lavalink = Lavalink(
+                    jda!!.selfUser.id,
+                    if (jda!!.shardInfo != null) jda!!.shardInfo.shardTotal else 1,
+                    { jda!! }
+            )
+
+            jda!!.addEventListener(lavalink!!)
+        } else
             for (i in 0 until shards) {
                 jda = builder
                         .useSharding(i, shards)
                         .buildAsync()
+
+                lavalink = Lavalink(
+                        jda!!.selfUser.id,
+                        if (jda!!.shardInfo != null) jda!!.shardInfo.shardTotal else 1,
+                        { jda!! }
+                )
+
+                jda!!.addEventListener(lavalink!!)
+                
                 Thread.sleep(5000)
-                lavalink = Lavalink(jda!!.selfUser.id, jda!!.shardInfo.shardTotal, { jda as JDA })
             }
-        }
+        
+        if (lavalink != null)
+            for (node in config.musicNodes) {
+                try {
+                    lavalink!!.addNode(URI(node.host), node.pass)
+                } catch(e: Exception) {
+                    e.printStackTrace()
+                }
+            }
     }
 
     fun setGame(text: String, idle: Boolean = false) = jda!!.presence.setPresence(Game.of(text), idle)

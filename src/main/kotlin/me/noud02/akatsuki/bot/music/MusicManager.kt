@@ -33,7 +33,7 @@ import org.slf4j.LoggerFactory
 import java.util.*
 
 object MusicManager {
-    private val loggr = LoggerFactory.getLogger(this::class.java)
+    private val logger = LoggerFactory.getLogger(this::class.java)
 
     val playerManager = DefaultAudioPlayerManager()
     val musicManagers = mutableMapOf<String, GuildMusicManager>()
@@ -45,7 +45,7 @@ object MusicManager {
     }
 
     fun join(ctx: Context): GuildMusicManager {
-        loggr.info("New voice connection in guild ${ctx.guild!!.name}!")
+        logger.info("New voice connection in guild ${ctx.guild!!.name}!")
         val manager = GuildMusicManager(playerManager, ctx.event.textChannel, ctx.member!!.voiceState.channel as VoiceChannel)
         musicManagers[ctx.guild.id] = manager
         ctx.guild.audioManager.openAudioConnection(ctx.member.voiceState?.channel)
@@ -54,7 +54,7 @@ object MusicManager {
     }
 
     fun leave(guild: String): Boolean {
-        loggr.info("Voice connection ended in guild with id $guild!")
+        logger.info("Voice connection ended in guild with id $guild!")
         val manager = musicManagers[guild] ?: return false
         manager.player.stopTrack()
         manager.scheduler.queue.clear()

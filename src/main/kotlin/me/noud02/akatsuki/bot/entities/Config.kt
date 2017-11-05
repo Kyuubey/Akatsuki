@@ -35,11 +35,17 @@ data class DatabaseConfig(
         val pass: String
 )
 
+data class MusicNodeConfig(
+        val host: String,
+        val pass: String
+)
+
 data class Config(
         val token: String,
         val owners: List<String>,
         val prefixes: List<String>,
         val games: List<String>,
+        val musicNodes: List<MusicNodeConfig>,
         val database: DatabaseConfig,
         val api: APIConfig
 )

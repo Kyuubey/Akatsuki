@@ -49,7 +49,5 @@ class AudioPlayerSendHandler(private val audioPlayer: AudioPlayer) : AudioSendHa
         return data
     }
 
-    override fun isOpus(): Boolean {
-        return true
-    }
+    override fun isOpus() = true
 }
