@@ -32,6 +32,7 @@ import me.noud02.akatsuki.bot.entities.Context
 import me.noud02.akatsuki.bot.entities.Load
 import me.noud02.akatsuki.bot.schema.Guilds
 import net.dv8tion.jda.core.EmbedBuilder
+import net.dv8tion.jda.core.Permission
 import org.jetbrains.exposed.sql.select
 
 @Load
@@ -50,8 +51,8 @@ class GuildInfo : AsyncCommand() {
             embed.setTitle(ctx.guild!!.name)
 
             desc.append("**Owner:** ${ctx.guild.owner.user.name}#${ctx.guild.owner.user.discriminator}\n")
-            desc.append("**Bots:** ${ctx.guild.members.filter { member -> member.user.isBot }.size}\n")
-            desc.append("**Users:** ${ctx.guild.members.filter { member -> !member.user.isBot }.size}\n")
+            desc.append("**Bots:** ${ctx.guild.members.filter { it.user.isBot }.size}\n")
+            desc.append("**Users:** ${ctx.guild.members.filter { !it.user.isBot }.size}\n")
             desc.append("**Roles:** ${ctx.guild.roles.size - 1}\n")
             desc.append("**Region:** ${ctx.guild.region.getName()}\n")
             desc.append("**Language:** ${guild[Guilds.lang]}\n")
@@ -60,8 +61,12 @@ class GuildInfo : AsyncCommand() {
 
             if (ctx.client.jda!!.shardInfo != null)
                 desc.append("**Shard:** ${(ctx.guild.idLong shr 22) % ctx.client.jda!!.shardInfo.shardTotal}\n")
-            desc.append("**Emotes:** ${ctx.guild.emotes.joinToString(", ") { emote -> emote.asMention }}\n")
-
+            desc.append("**Emotes:** ${ctx.guild.emotes.joinToString(" ") { it.asMention }}\n")
+            desc.append("**Mods:**\n${ctx.guild.members.filter {
+                !it.user.isBot && (it.isOwner || it.hasPermission(Permission.BAN_MEMBERS) || it.hasPermission(Permission.KICK_MEMBERS) || it.hasPermission(Permission.ADMINISTRATOR))
+            }.joinToString("\n") {
+                "${it.user.name}#${it.user.discriminator}${if (!it.nickname.isNullOrEmpty()) "(${it.nickname})" else ""}"
+            }}")
 
             embed.setDescription(desc)
 
