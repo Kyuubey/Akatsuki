@@ -2,7 +2,7 @@ group 'me.noud02'
 version '1.0-SNAPSHOT'
 
 buildscript {
-    ext.kotlin_version = '1.2.0-beta-88'
+    ext.kotlin_version = '1.2.0-rc-39'
 
     repositories {
         mavenCentral()
@@ -54,7 +54,7 @@ dependencies {
     compile 'org.reflections:reflections:0.9.11'
     compile 'org.python:jython:2.7.1b3'
     compile ('com.github.Frederikam:Lavalink:master-SNAPSHOT') {
-        exclude(module: 'Lavalink-Server')
+        exclude (module: 'Lavalink-Server')
     }
     compile 'com.fasterxml.jackson.core:jackson-databind:2.9.0'
     compile 'com.fasterxml.jackson.module:jackson-module-kotlin:2.9.0'
