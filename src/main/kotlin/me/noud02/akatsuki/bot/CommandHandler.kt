@@ -29,6 +29,9 @@ import kotlinx.coroutines.experimental.async
 import kotlinx.coroutines.experimental.future.await
 import me.aurieh.ares.exposed.async.asyncTransaction
 import me.aurieh.ares.utils.ArgParser
+import me.noud02.akatsuki.bot.db.DBGuild
+import me.noud02.akatsuki.bot.db.DBUser
+import me.noud02.akatsuki.bot.db.DatabaseWrapper
 import me.noud02.akatsuki.bot.entities.*
 import me.noud02.akatsuki.bot.extensions.UTF8Control
 import me.noud02.akatsuki.bot.extensions.await
@@ -84,155 +87,102 @@ class CommandHandler(private val client: Akatsuki) {
     }
 
     suspend fun handleMessage(event: MessageReceivedEvent) {
-        asyncTransaction(client.pool) {
-            var guilds: Query? = null
-            var users = Users.select {
-                Users.id.eq(event.author.id)
-            }
+        val guild: DBGuild? = if (event.guild != null) DatabaseWrapper.getGuildSafe(event.guild).await() else null
+        val user = DatabaseWrapper.getUserSafe(event.author).await()
 
-            if (users.empty())
-                try {
-                    Users.insert {
-                        it[id] = event.author.id
-                        it[username] = event.author.name
-                        it[discriminator] = event.author.discriminator
-                        it[lang] = "en_US"
-                    }
+        val locale = if (guild != null && guild.forceLang)
+            Locale(guild.lang.split("_")[0], guild.lang.split("_")[1])
+        else
+            Locale(user.lang.split("_")[0], user.lang.split("_")[1])
 
-                    users = Users.select {
-                        Users.id.eq(event.author.id)
-                    }
+        val guildPrefixes = guild?.prefixes ?: listOf()
 
-                    this@CommandHandler.logger.info("Added user ${event.author.name}#${event.author.discriminator} to the database!")
-                } catch (e: Throwable) {
-                    this@CommandHandler.logger.error("Error while trying to insert user in DB", e)
-                }
+        val lang = ResourceBundle.getBundle("i18n.Kyubey", locale, UTF8Control())
 
-            if (event.guild != null) {
-                guilds = Guilds.select {
-                    Guilds.id.eq(event.guild.id)
-                }
+        val usedPrefix: String = client.prefixes.lastOrNull {
+            event.message.rawContent.startsWith(it)
+        } ?: guildPrefixes.lastOrNull {
+            event.message.rawContent.startsWith(it)
+        } ?: return
 
-                if (guilds.empty())
-                    try {
-                        Guilds.insert {
-                            it[id] = event.guild.id
-                            it[name] = event.guild.name
-                            it[prefixes] = arrayOf(client.prefixes[0])
-                            it[lang] = "en_US"
-                            it[forceLang] = false
-                        }
+        var cmd: String = event.message.rawContent.substring(usedPrefix.length).split(" ")[0]
+        var args: List<String> = event.message.rawContent.substring(usedPrefix.length).split(" ")
 
-                        guilds = Guilds.select {
-                            Guilds.id.eq(event.guild.id)
-                        }
-                        this@CommandHandler.logger.info("Added guild ${event.guild.name} to the database!")
-                    } catch (e: Throwable) {
-                        this@CommandHandler.logger.error("Error while trying to insert guild ${event.guild.name} in DB", e)
-                    }
-            }
+        if (args.isNotEmpty())
+            args = args.drop(1)
 
-            val guild = if (guilds != null && !guilds.empty()) guilds.first() else null
-            val user = users.first()
+        val ctx: Context
+        val newArgs: MutableMap<String, Any>
+        val newPerms: MutableMap<String, Boolean>
 
-            val locale = if (guild != null && guild[Guilds.forceLang])
-                Locale(guild[Guilds.lang].split("_")[0], guild[Guilds.lang].split("_")[1])
+        if (!commands.contains(cmd))
+            if (aliases.contains(cmd))
+                cmd = aliases[cmd] as String
             else
-                Locale(user[Users.lang].split("_")[0], user[Users.lang].split("_")[1])
+                return
 
-            val guildPrefixes = if (guild != null) guild[Guilds.prefixes] else arrayOf()
+        if (event.guild != null)
+            this.logger.info("[Command] (Guild ${event.guild.name} (${event.guild.id})) - ${event.author.name}#${event.author.discriminator} (${event.author.id}): ${event.message.content}")
+        else
+            this.logger.info("[Command] (DM) - ${event.author.name}#${event.author.discriminator} (${event.author.id}): ${event.message.content}")
 
-            val lang = ResourceBundle.getBundle("i18n.Kyubey", locale, UTF8Control())
+        if ((commands[cmd] as Command).ownerOnly && !client.owners.contains(event.author.id))
+            return
 
-            val usedPrefix: String? = client.prefixes.lastOrNull {
-                event.message.rawContent.startsWith(it)
-            } ?: guildPrefixes.lastOrNull {
-                event.message.rawContent.startsWith(it)
+        if ((commands[cmd] as Command).guildOnly && event.guild == null)
+            return event.channel.sendMessage("This command can only be used in a server!").queue() // TODO add translations for this
+
+        var command = commands[cmd] as Command
+
+        if (args.isNotEmpty() && commands[cmd]?.subcommands?.get(args[0]) is Command) {
+            val subcmd = args[0]
+            command = commands[cmd]?.subcommands?.get(subcmd) as Command
+            args = args.drop(1)
+
+            val raw = args
+
+            val flags = ArgParser.untypedParseSplit(ArgParser.tokenize(args.joinToString(" ")))
+
+            args = flags.unmatched
+
+            if (!command.noHelp && (flags.argMap.contains("h") || flags.argMap.contains("help")))
+                return event.channel.sendMessage(help(command)).queue()
+
+            try {
+                newPerms = checkPermissions(event, command, lang)
+                newArgs = checkArguments(event, command, args, lang)
+            } catch (err: Exception) {
+                return event.channel.sendMessage(err.message).queue()
             }
 
-            async(client.coroutineDispatcher) {
-                if (usedPrefix != null) {
-                    var cmd: String = event.message.rawContent.substring(usedPrefix.length).split(" ")[0]
-                    var args: List<String> = event.message.rawContent.substring(usedPrefix.length).split(" ")
+            ctx = Context(event, client, command, newArgs, raw, flags, newPerms, lang)
 
-                    if (args.isNotEmpty())
-                        args = args.drop(1)
-
-                    val ctx: Context
-                    val newArgs: MutableMap<String, Any>
-                    val newPerms: MutableMap<String, Boolean>
-
-                    if (!commands.contains(cmd))
-                        if (aliases.contains(cmd))
-                            cmd = aliases[cmd] as String
-                        else
-                            return@async
-
-                    if (event.guild != null)
-                        this@CommandHandler.logger.info("[Command] (Guild ${event.guild.name} (${event.guild.id})) - ${event.author.name}#${event.author.discriminator} (${event.author.id}): ${event.message.content}")
-                    else
-                        this@CommandHandler.logger.info("[Command] (DM) - ${event.author.name}#${event.author.discriminator} (${event.author.id}): ${event.message.content}")
-
-                    if ((commands[cmd] as Command).ownerOnly && !client.owners.contains(event.author.id))
-                        return@async
-
-                    if ((commands[cmd] as Command).guildOnly && event.guild == null)
-                        return@async event.channel.sendMessage("This command can only be used in a server!").queue() // TODO add translations for this
-
-                    var command = commands[cmd] as Command
-
-                    if (args.isNotEmpty() && commands[cmd]?.subcommands?.get(args[0]) is Command) {
-                        val subcmd = args[0]
-                        command = commands[cmd]?.subcommands?.get(subcmd) as Command
-                        args = args.drop(1)
-
-                        val raw = args
-
-                        val flags = ArgParser.untypedParseSplit(ArgParser.tokenize(args.joinToString(" ")))
-
-                        args = flags.unmatched
-
-                        if (!command.noHelp && (flags.argMap.contains("h") || flags.argMap.contains("help")))
-                            return@async event.channel.sendMessage(help(command)).queue()
-
-                        try {
-                            newPerms = checkPermissions(event, command, lang)
-                            newArgs = checkArguments(event, command, args, lang)
-                        } catch (err: Exception) {
-                            return@async event.channel.sendMessage(err.message).queue()
-                        }
-
-                        ctx = Context(event, client, command, newArgs, raw, flags, newPerms, lang)
-
-                        if (!command.noHelp && (flags.argMap.contains("h") || flags.argMap.contains("help")))
-                            return@async ctx.send(ctx.help())
+            if (!command.noHelp && (flags.argMap.contains("h") || flags.argMap.contains("help")))
+                return ctx.send(ctx.help())
 
 
-                        command.run(ctx)
-                    } else {
-                        val raw = args
+            command.run(ctx)
+        } else {
+            val raw = args
 
-                        val flags = ArgParser.untypedParseSplit(ArgParser.tokenize(args.joinToString(" ")))
+            val flags = ArgParser.untypedParseSplit(ArgParser.tokenize(args.joinToString(" ")))
 
-                        args = flags.unmatched
+            args = flags.unmatched
 
-                        if (!command.noHelp && (flags.argMap.contains("h") || flags.argMap.contains("help")))
-                            return@async event.channel.sendMessage(help(command)).queue()
+            if (!command.noHelp && (flags.argMap.contains("h") || flags.argMap.contains("help")))
+                return event.channel.sendMessage(help(command)).queue()
 
-                        try {
-                            newPerms = checkPermissions(event, commands[cmd] as Command, lang)
-                            newArgs = checkArguments(event, commands[cmd] as Command, args, lang)
-                        } catch (err: Exception) {
-                            return@async event.channel.sendMessage(err.message).queue()
-                        }
-
-                        ctx = Context(event, client, commands[cmd] as Command, newArgs, raw, flags, newPerms, lang)
-
-                        command.run(ctx)
-                    }
-                }
+            try {
+                newPerms = checkPermissions(event, commands[cmd] as Command, lang)
+                newArgs = checkArguments(event, commands[cmd] as Command, args, lang)
+            } catch (err: Exception) {
+                return event.channel.sendMessage(err.message).queue()
             }
-        }.await()
+
+            ctx = Context(event, client, commands[cmd] as Command, newArgs, raw, flags, newPerms, lang)
+
+            command.run(ctx)
+        }
     }
 
     private fun checkPermissions(event: MessageReceivedEvent, cmd: Command, lang: ResourceBundle): MutableMap<String, Boolean> {
