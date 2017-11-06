@@ -33,6 +33,7 @@ import me.noud02.akatsuki.bot.entities.Config
 import me.noud02.akatsuki.bot.entities.CoroutineDispatcher
 import me.noud02.akatsuki.bot.schema.Guilds
 import me.noud02.akatsuki.bot.schema.Users
+import me.noud02.akatsuki.bot.utils.Wolk
 import net.dv8tion.jda.core.AccountType
 import net.dv8tion.jda.core.JDA
 import net.dv8tion.jda.core.JDABuilder
@@ -77,38 +78,21 @@ class Akatsuki(private val config: Config) : ListenerAdapter() {
             config.database.user,
             config.database.pass
     )
-    val lavalinkUtil = LavalinkUtil()
 
     var owners = config.owners
     var prefixes = config.prefixes
     var jda: JDA? = null
-    var lavalink: Lavalink? = null
     
 
     init {
         transaction { 
             SchemaUtils.create(Guilds, Users)
         }
+        Wolk.setToken(config.api.weebsh)
     }
 
     fun build() {
         jda = builder.buildBlocking()
-        
-        lavalink = Lavalink(
-                jda!!.selfUser.id,
-                if (jda!!.shardInfo != null) jda!!.shardInfo.shardTotal else 1,
-                { jda!! }
-        )
-        
-        for (node in config.musicNodes) {
-            try {
-                lavalink!!.addNode(URI(node.host), node.pass)
-            } catch(e: Exception) {
-                e.printStackTrace()
-            }
-        }
-        
-        jda!!.addEventListener(lavalink!!)
     }
 
     fun buildSharded(shards: Int, shard: Int? = null) {
@@ -116,38 +100,13 @@ class Akatsuki(private val config: Config) : ListenerAdapter() {
             jda = builder
                     .useSharding(shard, shards)
                     .buildAsync()
-            
-            lavalink = Lavalink(
-                    jda!!.selfUser.id,
-                    if (jda!!.shardInfo != null) jda!!.shardInfo.shardTotal else 1,
-                    { jda!! }
-            )
-
-            jda!!.addEventListener(lavalink!!)
         } else
             for (i in 0 until shards) {
                 jda = builder
                         .useSharding(i, shards)
                         .buildAsync()
-
-                lavalink = Lavalink(
-                        jda!!.selfUser.id,
-                        if (jda!!.shardInfo != null) jda!!.shardInfo.shardTotal else 1,
-                        { jda!! }
-                )
-
-                jda!!.addEventListener(lavalink!!)
                 
                 Thread.sleep(5000)
-            }
-        
-        if (lavalink != null)
-            for (node in config.musicNodes) {
-                try {
-                    lavalink!!.addNode(URI(node.host), node.pass)
-                } catch(e: Exception) {
-                    e.printStackTrace()
-                }
             }
     }
 

@@ -23,24 +23,28 @@
  *  OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package me.noud02.akatsuki.bot.entities
+package me.noud02.akatsuki.commands
 
-data class APIConfig(
-        val google: String,
-        val weebsh: String
-)
+import me.noud02.akatsuki.bot.entities.Argument
+import me.noud02.akatsuki.bot.entities.Command
+import me.noud02.akatsuki.bot.entities.Context
+import me.noud02.akatsuki.bot.entities.Load
+import me.noud02.akatsuki.bot.utils.Wolk
+import me.noud02.akatsuki.bot.utils.WolkType
+import net.dv8tion.jda.core.EmbedBuilder
 
-data class DatabaseConfig(
-        val name: String,
-        val user: String,
-        val pass: String
-)
+@Load
+@Argument("user", "user")
+class Hug : Command() {
+    override val name = "hug"
+    override val desc = "Hugs~"
+    override val guildOnly = true
 
-data class Config(
-        val token: String,
-        val owners: List<String>,
-        val prefixes: List<String>,
-        val games: List<String>,
-        val database: DatabaseConfig,
-        val api: APIConfig
-)
+    override fun run(ctx: Context) {
+        val embed = EmbedBuilder()
+
+        embed.setImage(Wolk.getByType(WolkType.HUG).url)
+
+        ctx.send(embed.build())
+    }
+}

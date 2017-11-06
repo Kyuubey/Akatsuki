@@ -72,8 +72,10 @@ class CommandHandler(private val client: Akatsuki) {
                         if (ann.isNotEmpty() && ann.first().bool) {
                             val cmd = it.newInstance() as Command
                             addCommand(cmd)
+                            logger.info("Loaded command ${cmd.name}")
                             if (aliases.isNotEmpty())
                                 for (alias in aliases.first().aliases) {
+                                    logger.info("Added alias for command ${cmd.name}: $alias")
                                     this.aliases[alias] = cmd.name
                                 }
                         }
@@ -142,7 +144,11 @@ class CommandHandler(private val client: Akatsuki) {
 
             val lang = ResourceBundle.getBundle("i18n.Kyubey", locale, UTF8Control())
 
-            val usedPrefix: String? = client.prefixes.lastOrNull { event.message.rawContent.startsWith(it) } ?: guildPrefixes.lastOrNull { event.message.rawContent.startsWith(it) }
+            val usedPrefix: String? = client.prefixes.lastOrNull {
+                event.message.rawContent.startsWith(it)
+            } ?: guildPrefixes.lastOrNull {
+                event.message.rawContent.startsWith(it)
+            }
 
             async(client.coroutineDispatcher) {
                 if (usedPrefix != null) {

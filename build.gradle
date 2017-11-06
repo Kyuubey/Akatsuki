@@ -53,9 +53,6 @@ dependencies {
     compile 'org.postgresql:postgresql:42.1.4'
     compile 'org.reflections:reflections:0.9.11'
     compile 'org.python:jython:2.7.1b3'
-    compile ('com.github.Frederikam:Lavalink:master-SNAPSHOT') {
-        exclude (module: 'Lavalink-Server')
-    }
     compile 'com.fasterxml.jackson.core:jackson-databind:2.9.0'
     compile 'com.fasterxml.jackson.module:jackson-module-kotlin:2.9.0'
     compile 'com.fasterxml.jackson.dataformat:jackson-dataformat-yaml:2.9.0'

@@ -14,8 +14,4 @@ database:
   pass: db password
 api:
   google: google api key
-musicNodes:
-  - host: example.com
-    pass: mypass123
-  - host: example.org
-    pass: mypass123
+  weebsh: weeb.sh api key
