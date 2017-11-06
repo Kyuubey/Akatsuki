@@ -52,7 +52,7 @@ import java.net.URI
 import java.util.concurrent.ExecutorService
 import java.util.concurrent.Executors
 
-class Akatsuki(private val config: Config) : ListenerAdapter() {
+class Akatsuki(config: Config) : ListenerAdapter() {
     private val eventHandler = EventHandler(this)
     private val logger = LoggerFactory.getLogger(this::class.java)
     private val builder = JDABuilder(AccountType.BOT)
@@ -60,6 +60,7 @@ class Akatsuki(private val config: Config) : ListenerAdapter() {
             .addEventListener(this)
             .setReconnectQueue(SessionReconnectQueue())
 
+    lateinit var jda: JDA
     val pool: ExecutorService by lazy {
         Executors.newCachedThreadPool {
             Thread(it, "Akatsuki-Pool-Thread").apply {
@@ -81,7 +82,6 @@ class Akatsuki(private val config: Config) : ListenerAdapter() {
 
     var owners = config.owners
     var prefixes = config.prefixes
-    var jda: JDA? = null
     
 
     init {
@@ -110,7 +110,7 @@ class Akatsuki(private val config: Config) : ListenerAdapter() {
             }
     }
 
-    fun setGame(text: String, idle: Boolean = false) = jda!!.presence.setPresence(Game.of(text), idle)
+    fun setGame(text: String, idle: Boolean = false) = jda.presence.setPresence(Game.of(text), idle)
 
     override fun onGenericEvent(event: Event) = waiter.emit(event)
 
