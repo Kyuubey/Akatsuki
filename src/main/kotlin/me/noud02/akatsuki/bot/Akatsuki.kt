@@ -27,6 +27,7 @@ package me.noud02.akatsuki.bot
 
 import kotlinx.coroutines.experimental.async
 import me.aurieh.ares.core.entities.EventWaiter
+import me.noud02.akatsuki.bot.db.DatabaseWrapper
 import me.noud02.akatsuki.bot.entities.Config
 import me.noud02.akatsuki.bot.entities.CoroutineDispatcher
 import me.noud02.akatsuki.bot.schema.Guilds
@@ -79,12 +80,8 @@ class Akatsuki(config: Config) : ListenerAdapter() {
 
     var owners = config.owners
     var prefixes = config.prefixes
-    
 
     init {
-        transaction { 
-            SchemaUtils.create(Guilds, Users)
-        }
         Wolk.setToken(config.api.weebsh)
     }
 

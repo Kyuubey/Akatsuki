@@ -26,18 +26,17 @@
 package me.noud02.akatsuki.bot.db
 
 import kotlinx.coroutines.experimental.async
-import kotlinx.coroutines.experimental.future.await
 import me.aurieh.ares.exposed.async.asyncTransaction
 import me.noud02.akatsuki.bot.entities.CoroutineDispatcher
-import me.noud02.akatsuki.bot.entities.DatabaseConfig
 import me.noud02.akatsuki.bot.schema.Guilds
 import me.noud02.akatsuki.bot.schema.Users
 import net.dv8tion.jda.core.entities.Guild
 import net.dv8tion.jda.core.entities.Member
 import net.dv8tion.jda.core.entities.User
-import org.jetbrains.exposed.sql.Database
+import org.jetbrains.exposed.sql.SchemaUtils
 import org.jetbrains.exposed.sql.insert
 import org.jetbrains.exposed.sql.select
+import org.jetbrains.exposed.sql.transactions.transaction
 import java.util.concurrent.CompletableFuture
 import java.util.concurrent.ExecutorService
 import java.util.concurrent.Executors
@@ -57,7 +56,7 @@ data class DBUser(
         val lang: String
 )
 
-class DatabaseWrapper(private val config: DatabaseConfig) {
+object DatabaseWrapper {
     private val pool: ExecutorService by lazy {
         Executors.newCachedThreadPool {
             Thread(it, "Akatsuki-Database-Pool-Thread").apply {
@@ -69,12 +68,11 @@ class DatabaseWrapper(private val config: DatabaseConfig) {
         CoroutineDispatcher(pool)
     }
 
-    val db = Database.connect(
-            "jdbc:postgresql:${config.name}",
-            "org.postgresql.Driver",
-            config.user,
-            config.pass
-    )
+    init {
+        transaction {
+            SchemaUtils.create(Guilds, Users)
+        }
+    }
 
     fun getGuild(guild: Guild) = getGuild(guild.id)
 
@@ -113,7 +111,7 @@ class DatabaseWrapper(private val config: DatabaseConfig) {
 
                 if (selection.empty())
                     newGuild(guild)
-            }
+            }.await()
         }
 
         return getGuild(guild)
@@ -150,7 +148,7 @@ class DatabaseWrapper(private val config: DatabaseConfig) {
 
     fun getUserSafe(member: Member) = getUserSafe(member.user)
 
-    fun getUserSafe(user: User): CompletableFuture<DBGuild> {
+    fun getUserSafe(user: User): CompletableFuture<DBUser> {
         async(coroutineDispatcher) {
             asyncTransaction(pool) {
                 val selection = Users.select {
@@ -159,7 +157,7 @@ class DatabaseWrapper(private val config: DatabaseConfig) {
 
                 if (selection.empty())
                     newUser(user)
-            }
+            }.await()
         }
 
         return getUser(user)
