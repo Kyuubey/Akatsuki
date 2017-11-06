@@ -26,8 +26,6 @@
 package me.noud02.akatsuki.bot
 
 import kotlinx.coroutines.experimental.async
-import lavalink.client.io.Lavalink
-import lavalink.client.LavalinkUtil
 import me.aurieh.ares.core.entities.EventWaiter
 import me.noud02.akatsuki.bot.entities.Config
 import me.noud02.akatsuki.bot.entities.CoroutineDispatcher
