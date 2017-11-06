@@ -46,7 +46,6 @@ import net.dv8tion.jda.core.requests.SessionReconnectQueue
 import org.jetbrains.exposed.sql.*
 import org.jetbrains.exposed.sql.transactions.transaction
 import org.slf4j.LoggerFactory
-import java.net.URI
 import java.util.concurrent.ExecutorService
 import java.util.concurrent.Executors
 

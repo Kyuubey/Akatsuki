@@ -59,8 +59,8 @@ class GuildInfo : AsyncCommand() {
             if (guild[Guilds.prefixes].isNotEmpty())
                 desc.append("**Prefixes:** ${guild[Guilds.prefixes].joinToString(", ")}\n")
 
-            if (ctx.client.jda!!.shardInfo != null)
-                desc.append("**Shard:** ${(ctx.guild.idLong shr 22) % ctx.client.jda!!.shardInfo.shardTotal}\n")
+            if (ctx.client.jda.shardInfo != null)
+                desc.append("**Shard:** ${(ctx.guild.idLong shr 22) % ctx.client.jda.shardInfo.shardTotal}\n")
             desc.append("**Emotes:** ${ctx.guild.emotes.joinToString(" ") { it.asMention }}\n")
             desc.append("**Mods:**\n${ctx.guild.members.filter {
                 !it.user.isBot && (it.isOwner || it.hasPermission(Permission.BAN_MEMBERS) || it.hasPermission(Permission.KICK_MEMBERS) || it.hasPermission(Permission.ADMINISTRATOR))
