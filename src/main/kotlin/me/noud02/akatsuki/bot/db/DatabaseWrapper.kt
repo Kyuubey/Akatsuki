@@ -26,6 +26,7 @@
 package me.noud02.akatsuki.bot.db
 
 import kotlinx.coroutines.experimental.async
+import kotlinx.coroutines.experimental.future.await
 import me.aurieh.ares.exposed.async.asyncTransaction
 import me.noud02.akatsuki.bot.entities.CoroutineDispatcher
 import me.noud02.akatsuki.bot.entities.DatabaseConfig
@@ -56,7 +57,7 @@ data class DBUser(
         val lang: String
 )
 
-class Database(private val config: DatabaseConfig) {
+class DatabaseWrapper(private val config: DatabaseConfig) {
     private val pool: ExecutorService by lazy {
         Executors.newCachedThreadPool {
             Thread(it, "Akatsuki-Database-Pool-Thread").apply {
@@ -103,6 +104,21 @@ class Database(private val config: DatabaseConfig) {
         return fut
     }
 
+    fun getGuildSafe(guild: Guild): CompletableFuture<DBGuild> {
+        async(coroutineDispatcher) {
+            asyncTransaction(pool) {
+                val selection = Guilds.select {
+                    Guilds.id.eq(guild.id)
+                }
+
+                if (selection.empty())
+                    newGuild(guild)
+            }
+        }
+
+        return getGuild(guild)
+    }
+
     fun getUser(user: User) = getUser(user.id)
 
     fun getUser(member: Member) = getUser(member.user.id)
@@ -130,6 +146,23 @@ class Database(private val config: DatabaseConfig) {
         }
 
         return fut
+    }
+
+    fun getUserSafe(member: Member) = getUserSafe(member.user)
+
+    fun getUserSafe(user: User): CompletableFuture<DBGuild> {
+        async(coroutineDispatcher) {
+            asyncTransaction(pool) {
+                val selection = Users.select {
+                    Users.id.eq(user.id)
+                }
+
+                if (selection.empty())
+                    newUser(user)
+            }
+        }
+
+        return getUser(user)
     }
 
     fun newGuild(guild: Guild): CompletableFuture<DBGuild> {
