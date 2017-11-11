@@ -32,6 +32,7 @@ import me.noud02.akatsuki.bot.entities.Load
 import me.noud02.akatsuki.bot.utils.Wolk
 import me.noud02.akatsuki.bot.utils.WolkType
 import net.dv8tion.jda.core.EmbedBuilder
+import net.dv8tion.jda.core.entities.Member
 
 @Load
 @Argument("user", "user")
@@ -42,7 +43,9 @@ class Hug : Command() {
 
     override fun run(ctx: Context) {
         val embed = EmbedBuilder()
+        val user = ctx.args["user"] as Member
 
+        embed.setTitle("${user.effectiveName}, you got a hug from ${ctx.member!!.effectiveName}!")
         embed.setImage(Wolk.getByType(WolkType.HUG).url)
 
         ctx.send(embed.build())
