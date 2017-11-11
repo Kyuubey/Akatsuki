@@ -50,7 +50,7 @@ import org.slf4j.LoggerFactory
 import java.util.concurrent.ExecutorService
 import java.util.concurrent.Executors
 
-class Akatsuki(config: Config) : ListenerAdapter() {
+class Akatsuki(val config: Config) : ListenerAdapter() {
     private val eventHandler = EventHandler(this)
     private val logger = LoggerFactory.getLogger(this::class.java)
     private val builder = JDABuilder(AccountType.BOT)
