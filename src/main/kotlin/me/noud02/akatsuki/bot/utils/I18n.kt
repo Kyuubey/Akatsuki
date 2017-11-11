@@ -23,11 +23,11 @@
  *  OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package me.noud02.akatsuki.bot
+package me.noud02.akatsuki.bot.utils
 
 import java.util.*
 
-object i18n {
+object I18n {
     fun parse(str: String, values: Map<String, Any>): String {
         val regex = "\\{\\{([^}]+)}}".toRegex()
         var new = str

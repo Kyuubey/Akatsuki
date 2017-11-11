@@ -27,7 +27,7 @@ package me.noud02.akatsuki.commands
 
 import me.aurieh.ares.exposed.async.asyncTransaction
 import me.noud02.akatsuki.bot.entities.*
-import me.noud02.akatsuki.bot.i18n
+import me.noud02.akatsuki.bot.utils.I18n
 import me.noud02.akatsuki.bot.schema.Users
 import org.jetbrains.exposed.sql.update
 
@@ -45,7 +45,7 @@ class SetLocale : AsyncCommand() {
                 it[lang] = ctx.args["lang"] as String
             }
 
-            ctx.send(i18n.parse(ctx.lang.getString("language_set"), mapOf("language" to ctx.args["lang"] as String)))
+            ctx.send(I18n.parse(ctx.lang.getString("language_set"), mapOf("language" to ctx.args["lang"] as String)))
         }.await()
     }
 }
@@ -59,5 +59,5 @@ class Locale : Command() {
         addSubcommand(SetLocale())
     }
 
-    override fun run(ctx: Context) = ctx.send(i18n.parse(ctx.lang.getString("language_check"), mapOf("language" to ctx.lang.locale)))
+    override fun run(ctx: Context) = ctx.send(I18n.parse(ctx.lang.getString("language_check"), mapOf("language" to ctx.lang.locale)))
 }

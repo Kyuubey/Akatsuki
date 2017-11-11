@@ -25,27 +25,19 @@
 
 package me.noud02.akatsuki.bot
 
-import kotlinx.coroutines.experimental.async
 import kotlinx.coroutines.experimental.future.await
-import me.aurieh.ares.exposed.async.asyncTransaction
 import me.aurieh.ares.utils.ArgParser
 import me.noud02.akatsuki.bot.db.DBGuild
-import me.noud02.akatsuki.bot.db.DBUser
 import me.noud02.akatsuki.bot.db.DatabaseWrapper
 import me.noud02.akatsuki.bot.entities.*
 import me.noud02.akatsuki.bot.extensions.UTF8Control
-import me.noud02.akatsuki.bot.extensions.await
-import me.noud02.akatsuki.bot.schema.Guilds
-import me.noud02.akatsuki.bot.schema.Users
 import me.noud02.akatsuki.bot.utils.UserPicker
+import me.noud02.akatsuki.bot.utils.I18n
 import net.dv8tion.jda.core.Permission
 import net.dv8tion.jda.core.entities.Channel
 import net.dv8tion.jda.core.entities.Member
 import net.dv8tion.jda.core.events.message.MessageReceivedEvent
 import org.apache.commons.validator.routines.UrlValidator
-import org.jetbrains.exposed.sql.Query
-import org.jetbrains.exposed.sql.insert
-import org.jetbrains.exposed.sql.select
 import org.reflections.Reflections
 import org.reflections.util.ClasspathHelper
 import org.reflections.util.ConfigurationBuilder
@@ -192,7 +184,7 @@ class CommandHandler(private val client: Akatsuki) {
         for (perm in perms) {
             newPerms[perm.name.name] = event.member?.hasPermission(event.channel as Channel, perm.name) ?: event.member?.hasPermission(Permission.ADMINISTRATOR) ?: false
             if (!perm.optional && !newPerms[perm.name.name]!! && !event.member?.hasPermission(Permission.ADMINISTRATOR)!!)
-                throw Exception(i18n.parse(lang.getString("user_lack_perms"), mapOf("username" to event.author.name, "permission" to i18n.permission(lang, perm.name.name))))
+                throw Exception(I18n.parse(lang.getString("user_lack_perms"), mapOf("username" to event.author.name, "permission" to I18n.permission(lang, perm.name.name))))
         }
 
         return newPerms
@@ -214,7 +206,7 @@ class CommandHandler(private val client: Akatsuki) {
                 arg2 = args[i]
             } catch (e: IndexOutOfBoundsException) {
                 if (!arg.optional)
-                    throw Exception(i18n.parse(lang.getString("argument_not_specified"), mapOf("argument" to arg.name, "username" to event.author.name)))
+                    throw Exception(I18n.parse(lang.getString("argument_not_specified"), mapOf("argument" to arg.name, "username" to event.author.name)))
                 else
                     return newArgs
             }
@@ -263,7 +255,7 @@ class CommandHandler(private val client: Akatsuki) {
 
                             arg2.toLongOrNull() != null && event.guild.getMemberById(arg2) != null -> event.guild.getMemberById(arg2)
 
-                            else -> throw Exception(i18n.parse(lang.getString("user_not_found"), mapOf("username" to event.author.name)))
+                            else -> throw Exception(I18n.parse(lang.getString("user_not_found"), mapOf("username" to event.author.name)))
                         }
 
                         newArgs[arg.name] = user

@@ -26,17 +26,14 @@
 package me.noud02.akatsuki.commands
 
 import com.sedmelluq.discord.lavaplayer.player.AudioLoadResultHandler
-import com.sedmelluq.discord.lavaplayer.source.youtube.YoutubeAudioSourceManager
-import com.sedmelluq.discord.lavaplayer.source.youtube.YoutubeSearchProvider
 import com.sedmelluq.discord.lavaplayer.tools.FriendlyException
-import com.sedmelluq.discord.lavaplayer.track.AudioItem
 import com.sedmelluq.discord.lavaplayer.track.AudioPlaylist
 import com.sedmelluq.discord.lavaplayer.track.AudioTrack
 import me.noud02.akatsuki.bot.entities.Argument
 import me.noud02.akatsuki.bot.entities.Command
 import me.noud02.akatsuki.bot.entities.Context
 import me.noud02.akatsuki.bot.entities.Load
-import me.noud02.akatsuki.bot.i18n
+import me.noud02.akatsuki.bot.utils.I18n
 import me.noud02.akatsuki.bot.music.MusicManager
 
 @Load
@@ -50,7 +47,7 @@ class Play : Command() {
         val manager = MusicManager.musicManagers[ctx.guild?.id] ?: return ctx.send("Not connected!")
         
         if (!ctx.guild!!.audioManager.isConnected)
-            return ctx.send(i18n.parse(ctx.lang.getString("join_voice_channel_fail"), mapOf("username" to ctx.author.name)))
+            return ctx.send(I18n.parse(ctx.lang.getString("join_voice_channel_fail"), mapOf("username" to ctx.author.name)))
 
         val search = ctx.rawArgs.joinToString(" ")
 
