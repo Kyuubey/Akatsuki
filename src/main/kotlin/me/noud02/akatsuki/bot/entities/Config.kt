@@ -38,6 +38,7 @@ data class DatabaseConfig(
 
 data class Config(
         val token: String,
+        val description: String,
         val owners: List<String>,
         val prefixes: List<String>,
         val games: List<String>,
