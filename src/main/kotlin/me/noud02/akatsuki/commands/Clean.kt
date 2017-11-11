@@ -41,7 +41,8 @@ class Clean : AsyncCommand() {
     override suspend fun asyncRun(ctx: Context) {
         val msgs = ctx.channel.getHistoryAround(ctx.msg, 100).await()
 
-        val botmsgs = msgs.retrievedHistory
+        val botmsgs = msgs
+                .retrievedHistory
                 .filter { it.author.id == ctx.selfMember!!.user.id }
                 .subList(0, 10)
 

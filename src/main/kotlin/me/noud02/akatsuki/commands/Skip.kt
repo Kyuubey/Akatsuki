@@ -29,7 +29,7 @@ import me.noud02.akatsuki.bot.entities.Command
 import me.noud02.akatsuki.bot.entities.Context
 import me.noud02.akatsuki.bot.entities.Load
 import me.noud02.akatsuki.bot.entities.Perm
-import me.noud02.akatsuki.bot.i18n
+import me.noud02.akatsuki.bot.utils.I18n
 import me.noud02.akatsuki.bot.music.MusicManager
 import net.dv8tion.jda.core.Permission
 import net.dv8tion.jda.core.entities.Member
@@ -45,12 +45,12 @@ class Skip : Command() {
 
     override fun run(ctx: Context) {
         if (!ctx.member!!.voiceState.inVoiceChannel())
-            return ctx.send(i18n.parse(ctx.lang.getString("join_voice_channel_fail"), mapOf("username" to ctx.author.name))) // TODO rename translation
+            return ctx.send(I18n.parse(ctx.lang.getString("join_voice_channel_fail"), mapOf("username" to ctx.author.name))) // TODO rename translation
         val manager = MusicManager.musicManagers[ctx.guild!!.id] ?: return ctx.send("Not connected!")
 
         if (ctx.perms["MANAGE_SERVER"] == true) {
             manager.scheduler.next()
-            ctx.send(i18n.parse(ctx.lang.getString("force_skip"), mapOf("username" to ctx.author.name)))
+            ctx.send(I18n.parse(ctx.lang.getString("force_skip"), mapOf("username" to ctx.author.name)))
         } else {
             val members = manager.voiceChannel.members.filter { member: Member -> !member.user.isBot }
 
@@ -68,7 +68,7 @@ class Skip : Command() {
             }
 
             manager.voteSkip.add(ctx.author.id)
-            ctx.send(i18n.parse(ctx.lang.getString("voteskip_add_success"), mapOf("votes" to manager.voteSkip.size, "total_votes" to members.size - 1)))
+            ctx.send(I18n.parse(ctx.lang.getString("voteskip_add_success"), mapOf("votes" to manager.voteSkip.size, "total_votes" to members.size - 1)))
         }
     }
 }

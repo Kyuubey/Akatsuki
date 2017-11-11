@@ -26,7 +26,7 @@
 package me.noud02.akatsuki.commands
 
 import me.noud02.akatsuki.bot.entities.*
-import me.noud02.akatsuki.bot.i18n
+import me.noud02.akatsuki.bot.utils.I18n
 
 @Load
 @Alias("--help", "-h")
@@ -62,7 +62,7 @@ class Help : Command() {
                 ctx.author.openPrivateChannel().complete().sendMessage("```$partt```").queue()
             }
 
-            ctx.send(i18n.parse(ctx.lang.getString("help_message"), mapOf("username" to ctx.author.name)))
+            ctx.send(I18n.parse(ctx.lang.getString("help_message"), mapOf("username" to ctx.author.name)))
         }
     }
 }

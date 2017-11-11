@@ -42,7 +42,17 @@ class Youtube : AsyncCommand() {
     override suspend fun asyncRun(ctx: Context) {
         val picker = ItemPicker(ctx.client.waiter, ctx.member as Member, ctx.guild as Guild)
 
-        val res = khttp.get("https://www.googleapis.com/youtube/v3/search", mapOf(), mapOf("key" to System.getenv("AKATSUKI_GOOGLE_KEY"), "part" to "snippet", "maxResults" to "10", "type" to "video", "q" to ctx.args["query"] as String))
+        val res = khttp.get(
+                "https://www.googleapis.com/youtube/v3/search", 
+                mapOf(),
+                mapOf(
+                        "key" to ctx.client.config.api.google, 
+                        "part" to "snippet", 
+                        "maxResults" to "10", 
+                        "type" to "video",
+                        "q" to ctx.args["query"] as String
+                )
+        )
 
         val items = res
                 .jsonObject
