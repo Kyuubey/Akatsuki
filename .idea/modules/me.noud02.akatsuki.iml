@@ -60,6 +60,9 @@
     <orderEntry type="library" scope="PROVIDED" name="Gradle: com.fasterxml.jackson.core:jackson-databind:2.9.0" level="project" />
     <orderEntry type="library" scope="PROVIDED" name="Gradle: com.fasterxml.jackson.module:jackson-module-kotlin:2.9.0" level="project" />
     <orderEntry type="library" scope="PROVIDED" name="Gradle: com.fasterxml.jackson.dataformat:jackson-dataformat-yaml:2.9.0" level="project" />
+    <orderEntry type="library" scope="PROVIDED" name="Gradle: com.github.kittinunf.fuel:fuel:1.11.0" level="project" />
+    <orderEntry type="library" scope="PROVIDED" name="Gradle: com.github.kittinunf.fuel:fuel-jackson:1.11.0" level="project" />
+    <orderEntry type="library" scope="PROVIDED" name="Gradle: com.github.kittinunf.fuel:fuel-gson:1.11.0" level="project" />
     <orderEntry type="library" scope="PROVIDED" name="Gradle: org.jetbrains.kotlin:kotlin-stdlib:1.2.0-rc-39" level="project" />
     <orderEntry type="library" scope="PROVIDED" name="Gradle: org.jetbrains.kotlin:kotlin-stdlib-jre7:1.2.0-rc-39" level="project" />
     <orderEntry type="library" scope="PROVIDED" name="Gradle: commons-beanutils:commons-beanutils:1.9.2" level="project" />
@@ -83,6 +86,8 @@
     <orderEntry type="library" scope="PROVIDED" name="Gradle: org.javassist:javassist:3.21.0-GA" level="project" />
     <orderEntry type="library" scope="PROVIDED" name="Gradle: com.fasterxml.jackson.core:jackson-annotations:2.9.0" level="project" />
     <orderEntry type="library" scope="PROVIDED" name="Gradle: org.yaml:snakeyaml:1.17" level="project" />
+    <orderEntry type="library" scope="PROVIDED" name="Gradle: com.github.kittinunf.result:result:1.2.0" level="project" />
+    <orderEntry type="library" scope="PROVIDED" name="Gradle: com.google.code.gson:gson:2.3.1" level="project" />
     <orderEntry type="library" scope="PROVIDED" name="Gradle: com.squareup.okio:okio:1.13.0" level="project" />
     <orderEntry type="library" scope="PROVIDED" name="Gradle: org.apache.httpcomponents:httpcore:4.4.4" level="project" />
     <orderEntry type="library" scope="PROVIDED" name="Gradle: commons-codec:commons-codec:1.9" level="project" />
@@ -107,6 +112,9 @@
     <orderEntry type="library" scope="RUNTIME" name="Gradle: com.fasterxml.jackson.core:jackson-databind:2.9.0" level="project" />
     <orderEntry type="library" scope="RUNTIME" name="Gradle: com.fasterxml.jackson.module:jackson-module-kotlin:2.9.0" level="project" />
     <orderEntry type="library" scope="RUNTIME" name="Gradle: com.fasterxml.jackson.dataformat:jackson-dataformat-yaml:2.9.0" level="project" />
+    <orderEntry type="library" scope="RUNTIME" name="Gradle: com.github.kittinunf.fuel:fuel:1.11.0" level="project" />
+    <orderEntry type="library" scope="RUNTIME" name="Gradle: com.github.kittinunf.fuel:fuel-jackson:1.11.0" level="project" />
+    <orderEntry type="library" scope="RUNTIME" name="Gradle: com.github.kittinunf.fuel:fuel-gson:1.11.0" level="project" />
     <orderEntry type="library" scope="RUNTIME" name="Gradle: org.jetbrains.kotlin:kotlin-stdlib:1.2.0-rc-39" level="project" />
     <orderEntry type="library" scope="RUNTIME" name="Gradle: org.jetbrains.kotlin:kotlin-stdlib-jre7:1.2.0-rc-39" level="project" />
     <orderEntry type="library" scope="RUNTIME" name="Gradle: commons-beanutils:commons-beanutils:1.9.2" level="project" />
@@ -130,6 +138,8 @@
     <orderEntry type="library" scope="RUNTIME" name="Gradle: org.javassist:javassist:3.21.0-GA" level="project" />
     <orderEntry type="library" scope="RUNTIME" name="Gradle: com.fasterxml.jackson.core:jackson-annotations:2.9.0" level="project" />
     <orderEntry type="library" scope="RUNTIME" name="Gradle: org.yaml:snakeyaml:1.17" level="project" />
+    <orderEntry type="library" scope="RUNTIME" name="Gradle: com.github.kittinunf.result:result:1.2.0" level="project" />
+    <orderEntry type="library" scope="RUNTIME" name="Gradle: com.google.code.gson:gson:2.3.1" level="project" />
     <orderEntry type="library" scope="RUNTIME" name="Gradle: com.squareup.okio:okio:1.13.0" level="project" />
     <orderEntry type="library" scope="RUNTIME" name="Gradle: org.apache.httpcomponents:httpcore:4.4.4" level="project" />
     <orderEntry type="library" scope="RUNTIME" name="Gradle: commons-codec:commons-codec:1.9" level="project" />
@@ -154,6 +164,9 @@
     <orderEntry type="library" scope="TEST" name="Gradle: com.fasterxml.jackson.core:jackson-databind:2.9.0" level="project" />
     <orderEntry type="library" scope="TEST" name="Gradle: com.fasterxml.jackson.module:jackson-module-kotlin:2.9.0" level="project" />
     <orderEntry type="library" scope="TEST" name="Gradle: com.fasterxml.jackson.dataformat:jackson-dataformat-yaml:2.9.0" level="project" />
+    <orderEntry type="library" scope="TEST" name="Gradle: com.github.kittinunf.fuel:fuel:1.11.0" level="project" />
+    <orderEntry type="library" scope="TEST" name="Gradle: com.github.kittinunf.fuel:fuel-jackson:1.11.0" level="project" />
+    <orderEntry type="library" scope="TEST" name="Gradle: com.github.kittinunf.fuel:fuel-gson:1.11.0" level="project" />
     <orderEntry type="library" scope="TEST" name="Gradle: org.jetbrains.kotlin:kotlin-stdlib:1.2.0-rc-39" level="project" />
     <orderEntry type="library" scope="TEST" name="Gradle: org.jetbrains.kotlin:kotlin-stdlib-jre7:1.2.0-rc-39" level="project" />
     <orderEntry type="library" scope="TEST" name="Gradle: commons-beanutils:commons-beanutils:1.9.2" level="project" />
@@ -177,6 +190,8 @@
     <orderEntry type="library" scope="TEST" name="Gradle: org.javassist:javassist:3.21.0-GA" level="project" />
     <orderEntry type="library" scope="TEST" name="Gradle: com.fasterxml.jackson.core:jackson-annotations:2.9.0" level="project" />
     <orderEntry type="library" scope="TEST" name="Gradle: org.yaml:snakeyaml:1.17" level="project" />
+    <orderEntry type="library" scope="TEST" name="Gradle: com.github.kittinunf.result:result:1.2.0" level="project" />
+    <orderEntry type="library" scope="TEST" name="Gradle: com.google.code.gson:gson:2.3.1" level="project" />
     <orderEntry type="library" scope="TEST" name="Gradle: com.squareup.okio:okio:1.13.0" level="project" />
     <orderEntry type="library" scope="TEST" name="Gradle: org.apache.httpcomponents:httpcore:4.4.4" level="project" />
     <orderEntry type="library" scope="TEST" name="Gradle: commons-codec:commons-codec:1.9" level="project" />
