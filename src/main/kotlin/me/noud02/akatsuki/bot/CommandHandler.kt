@@ -79,8 +79,8 @@ class CommandHandler(private val client: Akatsuki) {
     }
 
     suspend fun handleMessage(event: MessageReceivedEvent) {
-        val guild: DBGuild? = if (event.guild != null) DatabaseWrapper.getGuildSafe(event.guild).await() else null
-        val user = DatabaseWrapper.getUserSafe(event.author).await()
+        val guild: DBGuild? = if (event.guild != null) DatabaseWrapper.getGuildSafe(event.guild) else null
+        val user = DatabaseWrapper.getUserSafe(event.author)
 
         val locale = if (guild != null && guild.forceLang)
             Locale(guild.lang.split("_")[0], guild.lang.split("_")[1])
