@@ -83,6 +83,9 @@ class Akatsuki(val config: Config) : ListenerAdapter() {
 
     init {
         Wolk.setToken(config.api.weebsh)
+        transaction {
+            SchemaUtils.create(Guilds, Users)
+        }
     }
 
     fun build() {
