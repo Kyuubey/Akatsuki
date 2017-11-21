@@ -26,6 +26,7 @@
 package me.noud02.akatsuki.bot.db
 
 import kotlinx.coroutines.experimental.async
+import kotlinx.coroutines.experimental.future.await
 import me.aurieh.ares.exposed.async.asyncTransaction
 import me.noud02.akatsuki.bot.entities.CoroutineDispatcher
 import me.noud02.akatsuki.bot.schema.Guilds
@@ -33,10 +34,8 @@ import me.noud02.akatsuki.bot.schema.Users
 import net.dv8tion.jda.core.entities.Guild
 import net.dv8tion.jda.core.entities.Member
 import net.dv8tion.jda.core.entities.User
-import org.jetbrains.exposed.sql.SchemaUtils
 import org.jetbrains.exposed.sql.insert
 import org.jetbrains.exposed.sql.select
-import org.jetbrains.exposed.sql.transactions.transaction
 import java.util.concurrent.CompletableFuture
 import java.util.concurrent.ExecutorService
 import java.util.concurrent.Executors
@@ -68,140 +67,109 @@ object DatabaseWrapper {
         CoroutineDispatcher(pool)
     }
 
-    init {
-        transaction {
-            SchemaUtils.create(Guilds, Users)
-        }
+    suspend fun getGuild(guild: Guild) = getGuild(guild.id)
+
+    suspend fun getGuild(id: String): DBGuild {
+        return asyncTransaction(pool) {
+            val selection = Guilds.select {
+                Guilds.id.eq(id)
+            }
+
+            if (selection.empty())
+                throw Exception("Guild not found")
+            else {
+                val guild = selection.first()
+
+                return@asyncTransaction DBGuild(
+                        guild[Guilds.id],
+                        guild[Guilds.name],
+                        guild[Guilds.lang],
+                        guild[Guilds.prefixes].toList(),
+                        guild[Guilds.forceLang]
+                )
+            }
+        }.await()
     }
 
-    fun getGuild(guild: Guild) = getGuild(guild.id)
+    suspend fun newGuild(guild: Guild) {
+        asyncTransaction(pool) {
+            val selection = Guilds.select {
+                Guilds.id.eq(guild.id)
+            }
 
-    fun getGuild(id: String): CompletableFuture<DBGuild> {
-        val fut = CompletableFuture<DBGuild>()
-
-        async(coroutineDispatcher) {
-            asyncTransaction(pool) {
-                try {
-                    val guild = Guilds.select {
-                        Guilds.id.eq(id)
-                    }.first()
-
-                    fut.complete(DBGuild(
-                            guild[Guilds.id],
-                            guild[Guilds.name],
-                            guild[Guilds.lang],
-                            guild[Guilds.prefixes].toList(),
-                            guild[Guilds.forceLang]
-                    ))
-                } catch (e: Exception) {
-                    e.printStackTrace()
+            if (selection.empty())
+                Guilds.insert {
+                    it[id] = guild.id
+                    it[lang] = "en_US"
+                    it[forceLang] = false
+                    it[prefixes] = arrayOf()
+                    it[name] = guild.name
                 }
-            }.await()
-        }
-
-        return fut
+        }.await()
     }
 
-    fun getGuildSafe(guild: Guild): CompletableFuture<DBGuild> {
-        async(coroutineDispatcher) {
-            asyncTransaction(pool) {
-                val selection = Guilds.select {
-                    Guilds.id.eq(guild.id)
+    suspend fun getUser(user: User) = getUser(user.id)
+
+    suspend fun getUser(member: Member) = getUser(member.user.id)
+
+    suspend fun getUser(id: String): DBUser {
+        return asyncTransaction(pool) {
+            val selection = Users.select {
+                Users.id.eq(id)
+            }
+
+            if (selection.empty())
+                throw Exception("User not found")
+            else {
+                val user = selection.first()
+
+                return@asyncTransaction DBUser(
+                        user[Users.id],
+                        user[Users.username],
+                        user[Users.discriminator],
+                        user[Users.lang]
+                )
+            }
+        }.await()
+    }
+
+    suspend fun newUser(member: Member) = newUser(member.user)
+
+    suspend fun newUser(user: User) {
+        asyncTransaction(pool) {
+            val selection = Users.select {
+                Users.id.eq(user.id)
+            }
+
+            if (selection.empty())
+                Users.insert {
+                    it[id] = user.id
+                    it[username] = user.name
+                    it[discriminator] = user.discriminator
+                    it[lang] = "en_US"
                 }
-
-                if (selection.empty())
-                    newGuild(guild)
-            }.await()
         }
-
-        return getGuild(guild)
     }
 
-    fun getUser(user: User) = getUser(user.id)
-
-    fun getUser(member: Member) = getUser(member.user.id)
-
-    fun getUser(id: String): CompletableFuture<DBUser> {
-        val fut = CompletableFuture<DBUser>()
-
-        async(coroutineDispatcher) {
-            asyncTransaction(pool) {
-                try {
-                    val user = Users.select {
-                        Users.id.eq(id)
-                    }.first()
-
-                    fut.complete(DBUser(
-                            user[Users.id],
-                            user[Users.username],
-                            user[Users.discriminator],
-                            user[Users.lang]
-                    ))
-                } catch(e: Exception) {
-                    e.printStackTrace()
-                }
-            }.await()
+    suspend fun getGuildSafe(guild: Guild): DBGuild {
+        try {
+            getGuild(guild)
+        } catch (e: Exception) {
+            newGuild(guild)
+        } finally {
+            return getGuild(guild)
         }
-
-        return fut
     }
 
-    fun getUserSafe(member: Member) = getUserSafe(member.user)
+    suspend fun getUserSafe(member: Member) = getUserSafe(member.user)
 
-    fun getUserSafe(user: User): CompletableFuture<DBUser> {
-        async(coroutineDispatcher) {
-            asyncTransaction(pool) {
-                val selection = Users.select {
-                    Users.id.eq(user.id)
-                }
-
-                if (selection.empty())
-                    newUser(user)
-            }.await()
+    suspend fun getUserSafe(user: User): DBUser {
+        try {
+            getUser(user)
+        } catch (e: Exception) {
+            newUser(user)
+        } finally {
+            return getUser(user)
         }
-
-        return getUser(user)
     }
-
-    fun newGuild(guild: Guild): CompletableFuture<DBGuild> {
-        async(coroutineDispatcher) {
-            asyncTransaction(pool) {
-                try {
-                    Guilds.insert {
-                        it[id] = guild.id
-                        it[name] = guild.name
-                        it[prefixes] = arrayOf()
-                        it[lang] = "en_US"
-                        it[forceLang] = false
-                    }
-                } catch(e: Exception) {
-                    e.printStackTrace()
-                }
-            }.await()
-        }
-
-        return getGuild(guild)
-    }
-
-    fun newUser(member: Member) = newUser(member.user)
-
-    fun newUser(user: User): CompletableFuture<DBUser> {
-        async(coroutineDispatcher) {
-            asyncTransaction(pool) {
-                try {
-                    Users.insert {
-                        it[id] = user.id
-                        it[username] = user.name
-                        it[discriminator] = user.discriminator
-                        it[lang] = "en_US"
-                    }
-                } catch(e: Exception) {
-                    e.printStackTrace()
-                }
-            }.await()
-        }
-
-        return getUser(user)
-    }
-
 }
