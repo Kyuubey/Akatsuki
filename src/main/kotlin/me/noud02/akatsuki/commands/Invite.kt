@@ -25,9 +25,9 @@
 
 package me.noud02.akatsuki.commands
 
-import me.noud02.akatsuki.bot.entities.Command
-import me.noud02.akatsuki.bot.entities.Context
-import me.noud02.akatsuki.bot.entities.Load
+import me.noud02.akatsuki.entities.Command
+import me.noud02.akatsuki.entities.Context
+import me.noud02.akatsuki.annotations.Load
 
 @Load
 class Invite : Command() {

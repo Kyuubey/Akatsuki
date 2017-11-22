@@ -25,8 +25,11 @@
 
 package me.noud02.akatsuki.commands
 
-import me.noud02.akatsuki.bot.entities.*
-import me.noud02.akatsuki.bot.utils.ItemPicker
+import me.noud02.akatsuki.annotations.Alias
+import me.noud02.akatsuki.annotations.Argument
+import me.noud02.akatsuki.annotations.Load
+import me.noud02.akatsuki.entities.*
+import me.noud02.akatsuki.utils.ItemPicker
 import net.dv8tion.jda.core.entities.Guild
 import net.dv8tion.jda.core.entities.Member
 import java.awt.Color

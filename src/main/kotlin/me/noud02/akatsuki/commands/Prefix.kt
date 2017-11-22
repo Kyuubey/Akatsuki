@@ -26,8 +26,11 @@
 package me.noud02.akatsuki.commands
 
 import me.aurieh.ares.exposed.async.asyncTransaction
-import me.noud02.akatsuki.bot.entities.*
-import me.noud02.akatsuki.bot.schema.Guilds
+import me.noud02.akatsuki.annotations.Argument
+import me.noud02.akatsuki.annotations.Load
+import me.noud02.akatsuki.annotations.Perm
+import me.noud02.akatsuki.entities.*
+import me.noud02.akatsuki.schema.Guilds
 import net.dv8tion.jda.core.Permission
 import org.jetbrains.exposed.sql.select
 import org.jetbrains.exposed.sql.update

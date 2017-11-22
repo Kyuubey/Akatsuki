@@ -25,7 +25,10 @@
 
 package me.noud02.akatsuki.commands
 
-import me.noud02.akatsuki.bot.entities.*
+import me.noud02.akatsuki.annotations.Alias
+import me.noud02.akatsuki.annotations.Argument
+import me.noud02.akatsuki.annotations.Load
+import me.noud02.akatsuki.entities.*
 
 @Load
 @Alias("discrim")

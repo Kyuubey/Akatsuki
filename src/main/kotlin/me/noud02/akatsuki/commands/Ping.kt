@@ -26,10 +26,12 @@
 package me.noud02.akatsuki.commands
 
 import khttp.get
-import me.noud02.akatsuki.bot.entities.*
-import me.noud02.akatsuki.bot.extensions.await
+import me.noud02.akatsuki.annotations.Argument
+import me.noud02.akatsuki.annotations.Flag
+import me.noud02.akatsuki.annotations.Load
+import me.noud02.akatsuki.entities.*
+import me.noud02.akatsuki.extensions.await
 import net.dv8tion.jda.core.entities.Member
-import net.dv8tion.jda.core.entities.Message
 import java.time.temporal.ChronoUnit
 
 @Flag("meme", 'm', "this is a meme")

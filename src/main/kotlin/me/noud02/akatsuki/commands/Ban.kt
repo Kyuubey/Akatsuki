@@ -25,7 +25,11 @@
 
 package me.noud02.akatsuki.commands
 
-import me.noud02.akatsuki.bot.entities.*
+import me.noud02.akatsuki.annotations.Argument
+import me.noud02.akatsuki.annotations.Arguments
+import me.noud02.akatsuki.annotations.Load
+import me.noud02.akatsuki.annotations.Perm
+import me.noud02.akatsuki.entities.*
 import net.dv8tion.jda.core.Permission
 import net.dv8tion.jda.core.entities.Member
 import net.dv8tion.jda.core.exceptions.PermissionException
@@ -33,8 +37,8 @@ import net.dv8tion.jda.core.exceptions.PermissionException
 @Load
 @Perm(Permission.BAN_MEMBERS)
 @Arguments([
-    Argument("user", "user"),
-    Argument("reason", "string", true)
+    (Argument("user", "user")),
+    (Argument("reason", "string", true))
 ])
 class Ban : Command() {
     override val name = "ban"

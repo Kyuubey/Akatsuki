@@ -25,11 +25,11 @@
 
 package me.noud02.akatsuki.commands
 
-import me.noud02.akatsuki.bot.entities.Alias
-import me.noud02.akatsuki.bot.entities.Command
-import me.noud02.akatsuki.bot.entities.Context
-import me.noud02.akatsuki.bot.entities.Load
-import me.noud02.akatsuki.bot.music.MusicManager
+import me.noud02.akatsuki.annotations.Alias
+import me.noud02.akatsuki.entities.Command
+import me.noud02.akatsuki.entities.Context
+import me.noud02.akatsuki.annotations.Load
+import me.noud02.akatsuki.music.MusicManager
 import net.dv8tion.jda.core.EmbedBuilder
 
 @Load
