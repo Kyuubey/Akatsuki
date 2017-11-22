@@ -26,9 +26,12 @@
 package me.noud02.akatsuki.commands
 
 import me.aurieh.ares.exposed.async.asyncTransaction
-import me.noud02.akatsuki.bot.entities.*
-import me.noud02.akatsuki.bot.utils.I18n
-import me.noud02.akatsuki.bot.schema.Users
+import me.noud02.akatsuki.annotations.Alias
+import me.noud02.akatsuki.annotations.Argument
+import me.noud02.akatsuki.annotations.Load
+import me.noud02.akatsuki.entities.*
+import me.noud02.akatsuki.utils.I18n
+import me.noud02.akatsuki.schema.Users
 import org.jetbrains.exposed.sql.update
 
 @Alias("change")

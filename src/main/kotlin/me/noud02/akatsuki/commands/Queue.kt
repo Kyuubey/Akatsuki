@@ -26,11 +26,11 @@
 package me.noud02.akatsuki.commands
 
 import com.sedmelluq.discord.lavaplayer.track.AudioTrack
-import me.noud02.akatsuki.bot.entities.Command
-import me.noud02.akatsuki.bot.entities.Context
-import me.noud02.akatsuki.bot.entities.Load
-import me.noud02.akatsuki.bot.entities.Perm
-import me.noud02.akatsuki.bot.music.MusicManager
+import me.noud02.akatsuki.entities.Command
+import me.noud02.akatsuki.entities.Context
+import me.noud02.akatsuki.annotations.Load
+import me.noud02.akatsuki.annotations.Perm
+import me.noud02.akatsuki.music.MusicManager
 import net.dv8tion.jda.core.EmbedBuilder
 import net.dv8tion.jda.core.Permission
 import java.awt.Color

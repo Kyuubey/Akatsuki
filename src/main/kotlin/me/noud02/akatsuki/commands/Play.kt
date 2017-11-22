@@ -29,12 +29,12 @@ import com.sedmelluq.discord.lavaplayer.player.AudioLoadResultHandler
 import com.sedmelluq.discord.lavaplayer.tools.FriendlyException
 import com.sedmelluq.discord.lavaplayer.track.AudioPlaylist
 import com.sedmelluq.discord.lavaplayer.track.AudioTrack
-import me.noud02.akatsuki.bot.entities.Argument
-import me.noud02.akatsuki.bot.entities.Command
-import me.noud02.akatsuki.bot.entities.Context
-import me.noud02.akatsuki.bot.entities.Load
-import me.noud02.akatsuki.bot.utils.I18n
-import me.noud02.akatsuki.bot.music.MusicManager
+import me.noud02.akatsuki.annotations.Argument
+import me.noud02.akatsuki.entities.Command
+import me.noud02.akatsuki.entities.Context
+import me.noud02.akatsuki.annotations.Load
+import me.noud02.akatsuki.utils.I18n
+import me.noud02.akatsuki.music.MusicManager
 
 @Load
 @Argument("url|query", "string")

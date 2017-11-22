@@ -25,10 +25,10 @@
 
 package me.noud02.akatsuki.commands
 
-import me.noud02.akatsuki.bot.entities.Argument
-import me.noud02.akatsuki.bot.entities.AsyncCommand
-import me.noud02.akatsuki.bot.entities.Context
-import me.noud02.akatsuki.bot.entities.Load
+import me.noud02.akatsuki.annotations.Argument
+import me.noud02.akatsuki.entities.AsyncCommand
+import me.noud02.akatsuki.entities.Context
+import me.noud02.akatsuki.annotations.Load
 import net.dv8tion.jda.core.entities.Member
 
 @Load
