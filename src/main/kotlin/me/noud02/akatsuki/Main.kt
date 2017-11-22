@@ -23,7 +23,6 @@
  *  OTHER DEALINGS IN THE SOFTWARE.
  */
 
-@file:JvmName("Akatsuki")
 package me.noud02.akatsuki
 
 import com.fasterxml.jackson.databind.ObjectMapper
