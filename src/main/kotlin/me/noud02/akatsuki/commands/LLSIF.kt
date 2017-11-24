@@ -86,7 +86,7 @@ class GetCard : Command() {
     }
 }
 
-@Load
+// @Load
 class LLSIF : AsyncCommand() {
     override val desc = "Get info on cards and other things related to Love Live! School Idol Festival."
 
