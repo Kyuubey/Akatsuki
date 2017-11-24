@@ -28,4 +28,4 @@ package me.noud02.akatsuki.annotations
 @Repeatable
 annotation class Argument(val name: String, val type: String, val optional: Boolean = false)
 
-annotation class Arguments(val args: Array<Argument>)
+annotation class Arguments(vararg val args: Argument)
