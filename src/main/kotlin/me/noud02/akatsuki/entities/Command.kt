@@ -27,15 +27,15 @@ package me.noud02.akatsuki.entities
 
 open class Command {
     val subcommands = mutableMapOf<String, Command>()
-    open val name = "awoo"
-    open val desc = "awoo~"
+    open val name = ""
+    open val desc = ""
     open val ownerOnly = false
     open val noHelp = false
     open val guildOnly = false
 
     open fun run(ctx: Context) = ctx.send("Empty command")
 
-    fun addSubcommand(cmd: Command) {
-        subcommands[cmd.name] = cmd
+    fun addSubcommand(cmd: Command, name: String? = null) {
+        subcommands[(name ?: if (cmd.name.isEmpty()) cmd::class.simpleName ?: return else cmd.name).toLowerCase()] = cmd
     }
 }
