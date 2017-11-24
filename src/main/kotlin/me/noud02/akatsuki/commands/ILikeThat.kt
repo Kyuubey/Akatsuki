@@ -28,7 +28,7 @@ package me.noud02.akatsuki.commands
 import me.noud02.akatsuki.annotations.Argument
 import me.noud02.akatsuki.entities.Command
 import me.noud02.akatsuki.entities.Context
-import me.noud02.akatsuki.annotations.Load
+// import me.noud02.akatsuki.annotations.Load
 import java.awt.Color
 import java.awt.Font
 import java.awt.image.BufferedImage
@@ -39,7 +39,6 @@ import javax.imageio.ImageIO
 // TODO fix this command
 @Argument("text", "string")
 class ILikeThat : Command() {
-    override val name = "ilikethat"
     override val desc = "It's OK, I like that..."
 
     override fun run(ctx: Context) {
@@ -49,12 +48,10 @@ class ILikeThat : Command() {
         val txtG = txtImg.createGraphics()
         val out = ByteArrayOutputStream()
 
-
-
-        txtG.font = Font("Noto Sans", Font.PLAIN, 40 - ctx.rawArgs.joinToString(" ").length * 2)
+        txtG.font = Font("Monospace", Font.PLAIN, 40)
         txtG.color = Color.BLACK
+        txtG.drawString(ctx.args["text"] as String, 125 / 2, 30)
         txtG.rotate(Math.toRadians(-19.0))
-        txtG.drawString(ctx.args["text"] as String, 0, 0)
         txtG.dispose()
 
         g.drawImage(txtImg, 175, 160, 125, 60, null)
