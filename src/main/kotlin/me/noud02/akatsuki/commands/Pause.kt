@@ -35,7 +35,6 @@ import net.dv8tion.jda.core.Permission
 @Load
 @Perm(Permission.MANAGE_SERVER)
 class Pause : Command() {
-    override val name = "pause"
     override val desc = "Pause the current song!"
     override val guildOnly = true
 

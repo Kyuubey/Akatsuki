@@ -31,7 +31,6 @@ import me.noud02.akatsuki.annotations.Load
 
 @Load
 class CatFact : Command() {
-    override val name = "catfact"
     override val desc = "Get a random fact about cats!"
 
     override fun run(ctx: Context) = ctx.send(khttp.get("https://catfact.ninja/fact").jsonObject.getString("fact"))

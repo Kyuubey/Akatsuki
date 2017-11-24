@@ -35,7 +35,6 @@ import net.dv8tion.jda.core.EmbedBuilder
 @Load
 @Alias("np")
 class NowPlaying : Command() {
-    override val name = "nowplaying"
     override val desc = "Get the current song"
     override val guildOnly = true
 

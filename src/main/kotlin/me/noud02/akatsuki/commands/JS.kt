@@ -34,7 +34,6 @@ import javax.script.ScriptEngineManager
 @Load
 @Argument("code", "string")
 class JS : Command() {
-    override val name = "js"
     override val desc = "Evaluate (js) code"
     override val ownerOnly = true
 

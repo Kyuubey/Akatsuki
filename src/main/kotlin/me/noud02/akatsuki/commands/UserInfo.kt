@@ -38,9 +38,8 @@ import java.time.format.DateTimeFormatter
 @Alias("user")
 @Argument("user", "user", true)
 class UserInfo : Command() {
-    override val name = "userinfo"
     override val desc = "Get info on a user."
-    override val guildOnly: Boolean = true
+    override val guildOnly = true
 
     override fun run(ctx: Context) {
         val member = ctx.args["user"] as? Member ?: ctx.member!!

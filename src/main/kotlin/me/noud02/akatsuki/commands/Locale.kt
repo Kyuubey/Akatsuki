@@ -55,7 +55,6 @@ class SetLocale : AsyncCommand() {
 
 @Load
 class Locale : Command() {
-    override val name = "locale"
     override val desc = "View or change your language"
 
     init {

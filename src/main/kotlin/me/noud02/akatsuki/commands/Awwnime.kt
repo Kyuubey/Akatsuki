@@ -32,7 +32,6 @@ import me.noud02.akatsuki.annotations.Load
 
 @Load
 class Awwnime : Command() {
-    override val name = "awwnime"
     override val desc = "Get a random post from /r/awwnime"
 
     override fun run(ctx: Context) {

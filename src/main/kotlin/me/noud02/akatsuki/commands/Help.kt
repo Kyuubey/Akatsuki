@@ -35,7 +35,6 @@ import me.noud02.akatsuki.utils.I18n
 @Alias("--help", "-h")
 @Argument("command", "string", true)
 class Help : Command() {
-    override val name = "help"
     override val desc = "Sends you help!"
 
     override fun run(ctx: Context) {

@@ -36,12 +36,11 @@ import net.dv8tion.jda.core.exceptions.PermissionException
 
 @Load
 @Perm(Permission.KICK_MEMBERS)
-@Arguments([
-    (Argument("user", "user")),
-    (Argument("reason", "string", true))
-])
+@Arguments(
+    Argument("user", "user"),
+    Argument("reason", "string", true)
+)
 class Kick : Command() {
-    override val name = "kick"
     override val desc = "Kick members from the guild"
     override val guildOnly = true
 

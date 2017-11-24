@@ -38,7 +38,6 @@ import org.jetbrains.exposed.sql.select
 @Load
 @Alias("guild", "serverinfo", "server")
 class GuildInfo : AsyncCommand() {
-    override val name = "guildinfo"
     override val desc = "Get info about the guild."
     override val guildOnly = true
 

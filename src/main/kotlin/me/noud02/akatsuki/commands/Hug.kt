@@ -33,21 +33,22 @@ import me.noud02.akatsuki.utils.Wolk
 import me.noud02.akatsuki.utils.WolkType
 import net.dv8tion.jda.core.EmbedBuilder
 import net.dv8tion.jda.core.entities.Member
+import java.awt.Color
 
 @Load
 @Argument("user", "user")
 class Hug : Command() {
-    override val name = "hug"
-    override val desc = "Hugs~"
+    override val desc = "*hugs*"
     override val guildOnly = true
 
     override fun run(ctx: Context) {
-        val embed = EmbedBuilder()
         val user = ctx.args["user"] as Member
+        val embed = EmbedBuilder().apply {
+            setTitle("${user.effectiveName}, you got a hug from ${ctx.member!!.effectiveName}!")
+            setImage(Wolk.getByType(WolkType.HUG).url)
+            setColor(Color.CYAN)
+        }.build()
 
-        embed.setTitle("${user.effectiveName}, you got a hug from ${ctx.member!!.effectiveName}!")
-        embed.setImage(Wolk.getByType(WolkType.HUG).url)
-
-        ctx.send(embed.build())
+        ctx.send(embed)
     }
 }

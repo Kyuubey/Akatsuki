@@ -38,7 +38,6 @@ import java.awt.Color
 @Argument("query", "string")
 @Alias("yt")
 class Youtube : AsyncCommand() {
-    override val name = "youtube"
     override val desc = "Search for videos on YouTube"
     override val guildOnly = true
 

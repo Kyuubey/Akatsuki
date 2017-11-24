@@ -36,12 +36,11 @@ import net.dv8tion.jda.core.exceptions.PermissionException
 
 @Load
 @Perm(Permission.BAN_MEMBERS)
-@Arguments([
-    (Argument("user", "user")),
-    (Argument("reason", "string", true))
-])
+@Arguments(
+    Argument("user", "user"),
+    Argument("reason", "string", true)
+)
 class Ban : Command() {
-    override val name = "ban"
     override val desc = "Ban members from the guild"
     override val guildOnly = true
 
