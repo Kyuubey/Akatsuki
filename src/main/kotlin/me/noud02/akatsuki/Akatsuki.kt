@@ -88,7 +88,7 @@ class Akatsuki(val config: Config) : ListenerAdapter() {
     }
 
     fun build() {
-        jda = builder.buildBlocking()
+        jda = builder.buildAsync()
     }
 
     fun buildSharded(shards: Int, shard: Int? = null) {
