@@ -54,8 +54,8 @@ class CommandHandler(private val client: Akatsuki) {
         loadAll()
     }
 
-    private fun addCommand(cmd: Command) {
-        commands[cmd.name] = cmd
+    private fun addCommand(cmd: Command, name: String) {
+        commands[name] = cmd
     }
 
     private fun loadAll() {
@@ -67,12 +67,14 @@ class CommandHandler(private val client: Akatsuki) {
                         val aliases = it.annotations.filterIsInstance<Alias>()
                         if (ann.isNotEmpty() && ann.first().bool) {
                             val cmd = it.newInstance() as Command
-                            addCommand(cmd)
-                            logger.info("Loaded command ${cmd.name}")
+                            val name = (if (cmd.name.isEmpty()) cmd::class.simpleName ?: return else cmd.name).toLowerCase()
+                            addCommand(cmd, name)
+
+                            logger.info("Loaded command $name")
                             if (aliases.isNotEmpty())
                                 for (alias in aliases.first().aliases) {
-                                    logger.info("Added alias for command ${cmd.name}: $alias")
-                                    this.aliases[alias] = cmd.name
+                                    logger.info("Added alias for command $name: $alias")
+                                    this.aliases[alias] = name
                                 }
                         }
                     }
@@ -108,15 +110,16 @@ class CommandHandler(private val client: Akatsuki) {
         val newArgs: MutableMap<String, Any>
         val newPerms: MutableMap<String, Boolean>
 
-        if (!commands.contains(cmd) && aliases.contains(cmd))
-            cmd = aliases[cmd] as String
-        else
-            return
+        if (!commands.contains(cmd))
+            if (aliases.contains(cmd))
+                cmd = aliases[cmd] as String
+            else
+                return
 
         if (event.guild != null)
-            this.logger.info("[Command] (Guild ${event.guild.name} (${event.guild.id})) - ${event.author.name}#${event.author.discriminator} (${event.author.id}): ${event.message.content}")
+            logger.info("[Command] (Guild ${event.guild.name} (${event.guild.id})) - ${event.author.name}#${event.author.discriminator} (${event.author.id}): ${event.message.content}")
         else
-            this.logger.info("[Command] (DM) - ${event.author.name}#${event.author.discriminator} (${event.author.id}): ${event.message.content}")
+            logger.info("[Command] (DM) - ${event.author.name}#${event.author.discriminator} (${event.author.id}): ${event.message.content}")
 
         if ((commands[cmd] as Command).ownerOnly && !client.owners.contains(event.author.id))
             return
