@@ -98,7 +98,7 @@ class ItemPicker(private val waiter: EventWaiter, private val user: Member, priv
 
         waiter.await<MessageReactionAddEvent>(30, timeout) {
             if (it.messageId == msg.id && it.user.id == user.user.id) {
-                when (it.reaction.emote.name) {
+                when (it.reaction.reactionEmote.name) {
                     leftEmote -> {
                         it.reaction.removeReaction(it.user).queue()
                         if (index - 1 >= 0)
