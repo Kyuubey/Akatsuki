@@ -59,6 +59,9 @@ dependencies {
     compile 'com.github.kittinunf.fuel:fuel:1.11.0'
     compile 'com.github.kittinunf.fuel:fuel-jackson:1.11.0'
     compile 'com.github.kittinunf.fuel:fuel-gson:1.11.0'
+    // compile 'org.im4java:im4java:1.4.0'
+    // compile 'jmagick:jmagick:6.6.9'
+    // compile 'com.twelvemonkeys.imageio:imageio-jmagick:3.0.2'
 }
 
 compileKotlin {
