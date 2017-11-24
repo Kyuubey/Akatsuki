@@ -97,7 +97,6 @@ class RemPrefix : AsyncCommand() {
 
 @Load
 class Prefix : AsyncCommand() {
-    override val name = "prefix"
     override val desc = "Add, view or delete the guild's prefixes"
 
     init {

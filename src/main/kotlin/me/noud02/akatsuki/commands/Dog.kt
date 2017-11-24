@@ -32,7 +32,6 @@ import me.noud02.akatsuki.annotations.Load
 
 @Load
 class Dog: Command() {
-    override val name = "dog"
     override val desc = "Get a random dog"
 
     override fun run(ctx: Context) {

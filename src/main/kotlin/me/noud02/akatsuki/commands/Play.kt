@@ -39,7 +39,6 @@ import me.noud02.akatsuki.music.MusicManager
 @Load
 @Argument("url|query", "string")
 class Play : Command() {
-    override val name = "play"
     override val desc = "Play music!"
     override val guildOnly = true
 

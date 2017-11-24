@@ -34,7 +34,6 @@ import me.noud02.akatsuki.entities.*
 @Alias("discrim")
 @Argument("discrim", "string", true)
 class SearchDiscrim : Command() {
-    override val name = "searchdiscrim"
     override val desc = "Search for users with a specific discriminator."
 
     override fun run(ctx: Context) {

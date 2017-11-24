@@ -34,9 +34,6 @@ import me.noud02.akatsuki.utils.I18n
 @Load
 @Argument("choices", "string")
 class Choose : Command() {
-    override val name = "choose"
-    override val desc = ""
-
     override fun run(ctx: Context) {
         val choices = (ctx.args["choices"] as String).split("|")
         val choice = choices[Math.floor(Math.random() * choices.size).toInt()].trim()

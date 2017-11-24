@@ -32,7 +32,6 @@ import me.noud02.akatsuki.music.MusicManager
 
 @Load
 class Join : Command() {
-    override val name = "join"
     override val desc = "Have the bot join a voice channel"
     override val guildOnly = true
 

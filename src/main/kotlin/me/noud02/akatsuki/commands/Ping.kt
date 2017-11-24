@@ -36,7 +36,6 @@ import java.time.temporal.ChronoUnit
 
 @Flag("meme", 'm', "this is a meme")
 class Pong : Command() {
-    override val name = "pong"
     override val desc = "Ping!"
 
     override fun run(ctx: Context) {
@@ -57,7 +56,6 @@ class Pong : Command() {
 @Load
 @Argument("meme", "user", true)
 class Ping : AsyncCommand() {
-    override val name = "ping"
     override val desc = "Pings a user if specified"
 
     init {

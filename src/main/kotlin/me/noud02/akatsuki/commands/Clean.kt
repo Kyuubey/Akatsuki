@@ -34,7 +34,6 @@ import me.noud02.akatsuki.extensions.await
 @Load
 @Alias("clear", "cls")
 class Clean : AsyncCommand() {
-    override val name = "clean"
     override val desc = "Clean the last 10 messages sent by me"
     override val guildOnly = true
 

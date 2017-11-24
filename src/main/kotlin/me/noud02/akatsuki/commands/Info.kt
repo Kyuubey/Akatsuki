@@ -32,7 +32,6 @@ import net.dv8tion.jda.core.EmbedBuilder
 
 @Load
 class Info : Command() {
-    override val name = "info"
     override val desc = "Get info on the bot."
 
     override fun run(ctx: Context) {

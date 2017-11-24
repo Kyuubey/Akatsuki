@@ -34,7 +34,6 @@ import org.python.util.PythonInterpreter
 @Load
 @Argument("code", "string")
 class Py : Command() {
-    override val name = "py"
     override val desc = "Evaluate (python) code"
     override val ownerOnly = true
 

@@ -34,7 +34,6 @@ import net.dv8tion.jda.core.entities.Member
 @Load
 @Argument("user", "user")
 class Avatar : AsyncCommand() {
-    override val name = "avatar"
     override val desc = "Get someones avatar"
     override val guildOnly = true
 

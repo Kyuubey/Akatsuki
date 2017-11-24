@@ -37,7 +37,6 @@ import net.dv8tion.jda.core.entities.Member
 @Load
 @Perm(Permission.MANAGE_SERVER, true)
 class Skip : Command() {
-    override val name = "skip"
     override val desc = "Skips the current song"
     override val guildOnly = true
 

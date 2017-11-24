@@ -34,7 +34,6 @@ import org.jruby.embed.ScriptingContainer
 @Load
 @Argument("code", "string")
 class Ruby : Command() {
-    override val name = "ruby"
     override val desc = "Evaluate (ruby) code"
     override val ownerOnly = true
 

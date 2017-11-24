@@ -32,11 +32,7 @@ import me.noud02.akatsuki.annotations.Load
 
 @Load
 class Cat : Command() {
-    override val name = "cat"
     override val desc = "Get a random cat"
 
-    override fun run(ctx: Context) {
-        val cat = get("https://random.cat/meow").jsonObject.getString("file")
-        ctx.send(cat)
-    }
+    override fun run(ctx: Context) = ctx.send(get("https://random.cat/meow").jsonObject.getString("file"))
 }

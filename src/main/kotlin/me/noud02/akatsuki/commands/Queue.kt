@@ -37,7 +37,6 @@ import java.awt.Color
 
 @Perm(Permission.MANAGE_SERVER)
 class Clear : Command() {
-    override val name = "clear"
     override val desc = "Clear the queue!"
 
     override fun run(ctx: Context) {
@@ -50,7 +49,6 @@ class Clear : Command() {
 
 @Load
 class Queue : Command() {
-    override val name = "queue"
     override val desc = "View the queue!"
     override val guildOnly = true
 
