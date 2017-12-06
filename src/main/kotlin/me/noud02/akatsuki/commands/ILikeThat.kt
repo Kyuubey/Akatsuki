@@ -26,6 +26,7 @@
 package me.noud02.akatsuki.commands
 
 import me.noud02.akatsuki.annotations.Argument
+import me.noud02.akatsuki.annotations.Load
 import me.noud02.akatsuki.entities.Command
 import me.noud02.akatsuki.entities.Context
 // import me.noud02.akatsuki.annotations.Load
@@ -35,13 +36,19 @@ import java.awt.image.BufferedImage
 import java.io.*
 import javax.imageio.ImageIO
 
-// @Load
-// TODO fix this command
+@Load
 @Argument("text", "string")
 class ILikeThat : Command() {
     override val desc = "It's OK, I like that..."
 
     override fun run(ctx: Context) {
+        val req = khttp.get("http://localhost:5050/api/ilikethat", mapOf(), mapOf(
+                "text" to ctx.args["text"] as String
+        ))
+
+        ctx.event.channel.sendFile(req.content, "ilikethat.png", null).queue()
+    }
+    /*override fun run(ctx: Context) {
         val img = ImageIO.read(File("./src/main/resources/img/ilikethat.png"))
         val g = img.createGraphics()
         val txtImg = BufferedImage(125, 60, BufferedImage.TRANSLUCENT)
@@ -60,5 +67,5 @@ class ILikeThat : Command() {
         ImageIO.write(img, "png", out)
 
         ctx.event.channel.sendFile(ByteArrayInputStream(out.toByteArray()), "ilikethat.png", null).queue()
-    }
+    }*/
 }
