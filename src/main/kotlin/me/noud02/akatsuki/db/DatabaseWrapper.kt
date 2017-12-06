@@ -145,7 +145,7 @@ object DatabaseWrapper {
                     it[discriminator] = user.discriminator
                     it[lang] = "en_US"
                 }
-        }
+        }.await()
     }
 
     suspend fun getGuildSafe(guild: Guild): DBGuild {
