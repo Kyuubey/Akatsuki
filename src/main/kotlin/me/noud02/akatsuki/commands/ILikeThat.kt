@@ -45,27 +45,6 @@ class ILikeThat : Command() {
         val req = khttp.get("http://localhost:5050/api/ilikethat", mapOf(), mapOf(
                 "text" to ctx.args["text"] as String
         ))
-
         ctx.event.channel.sendFile(req.content, "ilikethat.png", null).queue()
     }
-    /*override fun run(ctx: Context) {
-        val img = ImageIO.read(File("./src/main/resources/img/ilikethat.png"))
-        val g = img.createGraphics()
-        val txtImg = BufferedImage(125, 60, BufferedImage.TRANSLUCENT)
-        val txtG = txtImg.createGraphics()
-        val out = ByteArrayOutputStream()
-
-        txtG.font = Font("Monospace", Font.PLAIN, 40)
-        txtG.color = Color.BLACK
-        txtG.drawString(ctx.args["text"] as String, 125 / 2, 30)
-        txtG.rotate(Math.toRadians(-19.0))
-        txtG.dispose()
-
-        g.drawImage(txtImg, 175, 160, 125, 60, null)
-        g.dispose()
-
-        ImageIO.write(img, "png", out)
-
-        ctx.event.channel.sendFile(ByteArrayInputStream(out.toByteArray()), "ilikethat.png", null).queue()
-    }*/
 }
