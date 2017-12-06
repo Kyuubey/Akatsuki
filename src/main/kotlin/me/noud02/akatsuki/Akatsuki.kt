@@ -106,7 +106,7 @@ class Akatsuki(val config: Config) : ListenerAdapter() {
             }
     }
 
-    fun setGame(text: String, idle: Boolean = false) = jda.presence.setPresence(Game.of(text), idle)
+    fun setGame(text: String, idle: Boolean = false) = jda.presence.setPresence(Game.of(Game.GameType.DEFAULT, text), idle)
 
     override fun onGenericEvent(event: Event) = waiter.emit(event)
 
