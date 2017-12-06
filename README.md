@@ -16,3 +16,12 @@ $ cp config.example.yml config.yml
 # Run it
 $ java -jar builds/libs/Akatsuki.jar
 ```
+
+### Setting up the image API
+
+```bash
+# Clone the repo
+$ git clone https://github.com/noud02/Akatsuki-Backend && cd Akatsuki-Backend
+$ ./main.py
+# Server listens on port 5050
+```
