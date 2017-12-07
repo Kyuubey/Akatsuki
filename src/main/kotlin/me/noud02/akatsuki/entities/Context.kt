@@ -40,6 +40,7 @@ class Context(
         val perms: MutableMap<String, Boolean>,
         val lang: ResourceBundle
 ) {
+    val client = Akatsuki.client
     val guild: Guild? = event.guild
     val author: User = event.author
     val channel: MessageChannel = event.channel
