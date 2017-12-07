@@ -69,7 +69,7 @@ class Akatsuki(val config: Config) : ListenerAdapter() {
         CoroutineDispatcher(pool)
     }
     val waiter = EventWaiter()
-    val cmdHandler = CommandHandler(this)
+    val cmdHandler = CommandHandler()
     val db = Database.connect(
             "jdbc:postgresql:${config.database.name}",
             "org.postgresql.Driver",
@@ -85,6 +85,7 @@ class Akatsuki(val config: Config) : ListenerAdapter() {
         transaction {
             SchemaUtils.create(Guilds, Users)
         }
+        Akatsuki.client = this
     }
 
     fun build() {
@@ -143,5 +144,10 @@ class Akatsuki(val config: Config) : ListenerAdapter() {
         async(coroutineDispatcher) {
             DatabaseWrapper.remGuild(event.guild)
         }*/
+    }
+
+    companion object {
+        @JvmStatic
+        lateinit var client: Akatsuki
     }
 }
