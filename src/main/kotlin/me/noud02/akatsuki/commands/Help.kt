@@ -41,7 +41,12 @@ class Help : Command() {
         if (ctx.args.contains("command"))
             return ctx.send(ctx.help(ctx.args["command"] as String))
         else {
-            val commands: List<String> = ctx.client.cmdHandler.commands.toSortedMap().map { entry: Map.Entry<String, Command> -> "\t${entry.value.name}" + " ".repeat(20 - entry.value.name.length) + entry.value.desc }
+            val commands = ctx.client.cmdHandler.commands
+                    .toSortedMap()
+                    .map {
+                        "\t${it.key}" + " ".repeat(20 - it.key.length) + it.value.desc
+                    }
+
             val text = "Flags:\n\n\t-h, --help${" ".repeat(10)}Get help on a command!\n\nCommands:\n\n${commands.joinToString("\n")}"
             val partSize = 40
             val parts = mutableListOf<String>()
