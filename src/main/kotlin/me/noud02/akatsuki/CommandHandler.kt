@@ -34,9 +34,11 @@ import me.noud02.akatsuki.entities.*
 import me.noud02.akatsuki.extensions.UTF8Control
 import me.noud02.akatsuki.utils.UserPicker
 import me.noud02.akatsuki.utils.I18n
+import me.noud02.akatsuki.utils.TextChannelPicker
 import net.dv8tion.jda.core.Permission
 import net.dv8tion.jda.core.entities.Channel
 import net.dv8tion.jda.core.entities.Member
+import net.dv8tion.jda.core.entities.TextChannel
 import net.dv8tion.jda.core.events.message.MessageReceivedEvent
 import org.apache.commons.validator.routines.UrlValidator
 import org.reflections.Reflections
@@ -151,7 +153,7 @@ class CommandHandler {
                 return event.channel.sendMessage(err.message).queue()
             }
 
-            ctx = Context(event, command, newArgs, raw, flags, newPerms, lang)
+            ctx = Context(event, command, newArgs, raw, flags, newPerms, lang, user, guild)
 
             if (!command.noHelp && (flags.argMap.contains("h") || flags.argMap.contains("help")))
                 return ctx.send(ctx.help())
@@ -176,7 +178,7 @@ class CommandHandler {
                 return event.channel.sendMessage(err.message).queue()
             }
 
-            ctx = Context(event, commands[cmd] as Command, newArgs, raw, flags, newPerms, lang)
+            ctx = Context(event, commands[cmd] as Command, newArgs, raw, flags, newPerms, lang, user, guild)
 
             command.run(ctx)
         }
@@ -223,6 +225,36 @@ class CommandHandler {
                 // TODO do these later
                 // "channel" -> TODO()
                 // "role" -> TODO()
+
+                "textchannel" -> {
+                    if (event.guild != null) {
+                        val channel: TextChannel = when {
+                            "<@!?\\d+>".toRegex().matches(arg2) -> try {
+                                event.guild.getTextChannelById("<@!?(\\d+)>".toRegex().matchEntire(arg2)?.groupValues?.get(1))
+                            } catch (e: Throwable) {
+                                throw Exception("Couldn't find that channel!")
+                            }
+
+                            event.guild.getTextChannelsByName(arg2, true).isNotEmpty() -> {
+                                val channels = event.guild.getTextChannelsByName(arg2, true)
+
+                                if (channels.size > 1) {
+                                    val picker = TextChannelPicker(Akatsuki.client.waiter, event.member, channels, event.guild)
+
+                                    picker.build(event.message).await()
+                                } else
+                                    channels[0]
+                            }
+
+                            arg2.toLongOrNull() != null && event.guild.getTextChannelById(arg2) != null -> event.guild.getTextChannelById(arg2)
+
+                            else -> throw Exception(I18n.parse(lang.getString("channel_not_found"), mapOf("username" to event.author.name)))
+                        }
+
+                        newArgs[arg.name] = channel
+                    }
+                }
+
                 "url" -> {
                     if (!UrlValidator().isValid(arg2))
                         throw Exception("Argument is not a valid URL!")
