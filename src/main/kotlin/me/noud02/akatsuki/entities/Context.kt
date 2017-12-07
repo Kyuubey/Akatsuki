@@ -27,6 +27,8 @@ package me.noud02.akatsuki.entities
 
 import me.aurieh.ares.utils.ArgParser
 import me.noud02.akatsuki.Akatsuki
+import me.noud02.akatsuki.db.DBGuild
+import me.noud02.akatsuki.db.DBUser
 import net.dv8tion.jda.core.entities.*
 import net.dv8tion.jda.core.events.message.MessageReceivedEvent
 import java.util.*
@@ -38,7 +40,9 @@ class Context(
         val rawArgs: List<String>,
         val flags: ArgParser.ParsedResult,
         val perms: MutableMap<String, Boolean>,
-        val lang: ResourceBundle
+        val lang: ResourceBundle,
+        val storedUser: DBUser,
+        val storedGuild: DBGuild?
 ) {
     val client = Akatsuki.client
     val guild: Guild? = event.guild
