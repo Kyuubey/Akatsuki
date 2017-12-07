@@ -33,7 +33,6 @@ import java.util.*
 
 class Context(
         val event: MessageReceivedEvent,
-        val client: Akatsuki,
         val cmd: Command,
         val args: MutableMap<String, Any>,
         val rawArgs: List<String>,
@@ -57,11 +56,11 @@ class Context(
 
     fun sendError(e: Throwable) = event.channel.sendMessage("```diff\n- ${e.stackTrace}```").queue()
 
-    fun help() = client.cmdHandler.help(cmd)
+    fun help() = Akatsuki.client.cmdHandler.help(cmd)
 
-    fun help(cmdd: String): String {
+    fun help(cmd: String): String {
         return try {
-            client.cmdHandler.help(cmdd)
+            Akatsuki.client.cmdHandler.help(cmd)
         } catch (e: Exception) {
             e.message.toString()
         }

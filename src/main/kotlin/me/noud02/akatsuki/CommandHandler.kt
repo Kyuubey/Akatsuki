@@ -45,7 +45,7 @@ import org.reflections.util.ConfigurationBuilder
 import org.slf4j.LoggerFactory
 import java.util.*
 
-class CommandHandler(private val client: Akatsuki) {
+class CommandHandler {
     val commands = mutableMapOf<String, Command>()
     private val aliases = mutableMapOf<String, String>()
     private val logger = LoggerFactory.getLogger(this::class.java)
@@ -94,7 +94,7 @@ class CommandHandler(private val client: Akatsuki) {
 
         val lang = ResourceBundle.getBundle("i18n.Kyubey", locale, UTF8Control())
 
-        val usedPrefix: String = client.prefixes.lastOrNull {
+        val usedPrefix: String = Akatsuki.client.prefixes.lastOrNull {
             event.message.rawContent.startsWith(it)
         } ?: guildPrefixes.lastOrNull {
             event.message.rawContent.startsWith(it)
@@ -121,7 +121,7 @@ class CommandHandler(private val client: Akatsuki) {
         else
             logger.info("[Command] (DM) - ${event.author.name}#${event.author.discriminator} (${event.author.id}): ${event.message.content}")
 
-        if ((commands[cmd] as Command).ownerOnly && !client.owners.contains(event.author.id))
+        if ((commands[cmd] as Command).ownerOnly && !Akatsuki.client.owners.contains(event.author.id))
             return
 
         if ((commands[cmd] as Command).guildOnly && event.guild == null)
@@ -151,7 +151,7 @@ class CommandHandler(private val client: Akatsuki) {
                 return event.channel.sendMessage(err.message).queue()
             }
 
-            ctx = Context(event, client, command, newArgs, raw, flags, newPerms, lang)
+            ctx = Context(event, command, newArgs, raw, flags, newPerms, lang)
 
             if (!command.noHelp && (flags.argMap.contains("h") || flags.argMap.contains("help")))
                 return ctx.send(ctx.help())
@@ -176,7 +176,7 @@ class CommandHandler(private val client: Akatsuki) {
                 return event.channel.sendMessage(err.message).queue()
             }
 
-            ctx = Context(event, client, commands[cmd] as Command, newArgs, raw, flags, newPerms, lang)
+            ctx = Context(event, commands[cmd] as Command, newArgs, raw, flags, newPerms, lang)
 
             command.run(ctx)
         }
@@ -241,7 +241,7 @@ class CommandHandler(private val client: Akatsuki) {
                             event.guild.getMembersByEffectiveName(arg2, true).isNotEmpty() -> {
                                 val users = event.guild.getMembersByEffectiveName(arg2, true)
                                 if (users.size > 1) {
-                                    val picker = UserPicker(client.waiter, event.member, users, event.guild)
+                                    val picker = UserPicker(Akatsuki.client.waiter, event.member, users, event.guild)
 
                                     picker.build(event.channel).await()
                                 } else
@@ -251,7 +251,7 @@ class CommandHandler(private val client: Akatsuki) {
                             event.guild.getMembersByName(arg2, true).isNotEmpty() -> {
                                 val users = event.guild.getMembersByName(arg2, true)
                                 if (users.size > 1) {
-                                    val picker = UserPicker(client.waiter, event.member, users, event.guild)
+                                    val picker = UserPicker(Akatsuki.client.waiter, event.member, users, event.guild)
 
                                     picker.build(event.channel).await()
                                 } else
