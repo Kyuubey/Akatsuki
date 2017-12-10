@@ -1,4 +1,4 @@
-FROM openjdk:latest
+FROM openjdk:alpine
 WORKDIR /usr/src
 RUN git clone git://github.com/noud02/Akatsuki.git akatsuki && \
     cd akatsuki && \
