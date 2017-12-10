@@ -35,6 +35,7 @@ class GuildMusicManager(manager: AudioPlayerManager, val textChannel: TextChanne
     val scheduler = TrackScheduler(player, this)
     val sendingHandler = AudioPlayerSendHandler(player)
     val voteSkip = mutableListOf<String>()
+    val autoplay = true
 
     init {
         player.addListener(scheduler)
