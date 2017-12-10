@@ -33,7 +33,8 @@ data class APIConfig(
 data class DatabaseConfig(
         val name: String,
         val user: String,
-        val pass: String
+        val pass: String,
+        val host: String
 )
 
 data class Config(
