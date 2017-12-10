@@ -119,7 +119,8 @@ class CommandHandler {
                 return
 
         if (event.guild != null)
-            logger.info("[Command] (Guild ${event.guild.name} (${event.guild.id})) - ${event.author.name}#${event.author.discriminator} (${event.author.id}): ${event.message.content}")
+            logger.info("[Command] (Guild ${event.guild.name} (${event.guild.id})) - " +
+                    "${event.author.name}#${event.author.discriminator} (${event.author.id}): ${event.message.content}")
         else
             logger.info("[Command] (DM) - ${event.author.name}#${event.author.discriminator} (${event.author.id}): ${event.message.content}")
 
@@ -189,9 +190,18 @@ class CommandHandler {
         val newPerms = mutableMapOf<String, Boolean>()
 
         for (perm in perms) {
-            newPerms[perm.name.name] = event.member?.hasPermission(event.channel as Channel, perm.name) ?: event.member?.hasPermission(Permission.ADMINISTRATOR) ?: false
+            newPerms[perm.name.name] = event.member?.hasPermission(event.channel as Channel, perm.name)
+                    ?: event.member?.hasPermission(Permission.ADMINISTRATOR) ?: false
             if (!perm.optional && !newPerms[perm.name.name]!! && !event.member?.hasPermission(Permission.ADMINISTRATOR)!!)
-                throw Exception(I18n.parse(lang.getString("user_lack_perms"), mapOf("username" to event.author.name, "permission" to I18n.permission(lang, perm.name.name))))
+                throw Exception(
+                        I18n.parse(
+                                lang.getString("user_lack_perms"),
+                                mapOf(
+                                        "username" to event.author.name,
+                                        "permission" to I18n.permission(lang, perm.name.name)
+                                )
+                        )
+                )
         }
 
         return newPerms
@@ -213,7 +223,15 @@ class CommandHandler {
                 arg2 = args[i]
             } catch (e: Exception) {
                 if (!arg.optional)
-                    throw Exception(I18n.parse(lang.getString("argument_not_specified"), mapOf("argument" to arg.name, "username" to event.author.name)))
+                    throw Exception(
+                            I18n.parse(
+                                    lang.getString("argument_not_specified"),
+                                    mapOf(
+                                            "argument" to arg.name,
+                                            "username" to event.author.name
+                                    )
+                            )
+                    )
                 else
                     return newArgs
             }
@@ -298,7 +316,8 @@ class CommandHandler {
                         newArgs[arg.name] = user
                     }
                 }
-                "number" -> newArgs[arg.name] = arg2.toIntOrNull() ?: throw Exception("Argument at pos ${i + 1} needs type 'number' but type 'string' was given") // TODO translate this
+                "number" -> newArgs[arg.name] = arg2.toIntOrNull()
+                        ?: throw Exception("Argument at pos ${i + 1} needs type 'number' but type 'string' was given") // TODO translate this
                 "string" -> newArgs[arg.name] = arg2
                 else -> newArgs[arg.name] = arg2
             }
@@ -324,9 +343,18 @@ class CommandHandler {
         if (otherFlags.isNotEmpty())
             args += otherArgs.first().args
 
-        val sub = cmd.subcommands.map { entry: Map.Entry<String, Command> -> "\t${entry.value.name}" + " ".repeat(20 - entry.value.name.length) + "${entry.value.desc}\n" }
-        val flag = flags.map { flag: Flag -> "\t${flag.abbr}, ${flag.flag}" + " ".repeat(20 - "${flag.abbr}, ${flag.flag}".length) + flag.desc + "\n"}
-        val usage = args.map { argument: Argument -> if (argument.optional) "[${argument.name}: ${argument.type}]" else "<${argument.name}: ${argument.type}>" }
+        val sub = cmd.subcommands.map {
+            "\t${it.key}" + " ".repeat(20 - it.key.length) + "${it.value.desc}\n"
+        }
+        val flag = flags.map {
+            "\t${it.abbr}, ${it.flag}${" ".repeat(20 - "${it.abbr}, ${it.flag}".length)}${it.desc}\n"
+        }
+        val usage = args.map {
+            if (it.optional)
+                "[${it.name}: ${it.type}]"
+            else
+                "<${it.name}: ${it.type}>"
+        }
         val formattedSubs = if (sub.isNotEmpty()) "\nSubcommands:\n${sub.joinToString("\n")}" else ""
         val formattedFlags = if (flag.isNotEmpty()) "\nFlags:\n${flag.joinToString("\n")}" else ""
 
@@ -346,9 +374,18 @@ class CommandHandler {
         if (otherFlags.isNotEmpty())
             args += otherArgs.first().args
 
-        val sub = cmd.subcommands.map { entry: Map.Entry<String, Command> -> "\t${entry.value.name}" + " ".repeat(20 - entry.value.name.length) + "${entry.value.desc}\n" }
-        val flag = flags.map { flag: Flag -> "\t-${flag.abbr}, --${flag.flag}" + " ".repeat(20 - "-${flag.abbr}, --${flag.flag}".length) + flag.desc + "\n"}
-        val usage = args.map { argument: Argument -> if (argument.optional) "[${argument.name}: ${argument.type}]" else "<${argument.name}: ${argument.type}>" }
+        val sub = cmd.subcommands.map {
+            "\t${it.key}" + " ".repeat(20 - it.key.length) + "${it.value.desc}\n"
+        }
+        val flag = flags.map {
+            "\t${it.abbr}, ${it.flag}${" ".repeat(20 - "${it.abbr}, ${it.flag}".length)}${it.desc}\n"
+        }
+        val usage = args.map {
+            if (it.optional)
+                "[${it.name}: ${it.type}]"
+            else
+                "<${it.name}: ${it.type}>"
+        }
         val formattedSubs = if (sub.isNotEmpty()) "\nSubcommands:\n${sub.joinToString("\n")}" else ""
         val formattedFlags = if (flag.isNotEmpty()) "\nFlags:\n${flag.joinToString("\n")}" else ""
 
