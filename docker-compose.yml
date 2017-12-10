@@ -1,0 +1,15 @@
+version: '3'
+
+services:
+  akatsuki:
+    build: .
+
+  db:
+    image: postgres:alpine
+    hostname: db
+    environment:
+      - POSTGRES_PASS=postgres
+      - POSTGRES_USER=postgres
+      - POSTGRES_DB=akatsuki
+    volumes:
+      - /var/data/akatsuki-pgdata:/var/lib/postgresql/data/pgdata
