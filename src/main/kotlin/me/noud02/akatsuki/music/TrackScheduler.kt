@@ -91,12 +91,11 @@ class TrackScheduler(private val player: AudioPlayer, private val manager: Guild
                         .getString("videoId")
 
                 MusicManager.playerManager.loadItem("https://youtube.com/watch?v=$id", object : AudioLoadResultHandler {
-                    override fun loadFailed(exception: FriendlyException) = manager.textChannel.sendMessage("Failed to add song to queue: ${exception.message}").queue()
-                    override fun noMatches() = manager.textChannel.sendMessage("Could not find that song!").queue()
-                    override fun trackLoaded(track: AudioTrack) {
-                        manager.scheduler.add(track)
-                        manager.textChannel.sendMessage("Added ${track.info.title} to the queue!").queue()
-                    }
+                    override fun loadFailed(exception: FriendlyException) = manager.textChannel.sendMessage(
+                            "[autoplay] Failed to add song to queue: ${exception.message}"
+                    ).queue()
+                    override fun noMatches() = manager.textChannel.sendMessage("[autoplay] YouTube url is (probably) invalid!").queue()
+                    override fun trackLoaded(track: AudioTrack) = manager.scheduler.add(track)
                     override fun playlistLoaded(playlist: AudioPlaylist) = trackLoaded(playlist.tracks.first())
                 })
             } else
@@ -112,7 +111,6 @@ class TrackScheduler(private val player: AudioPlayer, private val manager: Guild
         }
     }
 
-    override fun onTrackException(player: AudioPlayer, track: AudioTrack, exception: FriendlyException) {
-        manager.textChannel.sendMessage("Error occurred while playing music: ${exception.message}").queue()
-    }
+    override fun onTrackException(player: AudioPlayer, track: AudioTrack, exception: FriendlyException)
+            = manager.textChannel.sendMessage("Error occurred while playing music: ${exception.message}").queue()
 }
