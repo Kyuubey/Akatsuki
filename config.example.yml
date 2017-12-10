@@ -13,6 +13,7 @@ database:
   name: db name
   user: db user
   pass: db password
+  host: db host
 api:
   google: google api key
   weebsh: weeb.sh api key

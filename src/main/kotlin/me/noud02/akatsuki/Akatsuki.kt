@@ -71,7 +71,7 @@ class Akatsuki(val config: Config) : ListenerAdapter() {
     val waiter = EventWaiter()
     val cmdHandler = CommandHandler()
     val db = Database.connect(
-            "jdbc:postgresql:${config.database.name}",
+            "jdbc:postgresql://${config.database.host}/${config.database.name}",
             "org.postgresql.Driver",
             config.database.user,
             config.database.pass
