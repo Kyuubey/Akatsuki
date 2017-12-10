@@ -1,6 +1,6 @@
 FROM openjdk:alpine
 WORKDIR /usr/src
-RUN git clone git://github.com/noud02/Akatsuki.git akatsuki && \
+RUN git clone git://github.com/noud02/Akatsuki.git akatsuki --recursive && \
     cd akatsuki && \
     ./gradlew build
 WORKDIR /usr/src/akatsuki
