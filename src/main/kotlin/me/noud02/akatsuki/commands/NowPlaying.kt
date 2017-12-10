@@ -31,6 +31,7 @@ import me.noud02.akatsuki.entities.Context
 import me.noud02.akatsuki.annotations.Load
 import me.noud02.akatsuki.music.MusicManager
 import net.dv8tion.jda.core.EmbedBuilder
+import java.awt.Color
 
 @Load
 @Alias("np")
@@ -40,12 +41,35 @@ class NowPlaying : Command() {
 
     override fun run(ctx: Context) {
         val manager = MusicManager.musicManagers[ctx.guild?.id] ?: return ctx.send("Not connected!") // TODO add translations for "not connected"
-        val embed = EmbedBuilder()
+        val embed = EmbedBuilder().apply {
+            setAuthor(ctx.lang.getString("now_playing"), null, null)
+            setTitle(manager.player.playingTrack.info.title)
+            setColor(Color.CYAN)
+        }
 
-        embed.setAuthor(ctx.lang.getString("now_playing"), null, null)
-        embed.setTitle(manager.player.playingTrack.info.title)
         if (manager.scheduler.queue.isNotEmpty())
             embed.setFooter("Next: ${manager.scheduler.queue.peek().info.title}", null) // TODO add translations for "next"
+        else if (manager.autoplay && manager.player.playingTrack.info.uri.indexOf("youtube") > -1) {
+            val res = khttp.get(
+                    "https://www.googleapis.com/youtube/v3/search",
+                    mapOf(),
+                    mapOf(
+                            "key" to ctx.client.config.api.google,
+                            "part" to "snippet",
+                            "maxResults" to "10",
+                            "type" to "video",
+                            "relatedToVideoId" to manager.player.playingTrack.info.identifier
+                    )
+            )
+
+            val title = res.jsonObject
+                    .getJSONArray("items")
+                    .getJSONObject(0)
+                    .getJSONObject("snippet")
+                    .getString("title")
+
+            embed.setFooter("Next: $title (autoplay)", null)
+        }
 
         ctx.send(embed.build())
     }
