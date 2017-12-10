@@ -25,11 +25,14 @@
 
 package me.noud02.akatsuki.music
 
+import com.sedmelluq.discord.lavaplayer.player.AudioLoadResultHandler
 import com.sedmelluq.discord.lavaplayer.player.AudioPlayer
 import com.sedmelluq.discord.lavaplayer.player.event.AudioEventAdapter
 import com.sedmelluq.discord.lavaplayer.tools.FriendlyException
+import com.sedmelluq.discord.lavaplayer.track.AudioPlaylist
 import com.sedmelluq.discord.lavaplayer.track.AudioTrack
 import com.sedmelluq.discord.lavaplayer.track.AudioTrackEndReason
+import me.noud02.akatsuki.Akatsuki
 import net.dv8tion.jda.core.EmbedBuilder
 import java.awt.Color
 import java.util.concurrent.LinkedBlockingQueue
@@ -67,10 +70,36 @@ class TrackScheduler(private val player: AudioPlayer, private val manager: Guild
 
             if (nextTrack != null)
                 embed.setFooter("Next: ${nextTrack.info.title}", null)
-            /* TODO impl autoplay from yt
+            // TODO impl autoplay from yt
             if (manager.autoplay && track.info.uri.indexOf("youtube") > -1) {
+                val res = khttp.get(
+                        "https://www.googleapis.com/youtube/v3/search",
+                        mapOf(),
+                        mapOf(
+                                "key" to Akatsuki.client.config.api.google,
+                                "part" to "snippet",
+                                "maxResults" to "10",
+                                "type" to "video",
+                                "relatedToVideoId" to track.info.identifier
+                        )
+                )
 
-            }*/ else
+                val id = res.jsonObject
+                        .getJSONArray("items")
+                        .getJSONObject(0)
+                        .getJSONObject("id")
+                        .getString("videoId")
+
+                MusicManager.playerManager.loadItem("https://youtube.com/watch?v=$id", object : AudioLoadResultHandler {
+                    override fun loadFailed(exception: FriendlyException) = manager.textChannel.sendMessage("Failed to add song to queue: ${exception.message}").queue()
+                    override fun noMatches() = manager.textChannel.sendMessage("Could not find that song!").queue()
+                    override fun trackLoaded(track: AudioTrack) {
+                        manager.scheduler.add(track)
+                        manager.textChannel.sendMessage("Added ${track.info.title} to the queue!").queue()
+                    }
+                    override fun playlistLoaded(playlist: AudioPlaylist) = trackLoaded(playlist.tracks.first())
+                })
+            } else
                 MusicManager.inactivityScheduler.schedule(timerTask {
                     if (player.playingTrack != null || !manager.textChannel.guild.audioManager.isConnected)
                         return@timerTask
