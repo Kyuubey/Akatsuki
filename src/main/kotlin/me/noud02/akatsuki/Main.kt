@@ -44,5 +44,5 @@ fun main (args: Array<String>) {
     // bot.buildSharded(3)
     bot.build()
 
-    bot.setGame("awoo~ | ${bot.jda.guilds.size} Guild(s)!")
+    bot.setGame("awoo~")
 }

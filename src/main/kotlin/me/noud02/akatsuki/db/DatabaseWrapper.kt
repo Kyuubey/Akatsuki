@@ -26,19 +26,21 @@
 package me.noud02.akatsuki.db
 
 import me.aurieh.ares.exposed.async.asyncTransaction
+import me.noud02.akatsuki.Akatsuki
 import me.noud02.akatsuki.entities.CoroutineDispatcher
 import me.noud02.akatsuki.schema.Guilds
 import me.noud02.akatsuki.schema.Users
 import net.dv8tion.jda.core.entities.Guild
 import net.dv8tion.jda.core.entities.Member
 import net.dv8tion.jda.core.entities.User
+import org.jetbrains.exposed.sql.deleteWhere
 import org.jetbrains.exposed.sql.insert
 import org.jetbrains.exposed.sql.select
 import java.util.concurrent.ExecutorService
 import java.util.concurrent.Executors
 
 data class DBGuild(
-        val id: String,
+        val id: Long,
         val name: String,
         val lang: String,
         val prefixes: List<String>,
@@ -46,27 +48,18 @@ data class DBGuild(
 )
 
 data class DBUser(
-        val id: String,
+        val id: Long,
         val username: String,
         val discriminator: String,
         val lang: String
 )
 
 object DatabaseWrapper {
-    private val pool: ExecutorService by lazy {
-        Executors.newCachedThreadPool {
-            Thread(it, "Akatsuki-Database-Pool-Thread").apply {
-                isDaemon = true
-            }
-        }
-    }
-    private val coroutineDispatcher by lazy {
-        CoroutineDispatcher(pool)
-    }
+    private val pool: ExecutorService = Akatsuki.client.pool
 
-    suspend fun getGuild(guild: Guild) = getGuild(guild.id)
+    suspend fun getGuild(guild: Guild) = getGuild(guild.idLong)
 
-    suspend fun getGuild(id: String): DBGuild {
+    suspend fun getGuild(id: Long): DBGuild {
         return asyncTransaction(pool) {
             val selection = Guilds.select {
                 Guilds.id.eq(id)
@@ -91,12 +84,12 @@ object DatabaseWrapper {
     suspend fun newGuild(guild: Guild) {
         asyncTransaction(pool) {
             val selection = Guilds.select {
-                Guilds.id.eq(guild.id)
+                Guilds.id.eq(guild.idLong)
             }
 
             if (selection.empty())
                 Guilds.insert {
-                    it[id] = guild.id
+                    it[id] = guild.idLong
                     it[lang] = "en_US"
                     it[forceLang] = false
                     it[prefixes] = arrayOf()
@@ -105,11 +98,21 @@ object DatabaseWrapper {
         }.await()
     }
 
-    suspend fun getUser(user: User) = getUser(user.id)
+    suspend fun remGuild(guild: Guild) = remGuild(guild.idLong)
 
-    suspend fun getUser(member: Member) = getUser(member.user.id)
+    suspend fun remGuild(id: Long) {
+        asyncTransaction(pool) {
+            Guilds.deleteWhere {
+                Guilds.id.eq(id)
+            }
+        }
+    }
 
-    suspend fun getUser(id: String): DBUser {
+    suspend fun getUser(user: User) = getUser(user.idLong)
+
+    suspend fun getUser(member: Member) = getUser(member.user.idLong)
+
+    suspend fun getUser(id: Long): DBUser {
         return asyncTransaction(pool) {
             val selection = Users.select {
                 Users.id.eq(id)
@@ -135,12 +138,12 @@ object DatabaseWrapper {
     suspend fun newUser(user: User) {
         asyncTransaction(pool) {
             val selection = Users.select {
-                Users.id.eq(user.id)
+                Users.id.eq(user.idLong)
             }
 
             if (selection.empty())
                 Users.insert {
-                    it[id] = user.id
+                    it[id] = user.idLong
                     it[username] = user.name
                     it[discriminator] = user.discriminator
                     it[lang] = "en_US"
