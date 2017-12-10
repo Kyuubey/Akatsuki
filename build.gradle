@@ -39,16 +39,15 @@ repositories {
 
 dependencies {
     compile "org.jetbrains.kotlin:kotlin-stdlib-jre8:$kotlin_version"
-    compile 'org.jetbrains.kotlinx:kotlinx-coroutines-core:0.19.3'
-    compile 'org.jetbrains.kotlinx:kotlinx-coroutines-jdk8:0.19.3'
+    compile 'org.jetbrains.kotlinx:kotlinx-coroutines-core:0.20'
+    compile 'org.jetbrains.kotlinx:kotlinx-coroutines-jdk8:0.20'
     compile 'org.slf4j:slf4j-api:1.8.0-alpha2'
     compile 'org.slf4j:slf4j-simple:1.8.0-alpha2'
     compile 'org.jruby:jruby-complete:9.1.13.0'
     compile 'commons-validator:commons-validator:1.6'
-    // compile 'org.openpnp:opencv:3.2.0-0'
     compile 'khttp:khttp:0.1.0'
-    compile 'net.dv8tion:JDA:3.3.1_306'
-    compile 'com.sedmelluq:lavaplayer:1.2.44'
+    compile 'net.dv8tion:JDA:3.3.1_308'
+    compile 'com.sedmelluq:lavaplayer:1.2.45'
     compile 'org.jetbrains.exposed:exposed:0.8.7'
     compile 'org.postgresql:postgresql:42.1.4'
     compile 'org.reflections:reflections:0.9.11'
@@ -59,9 +58,6 @@ dependencies {
     compile 'com.github.kittinunf.fuel:fuel:1.11.0'
     compile 'com.github.kittinunf.fuel:fuel-jackson:1.11.0'
     compile 'com.github.kittinunf.fuel:fuel-gson:1.11.0'
-    // compile 'org.im4java:im4java:1.4.0'
-    // compile 'jmagick:jmagick:6.6.9'
-    // compile 'com.twelvemonkeys.imageio:imageio-jmagick:3.0.2'
 }
 
 compileKotlin {
