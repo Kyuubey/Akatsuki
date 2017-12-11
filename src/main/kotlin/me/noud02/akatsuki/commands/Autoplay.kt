@@ -23,23 +23,23 @@
  *  OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package me.noud02.akatsuki.music
+package me.noud02.akatsuki.commands
 
-import com.sedmelluq.discord.lavaplayer.player.AudioPlayer
-import com.sedmelluq.discord.lavaplayer.player.AudioPlayerManager
-import net.dv8tion.jda.core.entities.TextChannel
-import net.dv8tion.jda.core.entities.VoiceChannel
+import me.noud02.akatsuki.annotations.Load
+import me.noud02.akatsuki.entities.Command
+import me.noud02.akatsuki.entities.Context
+import me.noud02.akatsuki.music.MusicManager
 
-class GuildMusicManager(manager: AudioPlayerManager, val textChannel: TextChannel, val voiceChannel: VoiceChannel) {
-    val player: AudioPlayer = manager.createPlayer()
-    val scheduler = TrackScheduler(player, this)
-    val sendingHandler = AudioPlayerSendHandler(player)
-    val voteSkip = mutableListOf<String>()
+@Load
+class Autoplay : Command() {
+    override val desc = "Toggles autoplay."
+    override val guildOnly = true
 
-    var autoplay = true
+    override fun run(ctx: Context) {
+        val manager = MusicManager.musicManagers[ctx.guild?.id] ?: return ctx.send("Not connected!")
 
-    init {
-        player.addListener(scheduler)
-        player.volume = 50
+        manager.autoplay = !manager.autoplay
+
+        ctx.send("Autoplay is now turned ${if (manager.autoplay) "on" else "off"}!")
     }
 }
