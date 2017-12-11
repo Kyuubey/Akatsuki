@@ -31,7 +31,7 @@ import me.noud02.akatsuki.annotations.Argument
 import me.noud02.akatsuki.annotations.Load
 import me.noud02.akatsuki.entities.*
 import me.noud02.akatsuki.utils.I18n
-import me.noud02.akatsuki.schema.Users
+import me.noud02.akatsuki.db.schema.Users
 import org.jetbrains.exposed.sql.update
 
 @Alias("change")

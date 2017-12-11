@@ -27,9 +27,8 @@ package me.noud02.akatsuki.db
 
 import me.aurieh.ares.exposed.async.asyncTransaction
 import me.noud02.akatsuki.Akatsuki
-import me.noud02.akatsuki.entities.CoroutineDispatcher
-import me.noud02.akatsuki.schema.Guilds
-import me.noud02.akatsuki.schema.Users
+import me.noud02.akatsuki.db.schema.Guilds
+import me.noud02.akatsuki.db.schema.Users
 import net.dv8tion.jda.core.entities.Guild
 import net.dv8tion.jda.core.entities.Member
 import net.dv8tion.jda.core.entities.User
@@ -37,7 +36,6 @@ import org.jetbrains.exposed.sql.deleteWhere
 import org.jetbrains.exposed.sql.insert
 import org.jetbrains.exposed.sql.select
 import java.util.concurrent.ExecutorService
-import java.util.concurrent.Executors
 
 data class DBGuild(
         val id: Long,
