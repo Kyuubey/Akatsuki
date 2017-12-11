@@ -30,8 +30,8 @@ import me.aurieh.ares.core.entities.EventWaiter
 import me.noud02.akatsuki.db.DatabaseWrapper
 import me.noud02.akatsuki.entities.Config
 import me.noud02.akatsuki.entities.CoroutineDispatcher
-import me.noud02.akatsuki.schema.Guilds
-import me.noud02.akatsuki.schema.Users
+import me.noud02.akatsuki.db.schema.Guilds
+import me.noud02.akatsuki.db.schema.Users
 import me.noud02.akatsuki.utils.Wolk
 import net.dv8tion.jda.core.AccountType
 import net.dv8tion.jda.core.JDA

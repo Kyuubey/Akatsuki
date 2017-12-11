@@ -23,7 +23,7 @@
  *  OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package me.noud02.akatsuki.schema
+package me.noud02.akatsuki.db.schema
 
 import me.aurieh.ares.exposed.pg.pgArray
 import org.jetbrains.exposed.sql.Table
