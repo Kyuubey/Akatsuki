@@ -51,7 +51,7 @@ class AddPrefix : AsyncCommand() {
                 Guilds.update({
                     Guilds.id.eq(ctx.guild?.id)
                 }) {
-                    it[prefixes] = guild[Guilds.prefixes].plus(ctx.args["prefix"].toString())
+                    it[prefixes] = guild[Guilds.prefixes] + ctx.args["prefix"].toString()
                 }
                 ctx.send("Added prefix `${ctx.args["prefix"]}`")
             } catch (e: Throwable) {
