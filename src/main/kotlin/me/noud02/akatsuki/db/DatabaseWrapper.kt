@@ -42,7 +42,9 @@ data class DBGuild(
         val name: String,
         val lang: String,
         val prefixes: List<String>,
-        val forceLang: Boolean
+        val forceLang: Boolean,
+        val starboard: Boolean,
+        val starboardChannel: Long
 )
 
 data class DBUser(
@@ -52,122 +54,110 @@ data class DBUser(
         val lang: String
 )
 
+data class DBStar(
+        val messageId: Long,
+        val channelId: Long,
+        val guildId: Long,
+        val starId: Long,
+        val stargazers: List<Long>,
+        val content: String,
+        val attachments: List<String>
+)
+
 object DatabaseWrapper {
     private val pool: ExecutorService = Akatsuki.client.pool
 
-    suspend fun getGuild(guild: Guild) = getGuild(guild.idLong)
+    fun getGuild(guild: Guild) = getGuild(guild.idLong)
 
-    suspend fun getGuild(id: Long): DBGuild {
-        return asyncTransaction(pool) {
-            val selection = Guilds.select {
-                Guilds.id.eq(id)
-            }
+    fun getGuild(id: Long): DBGuild = asyncTransaction(pool) {
+        val guild = Guilds.select { Guilds.id.eq(id) }.firstOrNull()
 
-            if (selection.empty())
-                throw Exception("Guild not found")
-            else {
-                val guild = selection.first()
+        if (guild == null)
+            throw Exception("Guild not found")
+        else
+            return@asyncTransaction DBGuild(
+                    guild[Guilds.id],
+                    guild[Guilds.name],
+                    guild[Guilds.lang],
+                    guild[Guilds.prefixes].toList(),
+                    guild[Guilds.forceLang],
+                    guild[Guilds.starboard],
+                    guild[Guilds.starboardChannel]
+            )
+    }.execute().get()
 
-                return@asyncTransaction DBGuild(
-                        guild[Guilds.id],
-                        guild[Guilds.name],
-                        guild[Guilds.lang],
-                        guild[Guilds.prefixes].toList(),
-                        guild[Guilds.forceLang]
-                )
-            }
-        }.await()
-    }
-
-    suspend fun newGuild(guild: Guild) {
-        asyncTransaction(pool) {
-            val selection = Guilds.select {
-                Guilds.id.eq(guild.idLong)
-            }
-
-            if (selection.empty())
-                Guilds.insert {
-                    it[id] = guild.idLong
-                    it[lang] = "en_US"
-                    it[forceLang] = false
-                    it[prefixes] = arrayOf()
-                    it[name] = guild.name
-                }
-        }.await()
-    }
-
-    suspend fun remGuild(guild: Guild) = remGuild(guild.idLong)
-
-    suspend fun remGuild(id: Long) {
-        asyncTransaction(pool) {
-            Guilds.deleteWhere {
-                Guilds.id.eq(id)
-            }
+    fun newGuild(guild: Guild) = asyncTransaction(pool) {
+        val selection = Guilds.select {
+            Guilds.id.eq(guild.idLong)
         }
-    }
 
-    suspend fun getUser(user: User) = getUser(user.idLong)
-
-    suspend fun getUser(member: Member) = getUser(member.user.idLong)
-
-    suspend fun getUser(id: Long): DBUser {
-        return asyncTransaction(pool) {
-            val selection = Users.select {
-                Users.id.eq(id)
+        if (selection.empty())
+            Guilds.insert {
+                it[id] = guild.idLong
+                it[lang] = "en_US"
+                it[forceLang] = false
+                it[prefixes] = arrayOf()
+                it[name] = guild.name
+                it[starboard] = false
+                it[starboardChannel] = guild.textChannels.first().idLong
             }
+    }.execute()
 
-            if (selection.empty())
-                throw Exception("User not found")
-            else {
-                val user = selection.first()
+    fun remGuild(guild: Guild) = remGuild(guild.idLong)
 
-                return@asyncTransaction DBUser(
-                        user[Users.id],
-                        user[Users.username],
-                        user[Users.discriminator],
-                        user[Users.lang]
-                )
-            }
-        }.await()
-    }
-
-    suspend fun newUser(member: Member) = newUser(member.user)
-
-    suspend fun newUser(user: User) {
-        asyncTransaction(pool) {
-            val selection = Users.select {
-                Users.id.eq(user.idLong)
-            }
-
-            if (selection.empty())
-                Users.insert {
-                    it[id] = user.idLong
-                    it[username] = user.name
-                    it[discriminator] = user.discriminator
-                    it[lang] = "en_US"
-                }
-        }.await()
-    }
-
-    suspend fun getGuildSafe(guild: Guild): DBGuild {
-        try {
-            getGuild(guild)
-        } catch (e: Exception) {
-            newGuild(guild)
-        } finally {
-            return getGuild(guild)
+    fun remGuild(id: Long) = asyncTransaction(pool) {
+        Guilds.deleteWhere {
+            Guilds.id.eq(id)
         }
+    }.execute()
+
+    fun getUser(user: User) = getUser(user.idLong)
+
+    fun getUser(member: Member) = getUser(member.user.idLong)
+
+    fun getUser(id: Long): DBUser = asyncTransaction(pool) {
+        val user = Users.select { Users.id.eq(id) }.firstOrNull()
+
+        if (user == null)
+            throw Exception("User not found")
+        else
+            return@asyncTransaction DBUser(
+                    user[Users.id],
+                    user[Users.username],
+                    user[Users.discriminator],
+                    user[Users.lang]
+            )
+    }.execute().get()
+
+    fun newUser(member: Member) = newUser(member.user)
+
+    fun newUser(user: User) = asyncTransaction(pool) {
+        val selection = Users.select {
+            Users.id.eq(user.idLong)
+        }
+
+        if (selection.empty())
+            Users.insert {
+                it[id] = user.idLong
+                it[username] = user.name
+                it[discriminator] = user.discriminator
+                it[lang] = "en_US"
+            }
+    }.execute()
+
+    fun getGuildSafe(guild: Guild): DBGuild = try {
+        getGuild(guild)
+    } catch (e: Exception) {
+        newGuild(guild)
+        getGuild(guild)
     }
 
-    suspend fun getUserSafe(member: Member) = getUserSafe(member.user)
+    fun getUserSafe(member: Member) = getUserSafe(member.user)
 
-    suspend fun getUserSafe(user: User): DBUser {
-        try {
-            getUser(user)
-        } catch (e: Exception) {
-            newUser(user)
-        } finally {
-            return getUser(user)
-        }
+    fun getUserSafe(user: User): DBUser = try {
+        getUser(user)
+    } catch (e: Exception) {
+        newUser(user)
+        getUser(user)
     }
 }

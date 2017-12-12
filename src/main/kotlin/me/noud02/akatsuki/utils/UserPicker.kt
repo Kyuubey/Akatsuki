@@ -39,7 +39,14 @@ import kotlin.math.min
 
 class UserPicker(private val waiter: EventWaiter, private val user: Member, private var users: List<Member>, private val guild: Guild, private val timeout: Long = 60000) {
     private var index = 0
-    private val text get() = "Please select a user:\n```asciidoc\n${users.mapIndexed { i, member -> if (i == index) "*${i + 1}. ${member.user.name}#${member.user.discriminator} *" else " ${i + 1}. ${member.user.name}#${member.user.discriminator}" }.joinToString("\n")}```"
+    private val text
+        get() = "Please select a user:\n```asciidoc\n${users.mapIndexed {
+            i, member ->
+            if (i == index)
+                "*${i + 1}. ${member.user.name}#${member.user.discriminator} *"
+            else
+                " ${i + 1}. ${member.user.name}#${member.user.discriminator}"
+        }.joinToString("\n")}```"
     private val inputText = "Please select a user by sending their number:\n```asciidoc\n${users.mapIndexed { i, member -> " ${i + 1}. ${member.user.name}#${member.user.discriminator}" }.joinToString("\n")}```"
 
     private val upEmote = "\u2B06"
@@ -51,23 +58,23 @@ class UserPicker(private val waiter: EventWaiter, private val user: Member, priv
         users = users.subList(0, min(users.size, 5))
     }
 
-    suspend fun build(msg: Message): CompletableFuture<Member> = build(msg.channel)
+    fun build(msg: Message): CompletableFuture<Member> = build(msg.channel)
 
-    suspend fun build(channel: MessageChannel): CompletableFuture<Member> {
+    fun build(channel: MessageChannel): CompletableFuture<Member> {
         return if (guild.selfMember.hasPermission(Permission.MESSAGE_ADD_REACTION) || guild.selfMember.hasPermission(Permission.ADMINISTRATOR))
             buildReactions(channel)
         else
             buildInput(channel)
     }
 
-    private suspend fun buildReactions(channel: MessageChannel): CompletableFuture<Member> {
-        val msg = channel.sendMessage(text).await()
+    private fun buildReactions(channel: MessageChannel): CompletableFuture<Member> {
+        val msg = channel.sendMessage(text).complete()
         val fut = CompletableFuture<Member>()
 
-        msg.addReaction(upEmote).await()
-        msg.addReaction(confirmEmote).await()
-        msg.addReaction(cancelEmote).await()
-        msg.addReaction(downEmote).await()
+        msg.addReaction(upEmote).queue()
+        msg.addReaction(confirmEmote).queue()
+        msg.addReaction(cancelEmote).queue()
+        msg.addReaction(downEmote).queue()
 
         waiter.await<MessageReactionAddEvent>(20, timeout) {
             if (it.messageId == msg.id && it.user.id == user.user.id) {
@@ -105,8 +112,8 @@ class UserPicker(private val waiter: EventWaiter, private val user: Member, priv
         return fut
     }
 
-    private suspend fun buildInput(channel: MessageChannel): CompletableFuture<Member> {
-        val msg = channel.sendMessage(inputText).await()
+    private fun buildInput(channel: MessageChannel): CompletableFuture<Member> {
+        val msg = channel.sendMessage(inputText).complete()
         val fut = CompletableFuture<Member>()
 
         waiter.await<MessageReceivedEvent>(1, timeout) {

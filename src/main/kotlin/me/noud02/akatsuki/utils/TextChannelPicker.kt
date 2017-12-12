@@ -58,23 +58,23 @@ class TextChannelPicker(
         channels = channels.subList(0, min(channels.size, 5))
     }
 
-    suspend fun build(msg: Message): CompletableFuture<TextChannel> = build(msg.channel)
+    fun build(msg: Message): CompletableFuture<TextChannel> = build(msg.channel)
 
-    suspend fun build(channel: MessageChannel): CompletableFuture<TextChannel> {
+    fun build(channel: MessageChannel): CompletableFuture<TextChannel> {
         return if (guild.selfMember.hasPermission(Permission.MESSAGE_ADD_REACTION) || guild.selfMember.hasPermission(Permission.ADMINISTRATOR))
             buildReactions(channel)
         else
             buildInput(channel)
     }
 
-    private suspend fun buildReactions(channel: MessageChannel): CompletableFuture<TextChannel> {
-        val msg = channel.sendMessage(text).await()
+    private fun buildReactions(channel: MessageChannel): CompletableFuture<TextChannel> {
+        val msg = channel.sendMessage(text).complete()
         val fut = CompletableFuture<TextChannel>()
 
-        msg.addReaction(upEmote).await()
-        msg.addReaction(confirmEmote).await()
-        msg.addReaction(cancelEmote).await()
-        msg.addReaction(downEmote).await()
+        msg.addReaction(upEmote).queue()
+        msg.addReaction(confirmEmote).queue()
+        msg.addReaction(cancelEmote).queue()
+        msg.addReaction(downEmote).queue()
 
         waiter.await<MessageReactionAddEvent>(20, timeout) {
             if (it.messageId == msg.id && it.user.id == user.user.id) {
@@ -112,8 +112,8 @@ class TextChannelPicker(
         return fut
     }
 
-    private suspend fun buildInput(channel: MessageChannel): CompletableFuture<TextChannel> {
-        val msg = channel.sendMessage(inputText).await()
+    private fun buildInput(channel: MessageChannel): CompletableFuture<TextChannel> {
+        val msg = channel.sendMessage(inputText).complete()
         val fut = CompletableFuture<TextChannel>()
 
         waiter.await<MessageReceivedEvent>(1, timeout) {
