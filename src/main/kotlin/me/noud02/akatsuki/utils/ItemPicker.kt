@@ -36,7 +36,13 @@ import net.dv8tion.jda.core.events.message.react.MessageReactionAddEvent
 import java.awt.Color
 import java.util.concurrent.CompletableFuture
 
-class ItemPicker(private val waiter: EventWaiter, private val user: Member, private val guild: Guild, private val confirm: Boolean = false, private val timeout: Long = 60000) {
+class ItemPicker(
+        private val waiter: EventWaiter,
+        private val user: Member,
+        private val guild: Guild,
+        private val confirm: Boolean = false,
+        private val timeout: Long = 60000
+) {
     private var index = 0
     private val embeds = mutableListOf<MessageEmbed>()
     private val items = mutableListOf<PickerItem>()
@@ -53,16 +59,16 @@ class ItemPicker(private val waiter: EventWaiter, private val user: Member, priv
         return this
     }
 
-    suspend fun build(msg: Message): CompletableFuture<PickerItem> = build(msg.channel)
+    fun build(msg: Message): CompletableFuture<PickerItem> = build(msg.channel)
 
-    suspend fun build(channel: MessageChannel): CompletableFuture<PickerItem> {
+    fun build(channel: MessageChannel): CompletableFuture<PickerItem> {
         return if (guild.selfMember.hasPermission(Permission.MESSAGE_ADD_REACTION) || guild.selfMember.hasPermission(Permission.ADMINISTRATOR))
             buildReactions(channel)
         else
             buildInput(channel)
     }
 
-    private suspend fun buildReactions(channel: MessageChannel): CompletableFuture<PickerItem> {
+    private fun buildReactions(channel: MessageChannel): CompletableFuture<PickerItem> {
         val fut = CompletableFuture<PickerItem>()
 
         for (item in items) {
@@ -88,13 +94,13 @@ class ItemPicker(private val waiter: EventWaiter, private val user: Member, priv
             embeds.add(embed.build())
         }
 
-        val msg = channel.sendMessage(embeds[index]).await()
+        val msg = channel.sendMessage(embeds[index]).complete()
 
-        msg.addReaction(leftEmote).await()
+        msg.addReaction(leftEmote).queue()
         if (confirm)
-            msg.addReaction(confirmEmote).await()
-        msg.addReaction(cancelEmote).await()
-        msg.addReaction(rightEmote).await()
+            msg.addReaction(confirmEmote).queue()
+        msg.addReaction(cancelEmote).queue()
+        msg.addReaction(rightEmote).queue()
 
         waiter.await<MessageReactionAddEvent>(30, timeout) {
             if (it.messageId == msg.id && it.user.id == user.user.id) {
@@ -130,9 +136,12 @@ class ItemPicker(private val waiter: EventWaiter, private val user: Member, priv
         return fut
     }
 
-    private suspend fun buildInput(channel: MessageChannel): CompletableFuture<PickerItem> {
+    private fun buildInput(channel: MessageChannel): CompletableFuture<PickerItem> {
         val fut = CompletableFuture<PickerItem>()
-        val msg = channel.sendMessage("Please choose an item from the list by sending its number:\n```\n${items.mapIndexed { i, item -> " ${i + 1}. ${item.title}" }.joinToString("\n")}```").await()
+        val msg = channel.sendMessage(
+                "Please choose an item from the list by sending its number:\n```\n${items.mapIndexed {
+                    i, item -> " ${i + 1}. ${item.title}"
+                }.joinToString("\n")}```").complete()
 
         waiter.await<MessageReceivedEvent>(1, timeout) {
             if (it.channel.id == msg.channel.id && it.author.id == user.user.id) {
