@@ -83,7 +83,7 @@ class CommandHandler {
                 }
     }
 
-    suspend fun handleMessage(event: MessageReceivedEvent) {
+    fun handleMessage(event: MessageReceivedEvent) {
         val guild: DBGuild? = if (event.guild != null) DatabaseWrapper.getGuildSafe(event.guild) else null
         val user = DatabaseWrapper.getUserSafe(event.author)
 
@@ -207,7 +207,7 @@ class CommandHandler {
         return newPerms
     }
 
-    private suspend fun checkArguments(event: MessageReceivedEvent, cmd: Command, args: List<String>, lang: ResourceBundle): MutableMap<String, Any> {
+    private fun checkArguments(event: MessageReceivedEvent, cmd: Command, args: List<String>, lang: ResourceBundle): MutableMap<String, Any> {
         val newArgs = mutableMapOf<String, Any>()
 
         val cmdArgs = cmd::class.annotations.filterIsInstance(Argument::class.java).toMutableList()
@@ -247,8 +247,8 @@ class CommandHandler {
                 "textchannel" -> {
                     if (event.guild != null) {
                         val channel: TextChannel = when {
-                            "<@!?\\d+>".toRegex().matches(arg2) -> try {
-                                event.guild.getTextChannelById("<@!?(\\d+)>".toRegex().matchEntire(arg2)?.groupValues?.get(1))
+                            "<#\\d+>".toRegex().matches(arg2) -> try {
+                                event.guild.getTextChannelById("<#(\\d+)>".toRegex().matchEntire(arg2)?.groupValues?.get(1))
                             } catch (e: Throwable) {
                                 throw Exception("Couldn't find that channel!")
                             }
@@ -259,14 +259,21 @@ class CommandHandler {
                                 if (channels.size > 1) {
                                     val picker = TextChannelPicker(Akatsuki.client.waiter, event.member, channels, event.guild)
 
-                                    picker.build(event.message).await()
+                                    picker.build(event.message).get()
                                 } else
                                     channels[0]
                             }
 
                             arg2.toLongOrNull() != null && event.guild.getTextChannelById(arg2) != null -> event.guild.getTextChannelById(arg2)
 
-                            else -> throw Exception(I18n.parse(lang.getString("channel_not_found"), mapOf("username" to event.author.name)))
+                            else -> throw Exception(
+                                    I18n.parse(
+                                            lang.getString("channel_not_found"),
+                                            mapOf(
+                                                    "username" to event.author.name
+                                            )
+                                    )
+                            )
                         }
 
                         newArgs[arg.name] = channel
@@ -293,7 +300,7 @@ class CommandHandler {
                                 if (users.size > 1) {
                                     val picker = UserPicker(Akatsuki.client.waiter, event.member, users, event.guild)
 
-                                    picker.build(event.channel).await()
+                                    picker.build(event.channel).get()
                                 } else
                                     users[0]
                             }
@@ -303,14 +310,21 @@ class CommandHandler {
                                 if (users.size > 1) {
                                     val picker = UserPicker(Akatsuki.client.waiter, event.member, users, event.guild)
 
-                                    picker.build(event.channel).await()
+                                    picker.build(event.channel).get()
                                 } else
                                     users[0]
                             }
 
                             arg2.toLongOrNull() != null && event.guild.getMemberById(arg2) != null -> event.guild.getMemberById(arg2)
 
-                            else -> throw Exception(I18n.parse(lang.getString("user_not_found"), mapOf("username" to event.author.name)))
+                            else -> throw Exception(
+                                    I18n.parse(
+                                            lang.getString("user_not_found"),
+                                            mapOf(
+                                                    "username" to event.author.name
+                                            )
+                                    )
+                            )
                         }
 
                         newArgs[arg.name] = user
