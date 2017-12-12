@@ -36,4 +36,6 @@ object Guilds : Table() {
     val lang = varchar("lang", 5)
     val prefixes = pgArray<String>("prefixes", "varchar")
     val forceLang = bool("forceLang")
+    val starboard = bool("starboard")
+    val starboardChannel = long("starboardChannel")
 }
