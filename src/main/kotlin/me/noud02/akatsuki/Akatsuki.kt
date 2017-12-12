@@ -27,6 +27,7 @@ package me.noud02.akatsuki
 
 import kotlinx.coroutines.experimental.async
 import me.aurieh.ares.core.entities.EventWaiter
+import me.aurieh.ares.exposed.async.asyncTransaction
 import me.noud02.akatsuki.db.DatabaseWrapper
 import me.noud02.akatsuki.entities.Config
 import me.noud02.akatsuki.entities.CoroutineDispatcher
@@ -34,6 +35,7 @@ import me.noud02.akatsuki.db.schema.Guilds
 import me.noud02.akatsuki.db.schema.Starboard
 import me.noud02.akatsuki.db.schema.Users
 import me.noud02.akatsuki.extensions.addStar
+import me.noud02.akatsuki.extensions.removeStar
 import me.noud02.akatsuki.utils.Wolk
 import net.dv8tion.jda.core.AccountType
 import net.dv8tion.jda.core.JDA
@@ -45,6 +47,7 @@ import net.dv8tion.jda.core.events.guild.GuildJoinEvent
 import net.dv8tion.jda.core.events.guild.GuildLeaveEvent
 import net.dv8tion.jda.core.events.message.MessageReceivedEvent
 import net.dv8tion.jda.core.events.message.react.MessageReactionAddEvent
+import net.dv8tion.jda.core.events.message.react.MessageReactionRemoveEvent
 import net.dv8tion.jda.core.hooks.ListenerAdapter
 import net.dv8tion.jda.core.requests.SessionReconnectQueue
 import org.jetbrains.exposed.sql.*
@@ -85,9 +88,9 @@ class Akatsuki(val config: Config) : ListenerAdapter() {
 
     init {
         Wolk.setToken(config.api.weebsh)
-        transaction {
+        asyncTransaction(pool) {
             SchemaUtils.create(Guilds, Users, Starboard)
-        }
+        }.execute().get()
         Akatsuki.client = this
     }
 
@@ -133,9 +136,7 @@ class Akatsuki(val config: Config) : ListenerAdapter() {
     override fun onGuildJoin(event: GuildJoinEvent) {
         logger.info("New guild: ${event.guild.name} (${event.guild.id})")
 
-        async(coroutineDispatcher) {
-            DatabaseWrapper.newGuild(event.guild)
-        }
+        DatabaseWrapper.newGuild(event.guild)
     }
 
     override fun onGuildLeave(event: GuildLeaveEvent) {
@@ -154,6 +155,19 @@ class Akatsuki(val config: Config) : ListenerAdapter() {
             val msg = event.channel.getMessageById(event.messageId).complete()
 
             event.guild.addStar(msg, event.user)
+        }
+    }
+
+    override fun onMessageReactionRemove(event: MessageReactionRemoveEvent) {
+        if (event.guild != null && event.reaction.reactionEmote.name == "\u2b50") {
+            val guild = DatabaseWrapper.getGuildSafe(event.guild)
+
+            if (!guild.starboard)
+                return
+
+            val msg = event.channel.getMessageById(event.messageId).complete()
+
+            event.guild.removeStar(msg, event.user)
         }
     }
 
