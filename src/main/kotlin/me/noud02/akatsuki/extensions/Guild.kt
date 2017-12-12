@@ -31,6 +31,7 @@ import me.noud02.akatsuki.db.DatabaseWrapper
 import me.noud02.akatsuki.db.schema.Starboard
 import net.dv8tion.jda.core.EmbedBuilder
 import net.dv8tion.jda.core.entities.*
+import org.jetbrains.exposed.sql.deleteWhere
 import org.jetbrains.exposed.sql.insert
 import org.jetbrains.exposed.sql.select
 import org.jetbrains.exposed.sql.update
@@ -44,7 +45,22 @@ fun Guild.searchTextChannels(query: String): List<TextChannel> = textChannels.fi
     "${it.asMention} ${it.name.toLowerCase()} ${it.id}".indexOf(query.toLowerCase()) > -1
 }
 
+fun getStarColor(stars: Int): Color {
+    var c = stars / 13
+
+    if (c > 1)
+        c = 1
+
+    val g: Int = (194 * c) + (253 * (1 - c))
+    val b: Int = (12 * c) + (247 * (1 - c))
+
+    return Color(255, g, b)
+}
+
 fun Guild.addStar(msg: Message, user: User) {
+    if (msg.author.id == user.id)
+        return
+
     val guild = DatabaseWrapper.getGuildSafe(this)
     val channel = getTextChannelById(guild.starboardChannel)
 
@@ -60,13 +76,25 @@ fun Guild.addStar(msg: Message, user: User) {
         val embed = EmbedBuilder()
 
         if (star != null) {
+            if (star[Starboard.stargazers].contains(user.idLong))
+                return@asyncTransaction
+
+            embed.apply {
+                setAuthor(msg.author.name, null, msg.author.avatarUrl)
+                setColor(getStarColor(star[Starboard.stargazers].size + 1))
+                setDescription(descriptionBuilder.append(msg.rawContent))
+            }
+
             channel
                     .getMessageById(star[Starboard.starId])
+                    .complete()
+                    .editMessage(embed.build())
                     .complete()
                     .editMessage(
                             "\u2b50 **${star[Starboard.stargazers].size + 1}** <#${msg.channel.id}> ID: ${msg.id}"
                     )
                     .queue()
+
 
             Starboard.update({
                 Starboard.messageId.eq(msg.idLong)
@@ -75,10 +103,9 @@ fun Guild.addStar(msg: Message, user: User) {
             }
         } else {
             embed.apply {
-                setAuthor(user.name, null, user.avatarUrl)
-                setColor(Color.YELLOW)
-                val desc = embed.descriptionBuilder.apply { append(msg.rawContent) }
-                setDescription(desc)
+                setAuthor(msg.author.name, null, msg.author.avatarUrl)
+                setColor(getStarColor(1))
+                setDescription(descriptionBuilder.append(msg.rawContent))
             }
 
             val starMsg = channel.sendMessage(embed.build()).complete()
@@ -97,5 +124,60 @@ fun Guild.addStar(msg: Message, user: User) {
         }
 
         return@asyncTransaction
-    }.execute()
+    }.execute().get()
+}
+
+fun Guild.removeStar(msg: Message, user: User) {
+    val guild = DatabaseWrapper.getGuildSafe(this)
+    val channel = getTextChannelById(guild.starboardChannel)
+
+    asyncTransaction(Akatsuki.client.pool) {
+        val stars = Starboard.select {
+            Starboard.guildId.eq(idLong)
+        }
+
+        val star = stars.firstOrNull {
+            it[Starboard.messageId] == msg.idLong
+        }
+
+        if (star != null && star[Starboard.stargazers].contains(user.idLong)) {
+            val gazers = star[Starboard.stargazers].size - 1
+
+            val embed = EmbedBuilder().apply {
+                setAuthor(msg.author.name, null, msg.author.avatarUrl)
+                setColor(getStarColor(gazers))
+                setDescription(descriptionBuilder.append(msg.rawContent))
+            }
+
+            if (gazers == 0) {
+                channel
+                        .getMessageById(star[Starboard.starId])
+                        .complete()
+                        .delete()
+                        .queue()
+
+                Starboard.deleteWhere {
+                    Starboard.messageId.eq(msg.idLong)
+                }
+            } else {
+                channel
+                        .getMessageById(star[Starboard.starId])
+                        .complete()
+                        .editMessage(embed.build())
+                        .complete()
+                        .editMessage(
+                                "\u2b50 ${if (gazers == 1) "" else "**$gazers**"} <#${msg.channel.id}> ID: ${msg.id}"
+                        )
+                        .queue()
+
+                val gazerIds = star[Starboard.stargazers]
+
+                Starboard.update({
+                    Starboard.messageId.eq(msg.idLong)
+                }) {
+                    it[stargazers] = gazerIds.drop(gazerIds.indexOf(user.idLong)).toTypedArray()
+                }
+            }
+        }
+    }.execute().get()
 }
