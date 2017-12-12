@@ -31,7 +31,9 @@ import me.noud02.akatsuki.db.DatabaseWrapper
 import me.noud02.akatsuki.entities.Config
 import me.noud02.akatsuki.entities.CoroutineDispatcher
 import me.noud02.akatsuki.db.schema.Guilds
+import me.noud02.akatsuki.db.schema.Starboard
 import me.noud02.akatsuki.db.schema.Users
+import me.noud02.akatsuki.extensions.addStar
 import me.noud02.akatsuki.utils.Wolk
 import net.dv8tion.jda.core.AccountType
 import net.dv8tion.jda.core.JDA
@@ -42,6 +44,7 @@ import net.dv8tion.jda.core.events.ReadyEvent
 import net.dv8tion.jda.core.events.guild.GuildJoinEvent
 import net.dv8tion.jda.core.events.guild.GuildLeaveEvent
 import net.dv8tion.jda.core.events.message.MessageReceivedEvent
+import net.dv8tion.jda.core.events.message.react.MessageReactionAddEvent
 import net.dv8tion.jda.core.hooks.ListenerAdapter
 import net.dv8tion.jda.core.requests.SessionReconnectQueue
 import org.jetbrains.exposed.sql.*
@@ -83,7 +86,7 @@ class Akatsuki(val config: Config) : ListenerAdapter() {
     init {
         Wolk.setToken(config.api.weebsh)
         transaction {
-            SchemaUtils.create(Guilds, Users)
+            SchemaUtils.create(Guilds, Users, Starboard)
         }
         Akatsuki.client = this
     }
@@ -118,12 +121,10 @@ class Akatsuki(val config: Config) : ListenerAdapter() {
         if (event.author.isBot)
             return
 
-        async(coroutineDispatcher) {
-            try {
-                cmdHandler.handleMessage(event)
-            } catch (e: Exception) {
-                logger.error("Error while trying to handle message", e)
-            }
+        try {
+            cmdHandler.handleMessage(event)
+        } catch (e: Exception) {
+            logger.error("Error while trying to handle message", e)
         }
     }
 
@@ -140,10 +141,20 @@ class Akatsuki(val config: Config) : ListenerAdapter() {
     override fun onGuildLeave(event: GuildLeaveEvent) {
         logger.info("Left guild: ${event.guild.name} (${event.guild.id}")
 
-        /* TODO add remGuild function
-        async(coroutineDispatcher) {
-            DatabaseWrapper.remGuild(event.guild)
-        }*/
+        DatabaseWrapper.remGuild(event.guild)
+    }
+
+    override fun onMessageReactionAdd(event: MessageReactionAddEvent) {
+        if (event.guild != null && event.reaction.reactionEmote.name == "\u2b50") {
+            val guild = DatabaseWrapper.getGuildSafe(event.guild)
+
+            if (!guild.starboard)
+                return
+
+            val msg = event.channel.getMessageById(event.messageId).complete()
+
+            event.guild.addStar(msg, event.user)
+        }
     }
 
     companion object {
