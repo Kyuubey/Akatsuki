@@ -101,7 +101,7 @@ object DatabaseWrapper {
                 it[starboard] = false
                 it[starboardChannel] = guild.textChannels.first().idLong
             }
-    }.execute()
+    }.execute().get()
 
     fun remGuild(guild: Guild) = remGuild(guild.idLong)
 
@@ -109,7 +109,7 @@ object DatabaseWrapper {
         Guilds.deleteWhere {
             Guilds.id.eq(id)
         }
-    }.execute()
+    }.execute().get()
 
     fun getUser(user: User) = getUser(user.idLong)
 
@@ -143,7 +143,7 @@ object DatabaseWrapper {
                 it[discriminator] = user.discriminator
                 it[lang] = "en_US"
             }
-    }.execute()
+    }.execute().get()
 
     fun getGuildSafe(guild: Guild): DBGuild = try {
         getGuild(guild)
