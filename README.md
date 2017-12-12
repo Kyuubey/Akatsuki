@@ -17,6 +17,22 @@ $ cp config.example.yml config.yml
 $ java -jar builds/libs/Akatsuki.jar
 ```
 
+### Docker
+
+Same steps as above except instead of building it with gradle and running it with java run the following command
+
+```bash
+# Build and run it
+$ sudo docker-compose up -d
+
+# View all containers
+$ sudo docker-compose ps
+# CONTAINER ID        IMAGE               COMMAND                  CREATED              STATUS              PORTS               NAMES
+# abcdefg12345        postgres:alpine     "docker-entrypoint.s…"   ...                  ...                 5432/tcp            akatsuki_db_1
+# hijklmn67890        akatsuki_akatsuki   "java -jar ./build/l…"   ...                  ...                                     akatsuki_akatsuki_1
+
+```
+
 ### Setting up the image API
 
 ```bash
