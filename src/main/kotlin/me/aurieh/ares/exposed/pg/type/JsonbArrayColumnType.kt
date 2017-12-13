@@ -41,6 +41,7 @@ class JsonbArrayColumnType<V> : ColumnType() {
     override fun setParameter(stmt: PreparedStatement, index: Int, value: Any?) {
         val actualValue: String
         try {
+            @Suppress("UNCHECKED_CAST")
             actualValue = JSONArray(value!! as Array<V>).toString()
         } catch (e: Throwable) {
             when (e) {
@@ -63,6 +64,7 @@ class JsonbArrayColumnType<V> : ColumnType() {
     override fun valueFromDB(value: Any): Any {
         if (value is PGobject) {
             try {
+                @Suppress("UNCHECKED_CAST")
                 return JSONArray(value.value).toList() as List<V>
             } catch (e: Throwable) {
                 when (e) {
