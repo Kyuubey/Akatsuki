@@ -25,13 +25,13 @@
 
 package me.noud02.akatsuki
 
-import kotlinx.coroutines.experimental.async
 import me.aurieh.ares.core.entities.EventWaiter
 import me.aurieh.ares.exposed.async.asyncTransaction
 import me.noud02.akatsuki.db.DatabaseWrapper
 import me.noud02.akatsuki.entities.Config
 import me.noud02.akatsuki.entities.CoroutineDispatcher
 import me.noud02.akatsuki.db.schema.Guilds
+import me.noud02.akatsuki.db.schema.Logs
 import me.noud02.akatsuki.db.schema.Starboard
 import me.noud02.akatsuki.db.schema.Users
 import me.noud02.akatsuki.extensions.addStar
@@ -51,7 +51,6 @@ import net.dv8tion.jda.core.events.message.react.MessageReactionRemoveEvent
 import net.dv8tion.jda.core.hooks.ListenerAdapter
 import net.dv8tion.jda.core.requests.SessionReconnectQueue
 import org.jetbrains.exposed.sql.*
-import org.jetbrains.exposed.sql.transactions.transaction
 import org.slf4j.LoggerFactory
 import java.util.concurrent.ExecutorService
 import java.util.concurrent.Executors
@@ -89,7 +88,7 @@ class Akatsuki(val config: Config) : ListenerAdapter() {
     init {
         Wolk.setToken(config.api.weebsh)
         asyncTransaction(pool) {
-            SchemaUtils.create(Guilds, Users, Starboard)
+            SchemaUtils.create(Guilds, Users, Starboard, Logs)
         }.execute().get()
         Akatsuki.client = this
     }
