@@ -38,4 +38,5 @@ object Guilds : Table() {
     val forceLang = bool("forceLang")
     val starboard = bool("starboard")
     val starboardChannel = long("starboardChannel")
+    val logs = bool("logs")
 }

@@ -35,6 +35,7 @@ import me.noud02.akatsuki.db.schema.Logs
 import me.noud02.akatsuki.db.schema.Starboard
 import me.noud02.akatsuki.db.schema.Users
 import me.noud02.akatsuki.extensions.addStar
+import me.noud02.akatsuki.extensions.log
 import me.noud02.akatsuki.extensions.removeStar
 import me.noud02.akatsuki.utils.Wolk
 import net.dv8tion.jda.core.AccountType
@@ -45,7 +46,9 @@ import net.dv8tion.jda.core.events.Event
 import net.dv8tion.jda.core.events.ReadyEvent
 import net.dv8tion.jda.core.events.guild.GuildJoinEvent
 import net.dv8tion.jda.core.events.guild.GuildLeaveEvent
+import net.dv8tion.jda.core.events.message.MessageDeleteEvent
 import net.dv8tion.jda.core.events.message.MessageReceivedEvent
+import net.dv8tion.jda.core.events.message.MessageUpdateEvent
 import net.dv8tion.jda.core.events.message.react.MessageReactionAddEvent
 import net.dv8tion.jda.core.events.message.react.MessageReactionRemoveEvent
 import net.dv8tion.jda.core.hooks.ListenerAdapter
@@ -117,6 +120,9 @@ class Akatsuki(val config: Config) : ListenerAdapter() {
     override fun onGenericEvent(event: Event) = waiter.emit(event)
 
     override fun onMessageReceived(event: MessageReceivedEvent) {
+        if (event.guild != null && DatabaseWrapper.getGuildSafe(event.guild).logs)
+            event.message.log()
+
         if (prefixes.isEmpty())
             prefixes = listOf("akatsuki ")
 
@@ -128,6 +134,16 @@ class Akatsuki(val config: Config) : ListenerAdapter() {
         } catch (e: Exception) {
             logger.error("Error while trying to handle message", e)
         }
+    }
+
+    override fun onMessageDelete(event: MessageDeleteEvent) {
+        if (event.guild != null && DatabaseWrapper.getGuildSafe(event.guild).logs)
+            DatabaseWrapper.logEvent(event)
+    }
+
+    override fun onMessageUpdate(event: MessageUpdateEvent) {
+        if (event.guild != null && DatabaseWrapper.getGuildSafe(event.guild).logs)
+            event.message.log("UPDATE")
     }
 
     override fun onReady(event: ReadyEvent) = logger.info("Ready!")
