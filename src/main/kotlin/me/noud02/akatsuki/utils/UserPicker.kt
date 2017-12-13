@@ -37,7 +37,13 @@ import net.dv8tion.jda.core.events.message.react.MessageReactionAddEvent
 import java.util.concurrent.CompletableFuture
 import kotlin.math.min
 
-class UserPicker(private val waiter: EventWaiter, private val user: Member, private var users: List<Member>, private val guild: Guild, private val timeout: Long = 60000) {
+class UserPicker(
+        private val waiter: EventWaiter,
+        private val user: Member,
+        private var users: List<Member>,
+        private val guild: Guild,
+        private val timeout: Long = 60000
+) {
     private var index = 0
     private val text
         get() = "Please select a user:\n```asciidoc\n${users.mapIndexed {
@@ -118,12 +124,12 @@ class UserPicker(private val waiter: EventWaiter, private val user: Member, priv
 
         waiter.await<MessageReceivedEvent>(1, timeout) {
             if (it.channel.id == msg.channel.id && it.author.id == user.user.id) {
-                if (it.message.rawContent.toIntOrNull() == null)
+                if (it.message.contentRaw.toIntOrNull() == null)
                     msg.channel.sendMessage("Invalid number").queue()
-                else if (it.message.rawContent.toInt() - 1 > users.size || it.message.rawContent.toInt() - 1 < 0)
+                else if (it.message.contentRaw.toInt() - 1 > users.size || it.message.contentRaw.toInt() - 1 < 0)
                     msg.channel.sendMessage("Number out of bounds!").queue()
                 else {
-                    index = it.message.rawContent.toInt() - 1
+                    index = it.message.contentRaw.toInt() - 1
                     msg.delete().queue()
                     fut.complete(users[index])
                 }

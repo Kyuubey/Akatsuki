@@ -84,7 +84,7 @@ class CommandHandler {
     }
 
     fun handleMessage(event: MessageReceivedEvent) {
-        val guild: DBGuild? = if (event.guild != null) DatabaseWrapper.getGuildSafe(event.guild) else null
+        val guild = if (event.guild != null) DatabaseWrapper.getGuildSafe(event.guild) else null
         val user = DatabaseWrapper.getUserSafe(event.author)
 
         val locale = if (guild != null && guild.forceLang)
@@ -96,14 +96,14 @@ class CommandHandler {
 
         val lang = ResourceBundle.getBundle("i18n.Kyubey", locale, UTF8Control())
 
-        val usedPrefix: String = Akatsuki.client.prefixes.lastOrNull {
-            event.message.rawContent.startsWith(it)
+        val usedPrefix = Akatsuki.client.prefixes.lastOrNull {
+            event.message.contentRaw.startsWith(it)
         } ?: guildPrefixes.lastOrNull {
-            event.message.rawContent.startsWith(it)
+            event.message.contentRaw.startsWith(it)
         } ?: return
 
-        var cmd: String = event.message.rawContent.substring(usedPrefix.length).split(" ")[0]
-        var args: List<String> = event.message.rawContent.substring(usedPrefix.length).split(" ")
+        var cmd = event.message.contentRaw.substring(usedPrefix.length).split(" ")[0]
+        var args = event.message.contentRaw.substring(usedPrefix.length).split(" ")
 
         if (args.isNotEmpty())
             args = args.drop(1)
@@ -120,9 +120,9 @@ class CommandHandler {
 
         if (event.guild != null)
             logger.info("[Command] (Guild ${event.guild.name} (${event.guild.id})) - " +
-                    "${event.author.name}#${event.author.discriminator} (${event.author.id}): ${event.message.content}")
+                    "${event.author.name}#${event.author.discriminator} (${event.author.id}): ${event.message.contentDisplay}")
         else
-            logger.info("[Command] (DM) - ${event.author.name}#${event.author.discriminator} (${event.author.id}): ${event.message.content}")
+            logger.info("[Command] (DM) - ${event.author.name}#${event.author.discriminator} (${event.author.id}): ${event.message.contentDisplay}")
 
         if ((commands[cmd] as Command).ownerOnly && !Akatsuki.client.owners.contains(event.author.id))
             return
