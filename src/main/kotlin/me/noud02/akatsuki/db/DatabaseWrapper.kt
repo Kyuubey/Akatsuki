@@ -28,13 +28,21 @@ package me.noud02.akatsuki.db
 import me.aurieh.ares.exposed.async.asyncTransaction
 import me.noud02.akatsuki.Akatsuki
 import me.noud02.akatsuki.db.schema.Guilds
+import me.noud02.akatsuki.db.schema.Logs
 import me.noud02.akatsuki.db.schema.Users
+import me.noud02.akatsuki.extensions.log
 import net.dv8tion.jda.core.entities.Guild
 import net.dv8tion.jda.core.entities.Member
 import net.dv8tion.jda.core.entities.User
+import net.dv8tion.jda.core.events.message.GenericMessageEvent
+import net.dv8tion.jda.core.events.message.MessageDeleteEvent
+import net.dv8tion.jda.core.events.message.MessageReceivedEvent
+import net.dv8tion.jda.core.events.message.MessageUpdateEvent
 import org.jetbrains.exposed.sql.deleteWhere
 import org.jetbrains.exposed.sql.insert
 import org.jetbrains.exposed.sql.select
+import org.json.JSONArray
+import org.json.JSONObject
 import java.util.concurrent.ExecutorService
 
 data class DBGuild(
@@ -44,7 +52,8 @@ data class DBGuild(
         val prefixes: List<String>,
         val forceLang: Boolean,
         val starboard: Boolean,
-        val starboardChannel: Long
+        val starboardChannel: Long,
+        val logs: Boolean
 )
 
 data class DBUser(
@@ -82,7 +91,8 @@ object DatabaseWrapper {
                     guild[Guilds.prefixes].toList(),
                     guild[Guilds.forceLang],
                     guild[Guilds.starboard],
-                    guild[Guilds.starboardChannel]
+                    guild[Guilds.starboardChannel],
+                    guild[Guilds.logs]
             )
     }.execute().get()
 
@@ -100,6 +110,7 @@ object DatabaseWrapper {
                 it[name] = guild.name
                 it[starboard] = false
                 it[starboardChannel] = guild.textChannels.first().idLong
+                it[logs] = false
             }
     }.execute().get()
 
@@ -160,4 +171,35 @@ object DatabaseWrapper {
         newUser(user)
         getUser(user)
     }
+
+    fun logEvent(event: GenericMessageEvent) = asyncTransaction(pool) {
+        when (event) {
+            is MessageDeleteEvent -> {
+                val log = Logs.select {
+                    Logs.messageId.eq(event.messageIdLong)
+                }.firstOrNull()
+
+                if (log != null) {
+                    println(log[Logs.embeds]::class)
+
+                    Logs.insert {
+                        it[Logs.event] = "DELETE"
+                        it[messageId] = log[Logs.messageId]
+                        it[content] = log[Logs.content]
+                        it[attachments] = log[Logs.attachments]
+                        it[embeds] = log[Logs.embeds].clone().toList().toTypedArray()
+                        it[authorId] = log[Logs.authorId]
+                        it[authorName] = log[Logs.authorName]
+                        it[authorDiscrim] = log[Logs.authorDiscrim]
+                        it[authorAvatar] = log[Logs.authorAvatar]
+                        it[authorNick] = log[Logs.authorNick]
+                        it[guildId] = log[Logs.guildId]
+                    }
+                }
+            }
+            is MessageReceivedEvent -> event.message.log()
+            is MessageUpdateEvent -> event.message.log("UPDATE")
+            else -> throw Exception("Not a valid event to log")
+        }
+    }.execute().get()
 }
