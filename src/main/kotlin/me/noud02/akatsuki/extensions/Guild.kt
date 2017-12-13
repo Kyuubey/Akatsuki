@@ -82,7 +82,7 @@ fun Guild.addStar(msg: Message, user: User) {
             embed.apply {
                 setAuthor(msg.author.name, null, msg.author.avatarUrl)
                 setColor(getStarColor(star[Starboard.stargazers].size + 1))
-                setDescription(descriptionBuilder.append(msg.rawContent))
+                setDescription(descriptionBuilder.append(msg.contentRaw))
             }
 
             channel
@@ -105,7 +105,7 @@ fun Guild.addStar(msg: Message, user: User) {
             embed.apply {
                 setAuthor(msg.author.name, null, msg.author.avatarUrl)
                 setColor(getStarColor(1))
-                setDescription(descriptionBuilder.append(msg.rawContent))
+                setDescription(descriptionBuilder.append(msg.contentRaw))
             }
 
             val starMsg = channel.sendMessage(embed.build()).complete()
@@ -118,7 +118,7 @@ fun Guild.addStar(msg: Message, user: User) {
                 it[channelId] = msg.channel.idLong
                 it[starId] = starMsg.idLong
                 it[stargazers] = arrayOf(user.idLong)
-                it[content] = msg.rawContent
+                it[content] = msg.contentRaw
                 it[attachments] = msg.attachments.map { it.url }.toTypedArray()
             }
         }
@@ -146,7 +146,7 @@ fun Guild.removeStar(msg: Message, user: User) {
             val embed = EmbedBuilder().apply {
                 setAuthor(msg.author.name, null, msg.author.avatarUrl)
                 setColor(getStarColor(gazers))
-                setDescription(descriptionBuilder.append(msg.rawContent))
+                setDescription(descriptionBuilder.append(msg.contentRaw))
             }
 
             if (gazers == 0) {

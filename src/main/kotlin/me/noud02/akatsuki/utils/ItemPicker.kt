@@ -145,12 +145,12 @@ class ItemPicker(
 
         waiter.await<MessageReceivedEvent>(1, timeout) {
             if (it.channel.id == msg.channel.id && it.author.id == user.user.id) {
-                if (it.message.rawContent.toIntOrNull() == null)
+                if (it.message.contentRaw.toIntOrNull() == null)
                     msg.channel.sendMessage("Invalid number").queue()
-                else if (it.message.rawContent.toInt() - 1 > items.size || it.message.rawContent.toInt() - 1 < 0)
+                else if (it.message.contentRaw.toInt() - 1 > items.size || it.message.contentRaw.toInt() - 1 < 0)
                     msg.channel.sendMessage("Number out of bounds!")
                 else {
-                    index = it.message.rawContent.toInt() - 1
+                    index = it.message.contentRaw.toInt() - 1
                     msg.delete().queue()
                     fut.complete(items[index])
                 }
