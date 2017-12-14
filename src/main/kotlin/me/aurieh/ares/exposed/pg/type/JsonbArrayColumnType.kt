@@ -68,7 +68,7 @@ class JsonbArrayColumnType<V> : ColumnType() {
                 return JSONArray(value.value).toList().toTypedArray() as Array<V>
             } catch (e: Throwable) {
                 when (e) {
-                    is ClassCastException -> throw RuntimeException("value did not conform List<V>")
+                    is ClassCastException -> throw RuntimeException("value did not conform Array<V>")
                     is JSONException -> throw RuntimeException("value is not valid jsonb")
                     else -> throw e
                 }
