@@ -27,4 +27,4 @@ package me.noud02.akatsuki.annotations
 
 annotation class Flag(val flag: String, val abbr: Char, val desc: String)
 
-annotation class Flags(val flags: Array<Flag>)
+annotation class Flags(vararg val flags: Flag)
