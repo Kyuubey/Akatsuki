@@ -37,6 +37,11 @@ data class DatabaseConfig(
         val host: String
 )
 
+data class SiteConfig(
+        val host: String,
+        val ssl: Boolean
+)
+
 data class Config(
         val token: String,
         val description: String,
@@ -44,5 +49,6 @@ data class Config(
         val prefixes: List<String>,
         val games: List<String>,
         val database: DatabaseConfig,
-        val api: APIConfig
+        val api: APIConfig,
+        val site: SiteConfig
 )
