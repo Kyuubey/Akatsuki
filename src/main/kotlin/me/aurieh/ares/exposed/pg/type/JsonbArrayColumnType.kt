@@ -65,7 +65,7 @@ class JsonbArrayColumnType<V> : ColumnType() {
         if (value is PGobject) {
             try {
                 @Suppress("UNCHECKED_CAST")
-                return JSONArray(value.value).toList() as List<V>
+                return JSONArray(value.value).toList().toTypedArray() as Array<V>
             } catch (e: Throwable) {
                 when (e) {
                     is ClassCastException -> throw RuntimeException("value did not conform List<V>")
