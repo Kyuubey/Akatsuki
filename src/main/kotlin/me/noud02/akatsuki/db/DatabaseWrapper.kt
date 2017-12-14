@@ -180,14 +180,12 @@ object DatabaseWrapper {
                 }.firstOrNull()
 
                 if (log != null) {
-                    println(log[Logs.embeds]::class)
-
                     Logs.insert {
                         it[Logs.event] = "DELETE"
                         it[messageId] = log[Logs.messageId]
                         it[content] = log[Logs.content]
                         it[attachments] = log[Logs.attachments]
-                        it[embeds] = log[Logs.embeds].clone().toList().toTypedArray()
+                        it[embeds] = log[Logs.embeds]
                         it[authorId] = log[Logs.authorId]
                         it[authorName] = log[Logs.authorName]
                         it[authorDiscrim] = log[Logs.authorDiscrim]
