@@ -17,3 +17,6 @@ database:
 api:
   google: google api key
   weebsh: weeb.sh api key
+site:
+  host: your.site
+  ssl: false
