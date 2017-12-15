@@ -38,6 +38,7 @@ object Logs : Table() {
     val content = varchar("content", 2000)
     val attachments = pgArray<String>("attachments", "text")
     val embeds = jsonbArray<JSONObject>("embeds")
+    val timestamp = long("timestamp")
 
     // Author
     val authorId = long("authorId")
@@ -48,4 +49,9 @@ object Logs : Table() {
 
     // Guild
     val guildId = long("guildId")
+    val guildName = varchar("guildName", 100)
+
+    // Channel
+    val channelId = long("channelId")
+    val channelName = varchar("channelName", 100)
 }

@@ -37,7 +37,7 @@ fun main (args: Array<String>) {
 
     mapper.registerModule(KotlinModule())
 
-    val config: Config = mapper.readValue(File("./config.yml"))
+    val config = mapper.readValue<Config>(File("./config.yml"))
 
     val bot = Akatsuki(config)
 

@@ -186,12 +186,16 @@ object DatabaseWrapper {
                         it[content] = log[Logs.content]
                         it[attachments] = log[Logs.attachments]
                         it[embeds] = log[Logs.embeds]
+                        it[timestamp] = log[Logs.timestamp]
                         it[authorId] = log[Logs.authorId]
                         it[authorName] = log[Logs.authorName]
                         it[authorDiscrim] = log[Logs.authorDiscrim]
                         it[authorAvatar] = log[Logs.authorAvatar]
                         it[authorNick] = log[Logs.authorNick]
                         it[guildId] = log[Logs.guildId]
+                        it[guildName] = log[Logs.guildName]
+                        it[channelId] = log[Logs.channelId]
+                        it[channelName] = log[Logs.channelName]
                     }
                 }
             }
