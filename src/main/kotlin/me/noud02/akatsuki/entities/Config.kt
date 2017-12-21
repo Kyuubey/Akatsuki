@@ -39,7 +39,8 @@ data class DatabaseConfig(
 
 data class SiteConfig(
         val host: String,
-        val ssl: Boolean
+        val ssl: Boolean,
+        val port: Int
 )
 
 data class Config(

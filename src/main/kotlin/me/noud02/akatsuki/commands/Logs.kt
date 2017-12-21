@@ -24,7 +24,9 @@ class Logs : Command() {
         val url = URIBuilder().apply {
             scheme = if (ctx.client.config.site.ssl) "https" else "http"
             host = ctx.client.config.site.host
-            path = "/logs/${ctx.channel.id}"
+            if (ctx.client.config.site.port != 80)
+                port = ctx.client.config.site.port
+            path = "/logs/${ctx.channel.id}/${ctx.msg.creationTime.toInstant().toEpochMilli()}"
 
             when {
                 ctx.flags.argMap.contains("event") || ctx.flags.argMap.contains("e") ->

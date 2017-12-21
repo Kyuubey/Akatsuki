@@ -20,3 +20,4 @@ api:
 site:
   host: your.site
   ssl: false
+  port: 80
