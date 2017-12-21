@@ -53,7 +53,9 @@ data class DBGuild(
         val forceLang: Boolean,
         val starboard: Boolean,
         val starboardChannel: Long,
-        val logs: Boolean
+        val logs: Boolean,
+        val modlogs: Boolean,
+        val modlogChannel: Long
 )
 
 data class DBUser(
@@ -92,7 +94,9 @@ object DatabaseWrapper {
                     guild[Guilds.forceLang],
                     guild[Guilds.starboard],
                     guild[Guilds.starboardChannel],
-                    guild[Guilds.logs]
+                    guild[Guilds.logs],
+                    guild[Guilds.modlogs],
+                    guild[Guilds.modlogChannel]
             )
     }.execute().get()
 
@@ -111,6 +115,8 @@ object DatabaseWrapper {
                 it[starboard] = false
                 it[starboardChannel] = guild.textChannels.first().idLong
                 it[logs] = false
+                it[modlogs] = false
+                it[modlogChannel] = guild.textChannels.first().idLong
             }
     }.execute().get()
 

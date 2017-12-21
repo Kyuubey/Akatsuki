@@ -28,24 +28,26 @@ package me.noud02.akatsuki
 import me.aurieh.ares.core.entities.EventWaiter
 import me.aurieh.ares.exposed.async.asyncTransaction
 import me.noud02.akatsuki.db.DatabaseWrapper
+import me.noud02.akatsuki.db.schema.*
 import me.noud02.akatsuki.entities.Config
 import me.noud02.akatsuki.entities.CoroutineDispatcher
-import me.noud02.akatsuki.db.schema.Guilds
-import me.noud02.akatsuki.db.schema.Logs
-import me.noud02.akatsuki.db.schema.Starboard
-import me.noud02.akatsuki.db.schema.Users
 import me.noud02.akatsuki.extensions.addStar
 import me.noud02.akatsuki.extensions.log
 import me.noud02.akatsuki.extensions.removeStar
 import me.noud02.akatsuki.utils.Wolk
 import net.dv8tion.jda.core.AccountType
+import net.dv8tion.jda.core.EmbedBuilder
 import net.dv8tion.jda.core.JDA
 import net.dv8tion.jda.core.JDABuilder
+import net.dv8tion.jda.core.audit.ActionType
 import net.dv8tion.jda.core.entities.Game
 import net.dv8tion.jda.core.events.Event
 import net.dv8tion.jda.core.events.ReadyEvent
+import net.dv8tion.jda.core.events.guild.GuildBanEvent
 import net.dv8tion.jda.core.events.guild.GuildJoinEvent
 import net.dv8tion.jda.core.events.guild.GuildLeaveEvent
+import net.dv8tion.jda.core.events.guild.GuildUnbanEvent
+import net.dv8tion.jda.core.events.guild.member.GuildMemberLeaveEvent
 import net.dv8tion.jda.core.events.message.MessageDeleteEvent
 import net.dv8tion.jda.core.events.message.MessageReceivedEvent
 import net.dv8tion.jda.core.events.message.MessageUpdateEvent
@@ -91,8 +93,8 @@ class Akatsuki(val config: Config) : ListenerAdapter() {
     init {
         Wolk.setToken(config.api.weebsh)
         asyncTransaction(pool) {
-            SchemaUtils.create(Guilds, Users, Starboard, Logs)
-        }.execute().get()
+            SchemaUtils.create(Guilds, Users, Starboard, Logs, Modlogs)
+        }.execute()
         Akatsuki.client = this
     }
 
@@ -184,6 +186,99 @@ class Akatsuki(val config: Config) : ListenerAdapter() {
 
             event.guild.removeStar(msg, event.user)
         }
+    }
+
+    override fun onGuildMemberLeave(event: GuildMemberLeaveEvent) {
+        asyncTransaction(pool) {
+            val guild = Guilds.select { Guilds.id.eq(event.guild.idLong) }.firstOrNull()
+
+            if (guild == null || !guild[Guilds.modlogs] || event.guild.getTextChannelById(guild[Guilds.modlogChannel]) == null)
+                return@asyncTransaction
+
+            val modlogs = Modlogs.select { Modlogs.guildId.eq(event.guild.idLong) }
+            val modlogChannel = event.guild.getTextChannelById(guild[Guilds.modlogChannel])
+            val audit = event.guild.auditLogs.type(ActionType.KICK).limit(2).firstOrNull { it.targetId == event.user.id } ?: return@asyncTransaction
+            val case = modlogs.count() + 1
+
+            val msg = modlogChannel.sendMessage("""
+                **Kick** | Case $case
+                **User**: ${event.user.name}#${event.user.discriminator} (${event.user.id})
+                **Reason**: ${audit.reason ?: "`Responsible moderator, please use the reason command to set this reason`"}
+                **Responsible moderator**: ${audit.user.name}#${audit.user.discriminator} (${audit.user.id})
+            """.trimIndent()).complete()
+
+            Modlogs.insert {
+                it[messageId] = msg.idLong
+                it[modId] = audit.user.idLong
+                it[guildId] = event.guild.idLong
+                it[targetId] = audit.targetIdLong
+                it[caseId] = case
+                it[type] = "KICK"
+                it[reason] = audit.reason
+            }
+        }.execute()
+    }
+
+    override fun onGuildUnban(event: GuildUnbanEvent) {
+        asyncTransaction(pool) {
+            val guild = Guilds.select { Guilds.id.eq(event.guild.idLong) }.firstOrNull()
+
+            if (guild == null || !guild[Guilds.modlogs] || event.guild.getTextChannelById(guild[Guilds.modlogChannel]) == null)
+                return@asyncTransaction
+
+            val modlogs = Modlogs.select { Modlogs.guildId.eq(event.guild.idLong) }
+            val modlogChannel = event.guild.getTextChannelById(guild[Guilds.modlogChannel])
+            val audit = event.guild.auditLogs.type(ActionType.UNBAN).first { it.targetId == event.user.id }
+            val case = modlogs.count() + 1
+
+            val msg = modlogChannel.sendMessage("""
+                **Unban** | Case $case
+                **User**: ${event.user.name}#${event.user.discriminator} (${event.user.id})
+                **Reason**: ${audit.reason ?: "`Responsible moderator, please use the reason command to set this reason`"}
+                **Responsible moderator**: ${audit.user.name}#${audit.user.discriminator} (${audit.user.id})
+            """.trimIndent()).complete()
+
+            Modlogs.insert {
+                it[messageId] = msg.idLong
+                it[modId] = audit.user.idLong
+                it[guildId] = event.guild.idLong
+                it[targetId] = audit.targetIdLong
+                it[caseId] = case
+                it[type] = "UNBAN"
+                it[reason] = audit.reason
+            }
+        }.execute()
+    }
+
+    override fun onGuildBan(event: GuildBanEvent) {
+        asyncTransaction(pool) {
+            val guild = Guilds.select { Guilds.id.eq(event.guild.idLong) }.firstOrNull()
+
+            if (guild == null || !guild[Guilds.modlogs] || event.guild.getTextChannelById(guild[Guilds.modlogChannel]) == null)
+                return@asyncTransaction
+
+            val modlogs = Modlogs.select { Modlogs.guildId.eq(event.guild.idLong) }
+            val modlogChannel = event.guild.getTextChannelById(guild[Guilds.modlogChannel])
+            val audit = event.guild.auditLogs.type(ActionType.BAN).first { it.targetId == event.user.id }
+            val case = modlogs.count() + 1
+
+            val msg = modlogChannel.sendMessage("""
+                **Ban** | Case $case
+                **User**: ${event.user.name}#${event.user.discriminator} (${event.user.id})
+                **Reason**: ${audit.reason ?: "`Responsible moderator, please use the reason command to set this reason`"}
+                **Responsible moderator**: ${audit.user.name}#${audit.user.discriminator} (${audit.user.id})
+            """.trimIndent()).complete()
+
+            Modlogs.insert {
+                it[messageId] = msg.idLong
+                it[modId] = audit.user.idLong
+                it[guildId] = event.guild.idLong
+                it[targetId] = audit.targetIdLong
+                it[caseId] = case
+                it[type] = "BAN"
+                it[reason] = audit.reason
+            }
+        }.execute()
     }
 
     companion object {
