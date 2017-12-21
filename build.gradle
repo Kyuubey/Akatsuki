@@ -2,13 +2,13 @@ group 'me.noud02'
 version '1.0-SNAPSHOT'
 
 buildscript {
-    ext.kotlin_version = '1.2.0'
+    ext.kotlin_version = '1.2.20-eap-11'
 
     repositories {
         mavenCentral()
         jcenter()
         maven {
-            url = 'http://dl.bintray.com/kotlin/kotlin-eap-1.2'
+            url = 'http://dl.bintray.com/kotlin/kotlin-eap'
         }
     }
     dependencies {
@@ -38,7 +38,7 @@ repositories {
 }
 
 dependencies {
-    compile "org.jetbrains.kotlin:kotlin-stdlib-jre8:$kotlin_version"
+    compile "org.jetbrains.kotlin:kotlin-stdlib-jdk8:$kotlin_version"
     compile "org.jetbrains.kotlin:kotlin-reflect:$kotlin_version"
     compile 'org.jetbrains.kotlinx:kotlinx-coroutines-core:0.20'
     compile 'org.jetbrains.kotlinx:kotlinx-coroutines-jdk8:0.20'
@@ -47,7 +47,7 @@ dependencies {
     compile 'org.jruby:jruby-complete:9.1.13.0'
     compile 'commons-validator:commons-validator:1.6'
     compile 'khttp:khttp:0.1.0'
-    compile 'net.dv8tion:JDA:3.3.1_312'
+    compile 'net.dv8tion:JDA:3.4.0_317'
     compile 'com.sedmelluq:lavaplayer:1.2.45'
     compile 'org.jetbrains.exposed:exposed:0.9.1'
     compile 'org.postgresql:postgresql:42.1.4'
