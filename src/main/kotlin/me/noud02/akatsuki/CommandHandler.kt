@@ -108,7 +108,6 @@ class CommandHandler {
         if (args.isNotEmpty())
             args = args.drop(1)
 
-        val ctx: Context
         val newArgs: MutableMap<String, Any>
         val newPerms: MutableMap<String, Boolean>
 
@@ -144,7 +143,7 @@ class CommandHandler {
             args = flags.unmatched
 
             if (!command.noHelp && (flags.argMap.contains("h") || flags.argMap.contains("help")))
-                return event.channel.sendMessage(help(command)).queue()
+                return event.channel.sendMessage(help(cmd)).queue()
 
             try {
                 newPerms = checkPermissions(event, command, lang)
@@ -154,13 +153,7 @@ class CommandHandler {
                 return event.channel.sendMessage(err.message).queue()
             }
 
-            ctx = Context(event, command, newArgs, raw, flags, newPerms, lang, user, guild)
-
-            if (!command.noHelp && (flags.argMap.contains("h") || flags.argMap.contains("help")))
-                return ctx.send(ctx.help())
-
-
-            command.run(ctx)
+            command.run(Context(event, command, newArgs, raw, flags, newPerms, lang, user, guild))
         } else {
             val raw = args
 
@@ -169,7 +162,7 @@ class CommandHandler {
             args = flags.unmatched
 
             if (!command.noHelp && (flags.argMap.contains("h") || flags.argMap.contains("help")))
-                return event.channel.sendMessage(help(command)).queue()
+                return event.channel.sendMessage(help(cmd)).queue()
 
             try {
                 newPerms = checkPermissions(event, commands[cmd] as Command, lang)
@@ -179,9 +172,7 @@ class CommandHandler {
                 return event.channel.sendMessage(err.message).queue()
             }
 
-            ctx = Context(event, commands[cmd] as Command, newArgs, raw, flags, newPerms, lang, user, guild)
-
-            command.run(ctx)
+            command.run(Context(event, command, newArgs, raw, flags, newPerms, lang, user, guild))
         }
     }
 
@@ -355,13 +346,13 @@ class CommandHandler {
         val otherFlags = cmd::class.annotations.filterIsInstance(Flags::class.java)
 
         if (otherFlags.isNotEmpty())
-            args += otherArgs.first().args
+            flags += otherFlags.first().flags
 
         val sub = cmd.subcommands.map {
             "\t${it.key}" + " ".repeat(20 - it.key.length) + "${it.value.desc}\n"
         }
         val flag = flags.map {
-            "\t${it.abbr}, ${it.flag}${" ".repeat(20 - "${it.abbr}, ${it.flag}".length)}${it.desc}\n"
+            "\t-${it.abbr}, --${it.flag}${" ".repeat(20 - "-${it.abbr}, --${it.flag}".length)}${it.desc}\n"
         }
         val usage = args.map {
             if (it.optional)
@@ -372,7 +363,7 @@ class CommandHandler {
         val formattedSubs = if (sub.isNotEmpty()) "\nSubcommands:\n${sub.joinToString("\n")}" else ""
         val formattedFlags = if (flag.isNotEmpty()) "\nFlags:\n${flag.joinToString("\n")}" else ""
 
-        return "```\n${cmd.name} ${usage.joinToString(" ")}\n\n${cmd.desc}\n$formattedSubs$formattedFlags```"
+        return "```\n$cmdd ${usage.joinToString(" ")}\n\n${cmd.desc}\n$formattedSubs$formattedFlags```"
     }
 
     fun help(cmd: Command): String {
@@ -386,13 +377,13 @@ class CommandHandler {
         val otherFlags = cmd::class.annotations.filterIsInstance(Flags::class.java)
 
         if (otherFlags.isNotEmpty())
-            args += otherArgs.first().args
+            flags += otherFlags.first().flags
 
         val sub = cmd.subcommands.map {
             "\t${it.key}" + " ".repeat(20 - it.key.length) + "${it.value.desc}\n"
         }
         val flag = flags.map {
-            "\t${it.abbr}, ${it.flag}${" ".repeat(20 - "${it.abbr}, ${it.flag}".length)}${it.desc}\n"
+            "\t-${it.abbr}, --${it.flag}${" ".repeat(20 - "-${it.abbr}, --${it.flag}".length)}${it.desc}\n"
         }
         val usage = args.map {
             if (it.optional)
