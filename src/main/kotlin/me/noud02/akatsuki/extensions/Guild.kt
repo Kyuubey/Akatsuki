@@ -82,7 +82,7 @@ fun Guild.addStar(msg: Message, user: User) {
             embed.apply {
                 setAuthor(msg.author.name, null, msg.author.avatarUrl)
                 setColor(getStarColor(star[Starboard.stargazers].size + 1))
-                setDescription(descriptionBuilder.append(msg.contentRaw))
+                appendDescription(descriptionBuilder.append(msg.contentRaw))
             }
 
             channel
@@ -105,7 +105,7 @@ fun Guild.addStar(msg: Message, user: User) {
             embed.apply {
                 setAuthor(msg.author.name, null, msg.author.avatarUrl)
                 setColor(getStarColor(1))
-                setDescription(descriptionBuilder.append(msg.contentRaw))
+                appendDescription(descriptionBuilder.append(msg.contentRaw))
             }
 
             val starMsg = channel.sendMessage(embed.build()).complete()
