@@ -29,15 +29,47 @@ import com.fasterxml.jackson.databind.ObjectMapper
 import com.fasterxml.jackson.dataformat.yaml.YAMLFactory
 import com.fasterxml.jackson.module.kotlin.KotlinModule
 import com.fasterxml.jackson.module.kotlin.readValue
+import me.noud02.akatsuki.entities.APIConfig
 import me.noud02.akatsuki.entities.Config
+import me.noud02.akatsuki.entities.DatabaseConfig
+import me.noud02.akatsuki.entities.SiteConfig
 import java.io.File
 
 fun main (args: Array<String>) {
-    val mapper = ObjectMapper(YAMLFactory())
+    val config: Config
 
-    mapper.registerModule(KotlinModule())
+    if (System.getenv("IS_HEROKU") != null) {
+        val pgUrl = System.getenv("DATABASE_URL").removePrefix("postgres://")
 
-    val config = mapper.readValue<Config>(File("./config.yml"))
+        config = Config(
+                System.getenv("BOT_TOKEN"),
+                System.getenv("BOT_DESCRIPTION"),
+                System.getenv("BOT_OWNERS").split(","),
+                System.getenv("BOT_PREFIXES").split(","),
+                System.getenv("BOT_GAMES").split(","),
+                DatabaseConfig(
+                        pgUrl.split("/")[1],
+                        pgUrl.split(":")[0],
+                        pgUrl.split(":")[1].split("@")[0],
+                        pgUrl.split("@")[1].split("/")[0]
+                ),
+                APIConfig(
+                        System.getenv("GOOGLE_API_KEY"),
+                        System.getenv("WEEBSH_API_KEY")
+                ),
+                SiteConfig(
+                        System.getenv("SITE_HOST"),
+                        System.getenv("SITE_SSL").toBoolean(),
+                        System.getenv("SITE_PORT").toInt()
+                )
+        )
+    } else {
+        val mapper = ObjectMapper(YAMLFactory())
+
+        mapper.registerModule(KotlinModule())
+
+        config = mapper.readValue(File("./config.yml"))
+    }
 
     val bot = Akatsuki(config)
 
