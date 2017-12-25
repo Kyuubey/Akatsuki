@@ -186,6 +186,8 @@ object DatabaseWrapper {
                 }.firstOrNull()
 
                 if (log != null) {
+                    Akatsuki.client.snipes[event.channel.idLong] = log[Logs.messageId]
+
                     Logs.insert {
                         it[Logs.event] = "DELETE"
                         it[messageId] = log[Logs.messageId]

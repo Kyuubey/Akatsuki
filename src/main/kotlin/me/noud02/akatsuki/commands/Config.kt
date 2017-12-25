@@ -15,6 +15,7 @@ import org.jetbrains.exposed.sql.update
         Argument("key", "string"),
         Argument("value", "any")
 )
+@Perm(Permission.MANAGE_SERVER)
 class Set : AsyncCommand() {
     private val yes = listOf(
             "y",
@@ -27,6 +28,8 @@ class Set : AsyncCommand() {
             "no",
             "false"
     )
+
+    override val guildOnly = true
 
     override suspend fun asyncRun(ctx: Context) {
         val key = (ctx.args["key"] as String).toLowerCase()
@@ -169,7 +172,6 @@ class Set : AsyncCommand() {
 }
 
 @Load
-@Perm(Permission.MANAGE_SERVER)
 @Alias("cfg", "conf")
 class Config : Command() {
     override val guildOnly = true

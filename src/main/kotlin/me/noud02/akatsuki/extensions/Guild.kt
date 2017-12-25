@@ -51,10 +51,7 @@ fun getStarColor(stars: Int): Color {
     if (c > 1)
         c = 1
 
-    val g: Int = (194 * c) + (253 * (1 - c))
-    val b: Int = (12 * c) + (247 * (1 - c))
-
-    return Color(255, g, b)
+    return Color(255, (194 * c) + (253 * (1 - c)), (12 * c) + (247 * (1 - c)))
 }
 
 fun Guild.addStar(msg: Message, user: User) {
@@ -87,13 +84,12 @@ fun Guild.addStar(msg: Message, user: User) {
 
             channel
                     .getMessageById(star[Starboard.starId])
-                    .complete()
-                    .editMessage(embed.build())
-                    .complete()
-                    .editMessage(
-                            "\u2b50 **${star[Starboard.stargazers].size + 1}** <#${msg.channel.id}> ID: ${msg.id}"
-                    )
-                    .queue()
+                    .queue({
+                        it
+                                .editMessage(embed.build())
+                                .content("\u2b50 **${star[Starboard.stargazers].size + 1}** <#${msg.channel.id}> ID: ${msg.id}")
+                                .queue()
+                    })
 
 
             Starboard.update({
@@ -108,9 +104,10 @@ fun Guild.addStar(msg: Message, user: User) {
                 descriptionBuilder.append(msg.contentRaw)
             }
 
-            val starMsg = channel.sendMessage(embed.build()).complete()
-
-            starMsg.editMessage("\u2b50 <#${msg.channel.id}> ID: ${msg.id}").queue()
+            val starMsg = channel
+                    .sendMessage(embed.build())
+                    .content("\u2b50 <#${msg.channel.id}> ID: ${msg.id}")
+                    .complete()
 
             Starboard.insert {
                 it[messageId] = msg.idLong
@@ -152,9 +149,9 @@ fun Guild.removeStar(msg: Message, user: User) {
             if (gazers == 0) {
                 channel
                         .getMessageById(star[Starboard.starId])
-                        .complete()
-                        .delete()
-                        .queue()
+                        .queue({
+                            it.delete().queue()
+                        })
 
                 Starboard.deleteWhere {
                     Starboard.messageId.eq(msg.idLong)
@@ -162,13 +159,12 @@ fun Guild.removeStar(msg: Message, user: User) {
             } else {
                 channel
                         .getMessageById(star[Starboard.starId])
-                        .complete()
-                        .editMessage(embed.build())
-                        .complete()
-                        .editMessage(
-                                "\u2b50 ${if (gazers == 1) "" else "**$gazers**"} <#${msg.channel.id}> ID: ${msg.id}"
-                        )
-                        .queue()
+                        .queue({
+                            it
+                                    .editMessage(embed.build())
+                                    .content("\u2b50 ${if (gazers == 1) "" else "**$gazers**"} <#${msg.channel.id}> ID: ${msg.id}")
+                                    .queue()
+                        })
 
                 val gazerIds = star[Starboard.stargazers]
 
@@ -179,5 +175,5 @@ fun Guild.removeStar(msg: Message, user: User) {
                 }
             }
         }
-    }.execute().get()
+    }.execute()
 }

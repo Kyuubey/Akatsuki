@@ -86,6 +86,7 @@ class Akatsuki(val config: Config) : ListenerAdapter() {
             config.database.user,
             config.database.pass
     )
+    val snipes = mutableMapOf<Long, Long>()
 
     var owners = config.owners
     var prefixes = config.prefixes
