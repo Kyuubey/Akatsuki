@@ -78,3 +78,9 @@ kotlin {
 shadowJar {
     archiveName = 'Akatsuki.jar'
 }
+
+jar.enabled = false
+shadowDistTar.enabled = false
+shadowDistZip.enabled = false
+distTar.enabled = false
+distZip.enabled = false
