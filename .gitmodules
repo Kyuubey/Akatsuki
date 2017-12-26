@@ -2,3 +2,6 @@
 	path = src/main/resources/i18n
 	url = https://github.com/Kyuubey/translations.git
 	branch = rewrite-compat
+[submodule "backend"]
+	path = backend
+	url = https://github.com/noud02/Akatsuki-Backend
