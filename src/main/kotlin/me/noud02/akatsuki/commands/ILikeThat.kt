@@ -42,9 +42,13 @@ class ILikeThat : Command() {
     override val desc = "It's OK, I like that..."
 
     override fun run(ctx: Context) {
-        val req = khttp.get("http://localhost:5050/api/ilikethat", mapOf(), mapOf(
-                "text" to ctx.args["text"] as String
-        ))
+        val req = khttp.get(
+                "${if (ctx.client.config.backend.ssl) "https" else "http"}://${ctx.client.config.backend.host}/api/ilikethat",
+                mapOf(),
+                mapOf(
+                        "text" to ctx.args["text"] as String
+                )
+        )
         ctx.event.channel.sendFile(req.content, "ilikethat.png", null).queue()
     }
 }

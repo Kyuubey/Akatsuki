@@ -29,10 +29,7 @@ import com.fasterxml.jackson.databind.ObjectMapper
 import com.fasterxml.jackson.dataformat.yaml.YAMLFactory
 import com.fasterxml.jackson.module.kotlin.KotlinModule
 import com.fasterxml.jackson.module.kotlin.readValue
-import me.noud02.akatsuki.entities.APIConfig
-import me.noud02.akatsuki.entities.Config
-import me.noud02.akatsuki.entities.DatabaseConfig
-import me.noud02.akatsuki.entities.SiteConfig
+import me.noud02.akatsuki.entities.*
 import java.io.File
 
 fun main (args: Array<String>) {
@@ -61,6 +58,11 @@ fun main (args: Array<String>) {
                         System.getenv("SITE_HOST"),
                         System.getenv("SITE_SSL").toBoolean(),
                         System.getenv("SITE_PORT").toInt()
+                ),
+                BackendConfig(
+                        "localhost",
+                        false,
+                        System.getenv("PORT").toInt()
                 )
         )
     } else {
