@@ -43,6 +43,12 @@ data class SiteConfig(
         val port: Int
 )
 
+data class BackendConfig(
+        val host: String,
+        val ssl: Boolean,
+        val port: Int
+)
+
 data class Config(
         val token: String,
         val description: String,
@@ -51,5 +57,6 @@ data class Config(
         val games: List<String>,
         val database: DatabaseConfig,
         val api: APIConfig,
-        val site: SiteConfig
+        val site: SiteConfig,
+        val backend: BackendConfig
 )
