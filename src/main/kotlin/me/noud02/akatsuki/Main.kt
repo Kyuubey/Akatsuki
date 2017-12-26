@@ -38,7 +38,7 @@ import java.io.File
 fun main (args: Array<String>) {
     val config: Config
 
-    if (System.getenv("IS_HEROKU") != null) {
+    if (System.getenv("DYNO") != null) {
         val pgUrl = System.getenv("DATABASE_URL").removePrefix("postgres://")
 
         config = Config(
