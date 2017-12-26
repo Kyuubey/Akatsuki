@@ -18,6 +18,10 @@ api:
   google: google api key
   weebsh: weeb.sh api key
 site:
-  host: your.site
+  host: your site
   ssl: false
   port: 80
+backend:
+  host: localhost
+  ssl: false
+  port: 5050

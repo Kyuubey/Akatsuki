@@ -4,6 +4,12 @@ services:
   akatsuki:
     build: .
 
+  akatsuki-backend:
+    build: ./backend/
+    hostname: backend
+    ports:
+      - 5050:5050
+
   db:
     image: postgres:alpine
     hostname: db
