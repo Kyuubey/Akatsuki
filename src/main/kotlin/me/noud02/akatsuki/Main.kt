@@ -60,7 +60,7 @@ fun main (args: Array<String>) {
                         System.getenv("SITE_PORT").toInt()
                 ),
                 BackendConfig(
-                        "localhost",
+                        "${System.getenv("HEROKU_APP_NAME")}.herokuapp.com",
                         false,
                         System.getenv("PORT").toInt()
                 )
