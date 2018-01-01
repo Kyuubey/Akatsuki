@@ -27,4 +27,14 @@ package me.noud02.akatsuki.entities
 
 import java.awt.Color
 
-data class PickerItem (var id: String, var title: String = "", var description: String = "", var author: String = "", var image: String = "", var thumbnail: String = "", var footer: String = "", var color: Color? = null)
+data class PickerItem (
+        val id: String,
+        val title: String = "",
+        val description: String = "",
+        val author: String = "",
+        var image: String = "",
+        val thumbnail: String = "",
+        val footer: String = "",
+        val color: Color? = null,
+        val url: String = ""
+)

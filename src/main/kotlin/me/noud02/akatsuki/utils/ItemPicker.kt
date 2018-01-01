@@ -73,14 +73,14 @@ class ItemPicker(
 
         for (item in items) {
             val embed = EmbedBuilder()
-                    .setColor(if (item.color != null) item.color else color)
+                    .setColor(item.color ?: color)
                     .setFooter("${if (item.footer.isNotBlank()) "${item.footer} | " else ""}Page ${items.indexOf(item) + 1}/${items.size}", null)
 
             if (item.author.isNotBlank())
                 embed.setAuthor(item.author, null, null)
 
             if (item.title.isNotBlank())
-                embed.setTitle(item.title)
+                embed.setTitle(item.title, if (item.url.isNotBlank()) item.url else null)
 
             if (item.description.isNotBlank())
                 embed.setDescription(embed.descriptionBuilder.append(item.description))
