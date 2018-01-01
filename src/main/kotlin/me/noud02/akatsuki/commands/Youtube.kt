@@ -37,11 +37,11 @@ import java.awt.Color
 @Load
 @Argument("query", "string")
 @Alias("yt")
-class Youtube : AsyncCommand() {
+class Youtube : Command() {
     override val desc = "Search for videos on YouTube"
     override val guildOnly = true
 
-    override suspend fun asyncRun(ctx: Context) {
+    override fun run(ctx: Context) {
         val picker = ItemPicker(ctx.client.waiter, ctx.member as Member, ctx.guild as Guild)
 
         val res = khttp.get(
@@ -78,10 +78,10 @@ class Youtube : AsyncCommand() {
             val desc = snippet.getString("description")
             val channel = snippet.getString("channelTitle")
 
-            picker.addItem(PickerItem(id, title, desc, channel, thumb))
+            picker.addItem(PickerItem(id, title, desc, channel, thumb, url = "https://youtu.be/$id"))
         }
 
-        picker.color = Color.RED
+        picker.color = Color(255, 0, 0)
 
         picker.build(ctx.channel)
     }
