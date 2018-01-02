@@ -25,6 +25,7 @@
 
 package me.noud02.akatsuki.commands
 
+import me.noud02.akatsuki.annotations.Alias
 import me.noud02.akatsuki.entities.Command
 import me.noud02.akatsuki.entities.Context
 import me.noud02.akatsuki.annotations.Load
@@ -34,6 +35,7 @@ import net.dv8tion.jda.core.Permission
 
 @Load
 @Perm(Permission.MANAGE_SERVER)
+@Alias("unpause", "resume")
 class Pause : Command() {
     override val desc = "Pause the current song!"
     override val guildOnly = true
