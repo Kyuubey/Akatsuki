@@ -43,9 +43,14 @@ class ILikeThat : Command() {
 
     override fun run(ctx: Context) {
         val req = khttp.get(
-                "${if (ctx.client.config.backend.ssl) "https" else "http"}://${ctx.client.config.backend.host}/api/ilikethat",
-                mapOf(),
-                mapOf(
+                "${
+                if (ctx.client.config.backend.ssl) "https" else "http"
+                }://${
+                ctx.client.config.backend.host
+                }${
+                if (ctx.client.config.backend.port != 80) ":${ctx.client.config.backend.port}" else ""
+                }/api/ilikethat",
+                params = mapOf(
                         "text" to ctx.args["text"] as String
                 )
         )
