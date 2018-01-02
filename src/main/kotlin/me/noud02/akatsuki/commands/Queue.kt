@@ -30,7 +30,9 @@ import me.noud02.akatsuki.entities.Command
 import me.noud02.akatsuki.entities.Context
 import me.noud02.akatsuki.annotations.Load
 import me.noud02.akatsuki.annotations.Perm
+import me.noud02.akatsuki.entities.PickerItem
 import me.noud02.akatsuki.music.MusicManager
+import me.noud02.akatsuki.utils.ItemPicker
 import net.dv8tion.jda.core.EmbedBuilder
 import net.dv8tion.jda.core.Permission
 import java.awt.Color
@@ -57,17 +59,52 @@ class Queue : Command() {
     }
 
     override fun run(ctx: Context) {
-        val manager = MusicManager.musicManagers[ctx.guild?.id] ?: return ctx.send("Not connected!")
-        val queue = manager.scheduler.queue
+        val manager = MusicManager.musicManagers[ctx.guild!!.id] ?: return ctx.send("Not connected!")
 
-        val formatted = queue.mapIndexed { i: Int, audioTrack: AudioTrack -> "${i + 1}. [${audioTrack.info.title}](${audioTrack.info.uri})" }.joinToString("\n")
-        val embed = EmbedBuilder()
+        val formatted = manager.scheduler.queue.mapIndexed {
+            i: Int, audioTrack: AudioTrack -> "${i + 1}. [${audioTrack.info.title}](${audioTrack.info.uri})"
+        }.joinToString("\n")
 
-        embed.setColor(Color.CYAN)
-        embed.setTitle("${ctx.lang.getString("queue")}:")
-        val desc = embed.descriptionBuilder.append(formatted)
-        embed.setDescription(desc)
+        if (formatted.length > 2048) {
+            val parts = mutableListOf<String>()
+            val picker = ItemPicker(ctx.client.waiter, ctx.member!!, ctx.guild)
+            var part = ""
 
-        ctx.send(embed.build())
+            val items = manager.scheduler.queue.mapIndexed {
+                i: Int, audioTrack: AudioTrack -> "${i + 1}. [${audioTrack.info.title}](${audioTrack.info.uri})"
+            }
+
+            for (item in items) {
+                if (part.split("\n").size >= 10) {
+                    parts += part
+                    part = ""
+                }
+
+                part += "$item\n"
+            }
+
+            if (part.isNotBlank() && part.split("\n").size <= 10)
+                parts += part
+
+            for (pt in parts) {
+                picker.addItem(
+                        PickerItem(
+                                "",
+                                ctx.lang.getString("queue"),
+                                pt
+                        )
+                )
+            }
+
+            picker.build(ctx.channel)
+        } else {
+            val embed = EmbedBuilder().apply {
+                setColor(Color.CYAN)
+                setTitle("${ctx.lang.getString("queue")}:")
+                descriptionBuilder.append(formatted)
+            }
+
+            ctx.send(embed.build())
+        }
     }
 }
