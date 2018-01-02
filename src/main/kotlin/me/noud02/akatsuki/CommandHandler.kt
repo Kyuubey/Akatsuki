@@ -25,10 +25,8 @@
 
 package me.noud02.akatsuki
 
-import kotlinx.coroutines.experimental.future.await
 import me.aurieh.ares.utils.ArgParser
 import me.noud02.akatsuki.annotations.*
-import me.noud02.akatsuki.db.DBGuild
 import me.noud02.akatsuki.db.DatabaseWrapper
 import me.noud02.akatsuki.entities.*
 import me.noud02.akatsuki.extensions.UTF8Control
