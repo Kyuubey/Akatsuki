@@ -47,6 +47,14 @@ class TrackScheduler(private val player: AudioPlayer, private val manager: Guild
 
     fun next() = player.startTrack(queue.poll(), false)
 
+    fun shuffle() {
+        val tracks = queue.shuffled()
+
+        queue.clear()
+
+        queue += tracks
+    }
+
     override fun onTrackStart(player: AudioPlayer, track: AudioTrack) {
         val nextTrack = queue.peek()
         val embed = EmbedBuilder()
