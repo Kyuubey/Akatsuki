@@ -32,12 +32,12 @@ import me.noud02.akatsuki.annotations.Load
 import net.dv8tion.jda.core.entities.Member
 
 @Load
-@Argument("user", "user")
+@Argument("user", "user", true)
 class Avatar : AsyncCommand() {
     override val desc = "Get someones avatar"
     override val guildOnly = true
 
     override suspend fun asyncRun(ctx: Context) {
-        ctx.send((ctx.args["user"] as Member).user.avatarUrl + "?size=2048")
+        ctx.send((ctx.args["user"] as? Member ?: ctx.member!!).user.avatarUrl + "?size=2048")
     }
 }
