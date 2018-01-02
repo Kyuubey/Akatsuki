@@ -116,10 +116,9 @@ class Play : Command() {
                             .getJSONObject("medium")
                             .getString("url")
 
-                    val desc = snippet.getString("description")
                     val channel = snippet.getString("channelTitle")
 
-                    picker.addItem(PickerItem(id, title, desc, channel, thumb, url = "https://youtu.be/$id"))
+                    picker.addItem(PickerItem(id, title, "", channel, thumb, url = "https://youtu.be/$id"))
                 }
 
                 picker.color = Color(255, 0, 0)
