@@ -83,7 +83,7 @@ class ItemPicker(
                 embed.setTitle(item.title, if (item.url.isNotBlank()) item.url else null)
 
             if (item.description.isNotBlank())
-                embed.setDescription(embed.descriptionBuilder.append(item.description))
+                embed.descriptionBuilder.append(item.description)
 
             if (item.thumbnail.isNotBlank())
                 embed.setThumbnail(item.thumbnail)
@@ -113,7 +113,7 @@ class ItemPicker(
 
                     rightEmote -> {
                         it.reaction.removeReaction(it.user).queue()
-                        if (index + 1 <= items.size)
+                        if (index + 1 <= items.size - 1)
                             msg.editMessage(embeds[++index]).queue()
                     }
 
