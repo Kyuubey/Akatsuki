@@ -12,9 +12,10 @@ import net.dv8tion.jda.core.Permission
 @Perm(Permission.MANAGE_SERVER)
 class Stop : Command() {
     override fun run(ctx: Context) {
-        val manager = MusicManager.musicManagers[ctx.guild!!.id] ?: return ctx.send("Not connected!")
+        if (MusicManager.musicManagers[ctx.guild!!.id] == null)
+            return ctx.send("Not connected!")
 
-        manager.player.stopTrack()
+        MusicManager.leave(ctx.guild.id)
 
         ctx.send(I18n.parse(ctx.lang.getString("song_stop_success"), mapOf("username" to ctx.author.name)))
     }
