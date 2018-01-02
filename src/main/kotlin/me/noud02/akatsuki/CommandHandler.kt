@@ -48,9 +48,10 @@ import org.slf4j.LoggerFactory
 import java.util.*
 
 class CommandHandler {
-    val commands = mutableMapOf<String, Command>()
     private val aliases = mutableMapOf<String, String>()
     private val logger = LoggerFactory.getLogger(this::class.java)
+
+    val commands = mutableMapOf<String, Command>()
 
     init {
         loadAll()
@@ -123,13 +124,16 @@ class CommandHandler {
         else
             logger.info("[Command] (DM) - ${event.author.name}#${event.author.discriminator} (${event.author.id}): ${event.message.contentDisplay}")
 
-        if ((commands[cmd] as Command).ownerOnly && !Akatsuki.client.owners.contains(event.author.id))
+        var command = commands[cmd] as Command
+
+        if (command.ownerOnly && !Akatsuki.client.owners.contains(event.author.id))
             return
 
-        if ((commands[cmd] as Command).guildOnly && event.guild == null)
+        if (command.guildOnly && event.guild == null)
             return event.channel.sendMessage("This command can only be used in a server!").queue() // TODO add translations for this
 
-        var command = commands[cmd] as Command
+        if (command.nsfw && !event.textChannel.isNSFW)
+            return event.channel.sendMessage("This command can only be used in a NSFW channel!").queue() // TODO add translations for this
 
         if (args.isNotEmpty() && commands[cmd]?.subcommands?.get(args[0]) is Command) {
             val subcmd = args[0]
@@ -149,7 +153,6 @@ class CommandHandler {
                 newPerms = checkPermissions(event, command, lang)
                 newArgs = checkArguments(event, command, args, lang)
             } catch (err: Exception) {
-                err.printStackTrace()
                 return event.channel.sendMessage(err.message).queue()
             }
 
@@ -168,7 +171,6 @@ class CommandHandler {
                 newPerms = checkPermissions(event, commands[cmd] as Command, lang)
                 newArgs = checkArguments(event, commands[cmd] as Command, args, lang)
             } catch (err: Exception) {
-                err.printStackTrace()
                 return event.channel.sendMessage(err.message).queue()
             }
 
