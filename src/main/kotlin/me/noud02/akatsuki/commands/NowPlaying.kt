@@ -32,6 +32,7 @@ import me.noud02.akatsuki.annotations.Load
 import me.noud02.akatsuki.music.MusicManager
 import net.dv8tion.jda.core.EmbedBuilder
 import java.awt.Color
+import java.util.concurrent.TimeUnit
 
 @Load
 @Alias("np")
@@ -44,6 +45,19 @@ class NowPlaying : Command() {
         val embed = EmbedBuilder().apply {
             setAuthor(ctx.lang.getString("now_playing"), null, null)
             setTitle(manager.player.playingTrack.info.title)
+
+            val durationMins = TimeUnit.MILLISECONDS.toMinutes(manager.player.playingTrack.duration)
+            val durationSecs = TimeUnit.MILLISECONDS.toSeconds(manager.player.playingTrack.duration) - TimeUnit.MINUTES.toSeconds(TimeUnit.MILLISECONDS.toMinutes(manager.player.playingTrack.duration))
+
+            val positionMins = TimeUnit.MILLISECONDS.toMinutes(manager.player.playingTrack.position)
+            val positionSecs = TimeUnit.MILLISECONDS.toSeconds(manager.player.playingTrack.position) - TimeUnit.MINUTES.toSeconds(TimeUnit.MILLISECONDS.toMinutes(manager.player.playingTrack.position))
+
+            descriptionBuilder.append(
+                    "%02d:%02d/%02d:%02d ${if (manager.player.isPaused) "\u23F8" else "\u25B6"}".format(
+                            positionMins, positionSecs,
+                            durationMins, durationSecs
+                    )
+            )
             setColor(Color.CYAN)
         }
 
