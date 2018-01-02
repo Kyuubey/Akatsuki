@@ -146,10 +146,26 @@ class Play : Command() {
             }
 
             override fun playlistLoaded(playlist: AudioPlaylist) {
-                for (track in playlist.tracks) {
+                val id = when {
+                    search.indexOf("youtu") > -1 -> search.split("v=")[1].split("&")[0]
+
+                    else -> ""
+                }
+
+                val tracks = if (id.isNotBlank()) {
+                    val index = playlist.tracks.indexOfFirst { it.identifier == id }
+
+                    playlist.tracks.subList(index, playlist.tracks.size)
+                } else
+                    playlist.tracks
+
+
+
+                for (track in tracks) {
                     manager.scheduler.add(track)
                 }
-                ctx.send("Added ${playlist.tracks.size} tracks from playlist ${playlist.name} to the queue!")
+
+                ctx.send("Added ${tracks.size} tracks from playlist ${playlist.name} to the queue!")
             }
         })
     }
