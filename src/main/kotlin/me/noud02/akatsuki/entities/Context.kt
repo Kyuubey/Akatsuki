@@ -31,6 +31,7 @@ import me.noud02.akatsuki.db.DBGuild
 import me.noud02.akatsuki.db.DBUser
 import net.dv8tion.jda.core.entities.*
 import net.dv8tion.jda.core.events.message.MessageReceivedEvent
+import java.io.InputStream
 import java.util.*
 
 class Context(
@@ -52,8 +53,6 @@ class Context(
     val member: Member? = event.member
     val selfMember: Member? = event.guild.selfMember
 
-    // TODO use await here instead of queue
-
     fun send(arg: String) = event.channel.sendMessage(arg).queue()
     fun send(arg: MessageEmbed) = event.channel.sendMessage(arg).queue()
 
@@ -63,11 +62,18 @@ class Context(
 
     fun help() = Akatsuki.client.cmdHandler.help(cmd)
 
-    fun help(cmd: String): String {
-        return try {
-            Akatsuki.client.cmdHandler.help(cmd)
-        } catch (e: Exception) {
-            e.message.toString()
+    fun help(cmd: String) = try {
+        Akatsuki.client.cmdHandler.help(cmd)
+    } catch (e: Exception) {
+        e.message.toString()
+    }
+
+    fun getLastImage(): InputStream? {
+        for (message in channel.history.retrievePast(25).complete()) {
+            if (message.attachments.getOrNull(0) != null)
+                return message.attachments[0].inputStream
         }
+
+        return null
     }
 }
