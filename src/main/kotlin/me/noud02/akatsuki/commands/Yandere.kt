@@ -33,13 +33,13 @@ import me.noud02.akatsuki.utils.I18n
 import net.dv8tion.jda.core.EmbedBuilder
 
 @Load
-@Argument("query", "string")
+@Argument("tags", "string")
 class Yandere : Command() {
     override val nsfw = true
     override val desc = "Search for (lewd) images on yande.re"
 
     override fun run(ctx: Context) {
-        val query = ctx.args["query"] as String
+        val query = ctx.args["tags"] as String
 
         if (query.indexOf("loli") > -1)
             return ctx.send(I18n.parse(ctx.lang.getString("loli_is_illegal"), mapOf("username" to ctx.author.name)))
