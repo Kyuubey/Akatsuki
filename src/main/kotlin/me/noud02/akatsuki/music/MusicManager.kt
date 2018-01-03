@@ -28,12 +28,12 @@ package me.noud02.akatsuki.music
 import com.sedmelluq.discord.lavaplayer.player.DefaultAudioPlayerManager
 import com.sedmelluq.discord.lavaplayer.source.AudioSourceManagers
 import me.noud02.akatsuki.entities.Context
+import me.noud02.akatsuki.utils.Logger
 import net.dv8tion.jda.core.entities.VoiceChannel
-import org.slf4j.LoggerFactory
 import java.util.*
 
 object MusicManager {
-    private val logger = LoggerFactory.getLogger(this::class.java)
+    private val logger = Logger(this::class)
 
     val playerManager = DefaultAudioPlayerManager()
     val musicManagers = mutableMapOf<String, GuildMusicManager>()
