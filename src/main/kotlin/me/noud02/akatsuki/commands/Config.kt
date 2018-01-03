@@ -20,15 +20,32 @@ class Set : AsyncCommand() {
     private val yes = listOf(
             "y",
             "yes",
-            "true"
+            "true",
+            "enable",
+            "enabled"
     )
 
     private val no = listOf(
             "n",
             "no",
-            "false"
+            "false",
+            "disable",
+            "disabled"
     )
 
+    override val desc = """
+        Set something in the config
+
+        Available keys:
+
+        - forceLang: yes/no
+        - lang: language
+        - logs: yes/no
+        - starboard: yes/no
+        - starboardChannel: text channel
+        - modlogs: yes/no
+        - modlogChannel: text channel
+    """.trimIndent()
     override val guildOnly = true
 
     override suspend fun asyncRun(ctx: Context) {
