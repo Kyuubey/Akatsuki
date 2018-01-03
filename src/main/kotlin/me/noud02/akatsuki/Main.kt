@@ -43,7 +43,7 @@ fun main (args: Array<String>) {
                 System.getenv("BOT_DESCRIPTION"),
                 System.getenv("BOT_OWNERS").split(","),
                 System.getenv("BOT_PREFIXES").split(","),
-                System.getenv("BOT_GAMES").split(","),
+                System.getenv("BOT_GAMES").split(",").map { PresenceConfig(it, "default") },
                 DatabaseConfig(
                         pgUrl.split("/")[1],
                         pgUrl.split(":")[0],
@@ -77,6 +77,4 @@ fun main (args: Array<String>) {
 
     // bot.buildSharded(3)
     bot.build()
-
-    bot.setGame("awoo~")
 }
