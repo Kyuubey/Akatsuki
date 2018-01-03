@@ -31,12 +31,12 @@ import me.noud02.akatsuki.db.DatabaseWrapper
 import me.noud02.akatsuki.db.schema.*
 import me.noud02.akatsuki.entities.Config
 import me.noud02.akatsuki.entities.CoroutineDispatcher
+import me.noud02.akatsuki.utils.Logger
 import me.noud02.akatsuki.extensions.addStar
 import me.noud02.akatsuki.extensions.log
 import me.noud02.akatsuki.extensions.removeStar
 import me.noud02.akatsuki.utils.Wolk
 import net.dv8tion.jda.core.AccountType
-import net.dv8tion.jda.core.EmbedBuilder
 import net.dv8tion.jda.core.JDA
 import net.dv8tion.jda.core.JDABuilder
 import net.dv8tion.jda.core.audit.ActionType
@@ -56,16 +56,19 @@ import net.dv8tion.jda.core.events.message.react.MessageReactionRemoveEvent
 import net.dv8tion.jda.core.hooks.ListenerAdapter
 import net.dv8tion.jda.core.requests.SessionReconnectQueue
 import org.jetbrains.exposed.sql.*
-import org.slf4j.LoggerFactory
+import java.util.*
+import java.util.Date
 import java.util.concurrent.ExecutorService
 import java.util.concurrent.Executors
+import kotlin.concurrent.timer
 
 class Akatsuki(val config: Config) : ListenerAdapter() {
-    private val logger = LoggerFactory.getLogger(this::class.java)
+    private val logger = Logger(this::class)
     private val builder = JDABuilder(AccountType.BOT)
             .setToken(config.token)
             .addEventListener(this)
             .setReconnectQueue(SessionReconnectQueue())
+    private lateinit var presenceTimer: Timer
 
     lateinit var jda: JDA
     val pool: ExecutorService by lazy {
@@ -101,6 +104,26 @@ class Akatsuki(val config: Config) : ListenerAdapter() {
 
     fun build() {
         jda = builder.buildAsync()
+
+        presenceTimer = timer("presenceTimer", true, Date(), 60000L) {
+            val presence = config.presences[Math.floor(Math.random() * config.presences.size).toInt()]
+            val gameType = when(presence.type) {
+                "streaming" -> Game.GameType.STREAMING
+
+                "listening" -> Game.GameType.LISTENING
+
+                "watching" -> Game.GameType.WATCHING
+
+                "default" -> Game.GameType.DEFAULT
+                "playing" -> Game.GameType.DEFAULT
+                else -> Game.GameType.DEFAULT
+            }
+
+            jda.presence.setPresence(
+                    Game.of(gameType, presence.text),
+                    false
+            )
+        }
     }
 
     fun buildSharded(shards: Int, shard: Int? = null) {

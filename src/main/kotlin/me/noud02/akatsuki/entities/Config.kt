@@ -49,12 +49,17 @@ data class BackendConfig(
         val port: Int
 )
 
+data class PresenceConfig(
+        val text: String,
+        val type: String
+)
+
 data class Config(
         val token: String,
         val description: String,
         val owners: List<String>,
         val prefixes: List<String>,
-        val games: List<String>,
+        val presences: List<PresenceConfig>,
         val database: DatabaseConfig,
         val api: APIConfig,
         val site: SiteConfig,

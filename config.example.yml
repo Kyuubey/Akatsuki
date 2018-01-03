@@ -5,10 +5,15 @@ owners:
   - owner2
 prefixes:
   - unique_prefix
-games:
-  - aaa
-  - bbb
-  - ccc
+presences:
+  - text: aaa
+    type: streaming
+  - text: bbb
+    type: listening
+  - text: ccc
+    type: playing
+  - text: ddd
+    type: watching
 database:
   name: db name
   user: db user
