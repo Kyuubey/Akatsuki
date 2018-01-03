@@ -51,7 +51,7 @@ class Context(
     val channel: MessageChannel = event.channel
     val msg: Message = event.message
     val member: Member? = event.member
-    val selfMember: Member? = event.guild.selfMember
+    val selfMember: Member? = event.guild?.selfMember
 
     fun send(arg: String) = event.channel.sendMessage(arg).queue()
     fun send(arg: MessageEmbed) = event.channel.sendMessage(arg).queue()
