@@ -32,6 +32,7 @@ import me.noud02.akatsuki.entities.*
 import me.noud02.akatsuki.extensions.UTF8Control
 import me.noud02.akatsuki.utils.UserPicker
 import me.noud02.akatsuki.utils.I18n
+import me.noud02.akatsuki.utils.Logger
 import me.noud02.akatsuki.utils.TextChannelPicker
 import net.dv8tion.jda.core.Permission
 import net.dv8tion.jda.core.entities.Channel
@@ -42,12 +43,12 @@ import org.apache.commons.validator.routines.UrlValidator
 import org.reflections.Reflections
 import org.reflections.util.ClasspathHelper
 import org.reflections.util.ConfigurationBuilder
-import org.slf4j.LoggerFactory
 import java.util.*
 
 class CommandHandler {
     private val aliases = mutableMapOf<String, String>()
-    private val logger = LoggerFactory.getLogger(this::class.java)
+    // private val logger = LoggerFactory.getLogger(this::class.java)
+    private val logger = Logger(this::class)
 
     val commands = mutableMapOf<String, Command>()
 
@@ -116,11 +117,7 @@ class CommandHandler {
             else
                 return
 
-        if (event.guild != null)
-            logger.info("[Command] (Guild ${event.guild.name} (${event.guild.id})) - " +
-                    "${event.author.name}#${event.author.discriminator} (${event.author.id}): ${event.message.contentDisplay}")
-        else
-            logger.info("[Command] (DM) - ${event.author.name}#${event.author.discriminator} (${event.author.id}): ${event.message.contentDisplay}")
+        logger.command(event)
 
         var command = commands[cmd] as Command
 
@@ -145,7 +142,7 @@ class CommandHandler {
             args = flags.unmatched
 
             if (!command.noHelp && (flags.argMap.contains("h") || flags.argMap.contains("help")))
-                return event.channel.sendMessage(help(cmd)).queue()
+                return event.channel.sendMessage(help(command)).queue()
 
             try {
                 newPerms = checkPermissions(event, command, lang)
@@ -154,7 +151,36 @@ class CommandHandler {
                 return event.channel.sendMessage(err.message).queue()
             }
 
-            command.run(Context(event, command, newArgs, raw, flags, newPerms, lang, user, guild))
+            try {
+                command.run(Context(event, command, newArgs, raw, flags, newPerms, lang, user, guild))
+            } catch (e: Exception) {
+                event.channel.sendMessage(
+                        I18n.parse(
+                                lang.getString("error"),
+                                mapOf(
+                                        "error" to "$e\n${e.stackTrace.joinToString("\n") {
+                                            "\tat ${it.className}(${it.fileName ?: "Unknown Source"})"
+                                        }}"
+                                )
+                        )
+                )
+
+                logger.error(
+                        "Error while handling command $cmd, executed by user ${
+                        event.author.name
+                        }#${
+                        event.author.discriminator
+                        } (${
+                        event.author.id
+                        } in ${
+                        if (event.guild != null)
+                            "guild ${event.guild.name} (${event.guild.id}) with channel ${event.channel.name} (${event.channel.id}"
+                        else
+                            "DMs"
+                        }",
+                        e
+                )
+            }
         } else {
             val raw = args
 
@@ -172,7 +198,36 @@ class CommandHandler {
                 return event.channel.sendMessage(err.message).queue()
             }
 
-            command.run(Context(event, command, newArgs, raw, flags, newPerms, lang, user, guild))
+            try {
+                command.run(Context(event, command, newArgs, raw, flags, newPerms, lang, user, guild))
+            } catch (e: Exception) {
+                event.channel.sendMessage(
+                        I18n.parse(
+                                lang.getString("error"),
+                                mapOf(
+                                        "error" to "$e\n${e.stackTrace.joinToString("\n") {
+                                            "\tat ${it.className}(${it.fileName ?: "Unknown Source"})"
+                                        }}"
+                                )
+                        )
+                )
+
+                logger.error(
+                        "Error while handling command $cmd, executed by user ${
+                        event.author.name
+                        }#${
+                        event.author.discriminator
+                        } (${
+                        event.author.id
+                        } in ${
+                        if (event.guild != null)
+                            "guild ${event.guild.name} (${event.guild.id}) with channel ${event.channel.name} (${event.channel.id}"
+                        else
+                            "DMs"
+                        }",
+                        e
+                )
+            }
         }
     }
 
@@ -349,7 +404,7 @@ class CommandHandler {
             flags += otherFlags.first().flags
 
         val sub = cmd.subcommands.map {
-            "\t${it.key}" + " ".repeat(20 - it.key.length) + "${it.value.desc}\n"
+            "\t${it.key}" + " ".repeat(20 - it.key.length) + "${it.value.desc.split("\n")[0]}\n"
         }
         val flag = flags.map {
             "\t-${it.abbr}, --${it.flag}${" ".repeat(20 - "-${it.abbr}, --${it.flag}".length)}${it.desc}\n"
@@ -361,9 +416,16 @@ class CommandHandler {
                 "<${it.name}: ${it.type}>"
         }
         val formattedSubs = if (sub.isNotEmpty()) "\nSubcommands:\n${sub.joinToString("\n")}" else ""
-        val formattedFlags = if (flag.isNotEmpty()) "\nFlags:\n${flag.joinToString("\n")}" else ""
+        val formattedFlags = if (flag.isNotEmpty()) flag.joinToString("\n") else ""
 
-        return "```\n$cmdd ${usage.joinToString(" ")}\n\n${cmd.desc}\n$formattedSubs$formattedFlags```"
+        return "```\n" +
+                "$cmdd ${usage.joinToString(" ")}\n" +
+                "\n" +
+                "${cmd.desc}\n" +
+                "$formattedSubs\n" +
+                "Flags:\n" +
+                "\t-h, --help\n" +
+                "$formattedFlags```"
     }
 
     fun help(cmd: Command): String {
@@ -380,7 +442,7 @@ class CommandHandler {
             flags += otherFlags.first().flags
 
         val sub = cmd.subcommands.map {
-            "\t${it.key}" + " ".repeat(20 - it.key.length) + "${it.value.desc}\n"
+            "\t${it.key}" + " ".repeat(20 - it.key.length) + "${it.value.desc.split("\n")[0]}\n"
         }
         val flag = flags.map {
             "\t-${it.abbr}, --${it.flag}${" ".repeat(20 - "-${it.abbr}, --${it.flag}".length)}${it.desc}\n"
@@ -392,8 +454,17 @@ class CommandHandler {
                 "<${it.name}: ${it.type}>"
         }
         val formattedSubs = if (sub.isNotEmpty()) "\nSubcommands:\n${sub.joinToString("\n")}" else ""
-        val formattedFlags = if (flag.isNotEmpty()) "\nFlags:\n${flag.joinToString("\n")}" else ""
+        val formattedFlags = if (flag.isNotEmpty()) flag.joinToString("\n") else ""
 
-        return "```\n${cmd.name} ${usage.joinToString(" ")}\n\n${cmd.desc}\n$formattedSubs$formattedFlags```"
+        val name = (if (cmd.name.isEmpty()) cmd::class.simpleName!! else cmd.name).toLowerCase()
+
+        return "```\n" +
+                "$name ${usage.joinToString(" ")}\n" +
+                "\n" +
+                "${cmd.desc}\n" +
+                "$formattedSubs\n" +
+                "Flags:\n" +
+                "\t-h, --help\n" +
+                "$formattedFlags```"
     }
 }
