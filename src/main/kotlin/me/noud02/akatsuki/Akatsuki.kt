@@ -105,6 +105,27 @@ class Akatsuki(val config: Config) : ListenerAdapter() {
     fun build() {
         jda = builder.buildAsync()
 
+        startPresenceTimer()
+    }
+
+    fun buildSharded(shards: Int, shard: Int? = null) {
+        if (shard != null) {
+            jda = builder
+                    .useSharding(shard, shards)
+                    .buildAsync()
+        } else
+            for (i in 0 until shards) {
+                jda = builder
+                        .useSharding(i, shards)
+                        .buildAsync()
+                
+                Thread.sleep(5000)
+            }
+
+        startPresenceTimer()
+    }
+
+    fun startPresenceTimer() {
         presenceTimer = timer("presenceTimer", true, Date(), 60000L) {
             val presence = config.presences[Math.floor(Math.random() * config.presences.size).toInt()]
             val gameType = when(presence.type) {
@@ -124,21 +145,6 @@ class Akatsuki(val config: Config) : ListenerAdapter() {
                     false
             )
         }
-    }
-
-    fun buildSharded(shards: Int, shard: Int? = null) {
-        if (shard != null) {
-            jda = builder
-                    .useSharding(shard, shards)
-                    .buildAsync()
-        } else
-            for (i in 0 until shards) {
-                jda = builder
-                        .useSharding(i, shards)
-                        .buildAsync()
-                
-                Thread.sleep(5000)
-            }
     }
 
     fun setGame(text: String, idle: Boolean = false) = jda.presence.setPresence(Game.of(Game.GameType.DEFAULT, text), idle)
