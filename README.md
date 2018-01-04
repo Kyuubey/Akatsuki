@@ -6,7 +6,7 @@ A multipurpose Discord bot written in Kotlin.
 
 ```bash
 # Clone and build
-$ git clone https://github.com/noud02/Akatsuki && cd Akatsuki
+$ git clone https://github.com/noud02/Akatsuki --recrusive && cd Akatsuki
 $ ./gradlew clean build
 
 # Config
@@ -15,6 +15,9 @@ $ cp config.example.yml config.yml
 
 # Run it
 $ java -jar builds/libs/Akatsuki.jar
+
+# Also run the image API which listens on port 5050 by default
+$ ./backend/main.py
 ```
 
 ### Docker
@@ -31,13 +34,4 @@ $ sudo docker-compose ps
 # abcdefg12345        postgres:alpine     "docker-entrypoint.s…"   ...                  ...                 5432/tcp            akatsuki_db_1
 # hijklmn67890        akatsuki_akatsuki   "java -jar ./build/l…"   ...                  ...                                     akatsuki_akatsuki_1
 
-```
-
-### Setting up the image API
-
-```bash
-# Clone the repo
-$ git clone https://github.com/noud02/Akatsuki-Backend && cd Akatsuki-Backend
-$ ./main.py
-# Server listens on port 5050
 ```
