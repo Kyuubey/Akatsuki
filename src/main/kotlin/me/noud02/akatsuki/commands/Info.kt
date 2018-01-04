@@ -35,21 +35,19 @@ class Info : Command() {
     override val desc = "Get info on the bot."
 
     override fun run(ctx: Context) {
-        val embed = EmbedBuilder()
-        val desc = embed.descriptionBuilder
-        val json = khttp.get("https://api.github.com/repos/noud02/Akatsuki").jsonObject
-        val stars = json.getInt("stargazers_count")
-        val issues = json.getInt("open_issues")
-        val forks = json.getInt("forks_count")
-        
-        embed.setTitle(ctx.client.jda.selfUser.name)
-        
-        desc.append("This bot runs on [Akatsuki](https://github.com/noud02/Akatsuki), an open-source Discord bot.\n")
-        desc.append("\n${ctx.client.config.description}\n\n")
-        desc.append("[Bugs](https://github.com/noud02/Akatsuki/issues) | [GitHub](https://github.com/noud02/Akatsuki) | [Website](https://akatsuki.noud02.me)\n")
-        desc.append("\n\u2B50 $stars | \u26A0 $issues | \uD83C\uDF74 $forks\n")
-        
-        embed.setDescription(desc)
+        val embed = EmbedBuilder().apply {
+            val json = khttp.get("https://api.github.com/repos/noud02/Akatsuki").jsonObject
+            val stars = json.getInt("stargazers_count")
+            val issues = json.getInt("open_issues")
+            val forks = json.getInt("forks_count")
+
+            setTitle(ctx.client.jda.selfUser.name)
+
+            descriptionBuilder.append("This bot runs on [Akatsuki](https://github.com/noud02/Akatsuki), an open-source Discord bot written in Kotlin.\n")
+            descriptionBuilder.append("\n${ctx.client.config.description}\n\n")
+            descriptionBuilder.append("[Bugs](https://github.com/noud02/Akatsuki/issues) | [GitHub](https://github.com/noud02/Akatsuki)\n")
+            descriptionBuilder.append("\n\u2B50 $stars | \u26A0 $issues | \uD83C\uDF74 $forks\n")
+        }
         
         ctx.send(embed.build())
     }
