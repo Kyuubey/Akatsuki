@@ -54,7 +54,6 @@ import net.dv8tion.jda.core.events.message.MessageUpdateEvent
 import net.dv8tion.jda.core.events.message.react.MessageReactionAddEvent
 import net.dv8tion.jda.core.events.message.react.MessageReactionRemoveEvent
 import net.dv8tion.jda.core.hooks.ListenerAdapter
-import net.dv8tion.jda.core.requests.SessionReconnectQueue
 import org.jetbrains.exposed.sql.*
 import java.util.*
 import java.util.Date
@@ -67,7 +66,7 @@ class Akatsuki(val config: Config) : ListenerAdapter() {
     private val builder = JDABuilder(AccountType.BOT)
             .setToken(config.token)
             .addEventListener(this)
-            .setReconnectQueue(SessionReconnectQueue())
+            .setAutoReconnect(true)
     private lateinit var presenceTimer: Timer
 
     lateinit var jda: JDA
@@ -113,19 +112,18 @@ class Akatsuki(val config: Config) : ListenerAdapter() {
             jda = builder
                     .useSharding(shard, shards)
                     .buildAsync()
-        } else
+        } else {
             for (i in 0 until shards) {
                 jda = builder
                         .useSharding(i, shards)
                         .buildAsync()
-                
-                Thread.sleep(5000)
             }
+        }
 
         startPresenceTimer()
     }
 
-    fun startPresenceTimer() {
+    private fun startPresenceTimer() {
         presenceTimer = timer("presenceTimer", true, Date(), 60000L) {
             val presence = config.presences[Math.floor(Math.random() * config.presences.size).toInt()]
             val gameType = when(presence.type) {
