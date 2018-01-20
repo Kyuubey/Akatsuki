@@ -46,6 +46,7 @@ dependencies {
     compile 'org.slf4j:slf4j-simple:1.8.0-alpha2'
     compile 'org.jruby:jruby-complete:9.1.13.0'
     compile 'commons-validator:commons-validator:1.6'
+    compile 'org.apache.commons:commons-lang3:3.7'
     compile 'khttp:khttp:0.1.0'
     compile 'net.dv8tion:JDA:3.4.0_320'
     compile 'com.sedmelluq:lavaplayer:1.2.45'
@@ -59,7 +60,6 @@ dependencies {
     compile 'com.github.kittinunf.fuel:fuel:1.11.0'
     compile 'com.github.kittinunf.fuel:fuel-jackson:1.11.0'
     compile 'com.github.kittinunf.fuel:fuel-gson:1.11.0'
-    compile 'com.google.code.gson:gson:2.8.2'
 }
 
 compileKotlin {

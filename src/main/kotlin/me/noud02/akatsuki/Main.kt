@@ -52,7 +52,10 @@ fun main (args: Array<String>) {
                 ),
                 APIConfig(
                         System.getenv("GOOGLE_API_KEY"),
-                        System.getenv("WEEBSH_API_KEY")
+                        System.getenv("WEEBSH_API_KEY"),
+                        System.getenv("DISCORDBOTS_API_KEY"),
+                        System.getenv("DISCORDBOTSORG_API_KEY"),
+                        "${System.getenv("MAL_USERNAME")}:${System.getenv("MAL_PASSWORD")}"
                 ),
                 SiteConfig(
                         System.getenv("SITE_HOST"),
