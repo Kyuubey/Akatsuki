@@ -25,6 +25,8 @@
 
 package me.noud02.akatsuki.commands
 
+import me.noud02.akatsuki.Akatsuki
+import me.noud02.akatsuki.EventListener
 import me.noud02.akatsuki.annotations.Alias
 import me.noud02.akatsuki.annotations.Argument
 import me.noud02.akatsuki.annotations.Load
@@ -42,13 +44,13 @@ class Youtube : Command() {
     override val guildOnly = true
 
     override fun run(ctx: Context) {
-        val picker = ItemPicker(ctx.client.waiter, ctx.member as Member, ctx.guild as Guild)
+        val picker = ItemPicker(EventListener.instance.waiter, ctx.member as Member, ctx.guild as Guild)
 
         val res = khttp.get(
                 "https://www.googleapis.com/youtube/v3/search", 
                 mapOf(),
                 mapOf(
-                        "key" to ctx.client.config.api.google, 
+                        "key" to Akatsuki.instance.config.api.google,
                         "part" to "snippet", 
                         "maxResults" to "10", 
                         "type" to "video",

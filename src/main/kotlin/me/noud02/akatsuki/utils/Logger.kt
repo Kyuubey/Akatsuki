@@ -6,7 +6,7 @@ import java.util.*
 import kotlin.reflect.KClass
 import kotlin.reflect.jvm.jvmName
 
-class Logger(klass: KClass<out Any>) {
+class Logger(loggerName: String) {
     val ANSI_RESET = "\u001B[0m"
     val ANSI_BLACK = "\u001B[30m"
     val ANSI_RED = "\u001B[31m"
@@ -26,7 +26,7 @@ class Logger(klass: KClass<out Any>) {
     val ANSI_CYAN_BACKGROUND = "\u001B[46m"
     val ANSI_WHITE_BACKGROUND = "\u001B[47m"
 
-    private val name = "$ANSI_BLACK_BACKGROUND$ANSI_YELLOW[ ${klass.jvmName} ]$ANSI_RESET"
+    private val name = "$ANSI_BLACK_BACKGROUND$ANSI_YELLOW[ $loggerName ]$ANSI_RESET"
 
     private val time
         get() = SimpleDateFormat("yyyy/MM/dd HH:mm:ss").format(Date())

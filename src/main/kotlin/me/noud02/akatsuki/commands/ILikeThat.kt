@@ -25,6 +25,7 @@
 
 package me.noud02.akatsuki.commands
 
+import me.noud02.akatsuki.Akatsuki
 import me.noud02.akatsuki.annotations.Argument
 import me.noud02.akatsuki.annotations.Load
 import me.noud02.akatsuki.entities.Command
@@ -44,11 +45,11 @@ class ILikeThat : Command() {
     override fun run(ctx: Context) {
         val req = khttp.get(
                 "${
-                if (ctx.client.config.backend.ssl) "https" else "http"
+                if (Akatsuki.instance.config.backend.ssl) "https" else "http"
                 }://${
-                ctx.client.config.backend.host
+                Akatsuki.instance.config.backend.host
                 }${
-                if (ctx.client.config.backend.port != 80) ":${ctx.client.config.backend.port}" else ""
+                if (Akatsuki.instance.config.backend.port != 80) ":${Akatsuki.instance.config.backend.port}" else ""
                 }/api/ilikethat",
                 params = mapOf(
                         "text" to ctx.args["text"] as String

@@ -1,6 +1,8 @@
 package me.noud02.akatsuki.commands
 
 import me.aurieh.ares.exposed.async.asyncTransaction
+import me.noud02.akatsuki.Akatsuki
+import me.noud02.akatsuki.EventListener
 import me.noud02.akatsuki.annotations.*
 import me.noud02.akatsuki.db.schema.Guilds
 import me.noud02.akatsuki.entities.AsyncCommand
@@ -52,7 +54,7 @@ class Set : AsyncCommand() {
         val key = (ctx.args["key"] as String).toLowerCase()
         val value = (ctx.args["value"] as String).toLowerCase()
 
-        asyncTransaction(ctx.client.pool) {
+        asyncTransaction(Akatsuki.instance.pool) {
             when (key) {
                 "forcelang" -> {
                     if (!yes.contains(value) && !no.contains(value))
@@ -115,7 +117,7 @@ class Set : AsyncCommand() {
                             val channels = ctx.guild.getTextChannelsByName(value, true)
 
                             if (channels.size > 1) {
-                                val picker = TextChannelPicker(ctx.client.waiter, ctx.member!!, channels, ctx.guild)
+                                val picker = TextChannelPicker(EventListener.instance.waiter, ctx.member!!, channels, ctx.guild)
 
                                 picker.build(ctx.channel).get()
                             } else
@@ -161,7 +163,7 @@ class Set : AsyncCommand() {
                             val channels = ctx.guild.getTextChannelsByName(value, true)
 
                             if (channels.size > 1) {
-                                val picker = TextChannelPicker(ctx.client.waiter, ctx.member!!, channels, ctx.guild)
+                                val picker = TextChannelPicker(EventListener.instance.waiter, ctx.member!!, channels, ctx.guild)
 
                                 picker.build(ctx.channel).get()
                             } else

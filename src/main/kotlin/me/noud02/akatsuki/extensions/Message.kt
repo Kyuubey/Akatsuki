@@ -32,13 +32,11 @@ import org.jetbrains.exposed.sql.insert
 import com.google.gson.Gson
 import net.dv8tion.jda.core.entities.Message
 import org.json.JSONObject
-import java.time.temporal.ChronoField
-
 
 fun Message.log(ev: String = "CREATE") {
     val gson = Gson()
 
-    asyncTransaction(Akatsuki.client.pool) {
+    asyncTransaction(Akatsuki.instance.pool) {
         Logs.insert {
             it[event] =  ev
             it[messageId] = idLong

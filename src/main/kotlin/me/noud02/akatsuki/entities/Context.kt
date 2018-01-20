@@ -29,6 +29,7 @@ import me.aurieh.ares.utils.ArgParser
 import me.noud02.akatsuki.Akatsuki
 import me.noud02.akatsuki.db.DBGuild
 import me.noud02.akatsuki.db.DBUser
+import net.dv8tion.jda.core.JDA
 import net.dv8tion.jda.core.entities.*
 import net.dv8tion.jda.core.events.message.MessageReceivedEvent
 import java.io.InputStream
@@ -45,7 +46,7 @@ class Context(
         val storedUser: DBUser,
         val storedGuild: DBGuild?
 ) {
-    val client = Akatsuki.client
+    val jda: JDA = event.jda
     val guild: Guild? = event.guild
     val author: User = event.author
     val channel: MessageChannel = event.channel
@@ -59,14 +60,6 @@ class Context(
     fun sendCode(lang: String, arg: Any) = event.channel.sendMessage("```$lang\n$arg```").queue()
 
     fun sendError(e: Throwable) = event.channel.sendMessage("```diff\n- ${e.stackTrace}```").queue()
-
-    fun help() = Akatsuki.client.cmdHandler.help(cmd)
-
-    fun help(cmd: String) = try {
-        Akatsuki.client.cmdHandler.help(cmd)
-    } catch (e: Exception) {
-        e.message.toString()
-    }
 
     fun getLastImage(): InputStream? {
         for (message in channel.history.retrievePast(25).complete()) {

@@ -38,7 +38,7 @@ class SearchDiscrim : Command() {
 
     override fun run(ctx: Context) {
         val discrim = ctx.args["discrim"] as? String ?: ctx.author.discriminator
-        val users = ctx.client.jda.users.filter { it.discriminator == discrim }
+        val users = ctx.jda.users.filter { it.discriminator == discrim }
         
         ctx.send("Users with discriminator $discrim:\n${
             users

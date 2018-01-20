@@ -26,6 +26,7 @@
 package me.noud02.akatsuki.commands
 
 import me.aurieh.ares.exposed.async.asyncTransaction
+import me.noud02.akatsuki.Akatsuki
 import me.noud02.akatsuki.annotations.Argument
 import me.noud02.akatsuki.annotations.Load
 import me.noud02.akatsuki.annotations.Perm
@@ -42,7 +43,7 @@ class AddPrefix : AsyncCommand() {
     override val desc = "Add a prefix"
 
     override suspend fun asyncRun(ctx: Context) {
-        asyncTransaction(ctx.client.pool) {
+        asyncTransaction(Akatsuki.instance.pool) {
             val guild = Guilds.select {
                 Guilds.id.eq(ctx.guild?.id)
             }.first()
@@ -68,7 +69,7 @@ class RemPrefix : AsyncCommand() {
     override val desc = "Remove a prefix"
 
     override suspend fun asyncRun(ctx: Context) {
-        asyncTransaction(ctx.client.pool) {
+        asyncTransaction(Akatsuki.instance.pool) {
             val guild = Guilds.select { // TODO add guild from db to Context class
                 Guilds.id.eq(ctx.guild?.id)
             }.first()
@@ -105,7 +106,7 @@ class Prefix : AsyncCommand() {
     }
 
     override suspend fun asyncRun(ctx: Context) {
-        asyncTransaction(ctx.client.pool) {
+        asyncTransaction(Akatsuki.instance.pool) {
             val guild = Guilds.select {
                 Guilds.id.eq(ctx.guild?.id)
             }.first()

@@ -17,8 +17,8 @@ class Stats : Command() {
         val rtime = Runtime.getRuntime()
 
         val embed = EmbedBuilder().apply {
-            if (ctx.client.jda.shardInfo != null) {
-                setTitle("Shard ${ctx.client.jda.shardInfo.shardString}")
+            if (ctx.jda.shardInfo != null) {
+                setTitle("EventListener ${ctx.jda.shardInfo.shardString}")
             }
 
             val uptimeHours = TimeUnit.MILLISECONDS.toHours(rb.uptime)
@@ -26,10 +26,10 @@ class Stats : Command() {
             val uptimeSecs = TimeUnit.MILLISECONDS.toSeconds(rb.uptime) - TimeUnit.MINUTES.toSeconds(TimeUnit.MILLISECONDS.toMinutes(rb.uptime)) - TimeUnit.HOURS.toSeconds(TimeUnit.MILLISECONDS.toHours(rb.uptime))
 
             descriptionBuilder.append("**Uptime:** ${"%02d:%02d:%02d".format(uptimeHours, uptimeMins, uptimeSecs)}\n")
-            descriptionBuilder.append("**Guilds:** ${ctx.client.jda.guilds.size}\n")
-            descriptionBuilder.append("**Users:** ${ctx.client.jda.users.size}\n")
+            descriptionBuilder.append("**Guilds:** ${ctx.jda.guilds.size}\n")
+            descriptionBuilder.append("**Users:** ${ctx.jda.users.size}\n")
             descriptionBuilder.append("**Voice connections:** ${MusicManager.musicManagers.size}\n")
-            descriptionBuilder.append("**Ping:** ${ctx.client.jda.ping}ms\n")
+            descriptionBuilder.append("**Ping:** ${ctx.jda.ping}ms\n")
             descriptionBuilder.append("**Memory Usage:** ${rtime.totalMemory() / (1024 * 1024)}MB")
         }
 

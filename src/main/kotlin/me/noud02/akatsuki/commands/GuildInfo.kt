@@ -26,6 +26,7 @@
 package me.noud02.akatsuki.commands
 
 import me.aurieh.ares.exposed.async.asyncTransaction
+import me.noud02.akatsuki.Akatsuki
 import me.noud02.akatsuki.annotations.Alias
 import me.noud02.akatsuki.entities.AsyncCommand
 import me.noud02.akatsuki.entities.Context
@@ -42,7 +43,7 @@ class GuildInfo : AsyncCommand() {
     override val guildOnly = true
 
     override suspend fun asyncRun(ctx: Context) {
-        asyncTransaction(ctx.client.pool) {
+        asyncTransaction(Akatsuki.instance.pool) {
             val embed = EmbedBuilder()
             val desc = embed.descriptionBuilder
             val guild = Guilds.select { Guilds.id.eq(ctx.guild!!.id) }.first()
@@ -58,8 +59,8 @@ class GuildInfo : AsyncCommand() {
             if (guild[Guilds.prefixes].isNotEmpty())
                 desc.append("**Prefixes:** ${guild[Guilds.prefixes].joinToString(", ")}\n")
 
-            if (ctx.client.jda.shardInfo != null)
-                desc.append("**Shard:** ${(ctx.guild.idLong shr 22) % ctx.client.jda.shardInfo.shardTotal}\n")
+            if (ctx.jda.shardInfo != null)
+                desc.append("**EventListener:** ${(ctx.guild.idLong shr 22) % ctx.jda.shardInfo.shardTotal}\n")
             desc.append("**Emotes:** ${ctx.guild.emotes.joinToString(" ") { it.asMention }}\n")
             desc.append("**Mods:**\n${ctx.guild.members.filter {
                 !it.user.isBot && (it.isOwner || it.hasPermission(Permission.BAN_MEMBERS) || it.hasPermission(Permission.KICK_MEMBERS) || it.hasPermission(Permission.ADMINISTRATOR))

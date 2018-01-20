@@ -78,6 +78,6 @@ fun main (args: Array<String>) {
 
     val bot = Akatsuki(config)
 
-    // bot.buildSharded(3)
-    bot.build()
+    bot.build(0, 2, 3)
+    //bot.build()
 }

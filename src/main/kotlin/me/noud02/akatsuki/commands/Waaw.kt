@@ -26,6 +26,7 @@
 package me.noud02.akatsuki.commands
 
 import khttp.extensions.fileLike
+import me.noud02.akatsuki.Akatsuki
 import me.noud02.akatsuki.annotations.Load
 import me.noud02.akatsuki.entities.Command
 import me.noud02.akatsuki.entities.Context
@@ -44,11 +45,11 @@ class Waaw : Command() {
 
         val req = khttp.post(
                 "${
-                if (ctx.client.config.backend.ssl) "https" else "http"
+                if (Akatsuki.instance.config.backend.ssl) "https" else "http"
                 }://${
-                ctx.client.config.backend.host
+                Akatsuki.instance.config.backend.host
                 }${
-                if (ctx.client.config.backend.port != 80) ":${ctx.client.config.backend.port}" else ""
+                if (Akatsuki.instance.config.backend.port != 80) ":${Akatsuki.instance.config.backend.port}" else ""
                 }/api/waaw",
                 files = listOf(temp.fileLike())
         )

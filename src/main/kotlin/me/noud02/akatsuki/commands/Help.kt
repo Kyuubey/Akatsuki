@@ -25,6 +25,7 @@
 
 package me.noud02.akatsuki.commands
 
+import me.noud02.akatsuki.EventListener
 import me.noud02.akatsuki.annotations.Alias
 import me.noud02.akatsuki.annotations.Argument
 import me.noud02.akatsuki.annotations.Load
@@ -39,9 +40,9 @@ class Help : Command() {
 
     override fun run(ctx: Context) {
         if (ctx.args.contains("command"))
-            return ctx.send(ctx.help(ctx.args["command"] as String))
+            return ctx.send(EventListener.instance.cmdHandler.help(ctx.args["command"] as String))
         else {
-            val commands = ctx.client.cmdHandler.commands
+            val commands = EventListener.instance.cmdHandler.commands
                     .toSortedMap()
                     .map {
                         "\t${it.key}" + " ".repeat(20 - it.key.length) + it.value.desc

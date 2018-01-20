@@ -25,6 +25,7 @@
 
 package me.noud02.akatsuki.commands
 
+import me.noud02.akatsuki.Akatsuki
 import me.noud02.akatsuki.entities.Command
 import me.noud02.akatsuki.entities.Context
 import me.noud02.akatsuki.annotations.Load
@@ -41,10 +42,10 @@ class Info : Command() {
             val issues = json.getInt("open_issues")
             val forks = json.getInt("forks_count")
 
-            setTitle(ctx.client.jda.selfUser.name)
+            setTitle(ctx.jda.selfUser.name)
 
             descriptionBuilder.append("This bot runs on [Akatsuki](https://github.com/noud02/Akatsuki), an open-source Discord bot written in Kotlin.\n")
-            descriptionBuilder.append("\n${ctx.client.config.description}\n\n")
+            descriptionBuilder.append("\n${Akatsuki.instance.config.description}\n\n")
             descriptionBuilder.append("[Bugs](https://github.com/noud02/Akatsuki/issues) | [GitHub](https://github.com/noud02/Akatsuki)\n")
             descriptionBuilder.append("\n\u2B50 $stars | \u26A0 $issues | \uD83C\uDF74 $forks\n")
         }

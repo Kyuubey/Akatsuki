@@ -1,5 +1,6 @@
 package me.noud02.akatsuki.commands
 
+import me.noud02.akatsuki.Akatsuki
 import me.noud02.akatsuki.annotations.Argument
 import me.noud02.akatsuki.annotations.Flag
 import me.noud02.akatsuki.annotations.Flags
@@ -22,10 +23,10 @@ class Logs : Command() {
     override fun run(ctx: Context) {
         val num = ctx.args.getOrDefault("logs", 100)
         val url = URIBuilder().apply {
-            scheme = if (ctx.client.config.site.ssl) "https" else "http"
-            host = ctx.client.config.site.host
-            if (ctx.client.config.site.port != 80)
-                port = ctx.client.config.site.port
+            scheme = if (Akatsuki.instance.config.site.ssl) "https" else "http"
+            host = Akatsuki.instance.config.site.host
+            if (Akatsuki.instance.config.site.port != 80)
+                port = Akatsuki.instance.config.site.port
             path = "/logs/${ctx.channel.id}/${ctx.msg.creationTime.toInstant().toEpochMilli()}"
 
             when {
