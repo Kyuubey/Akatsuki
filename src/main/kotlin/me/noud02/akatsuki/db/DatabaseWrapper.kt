@@ -27,6 +27,7 @@ package me.noud02.akatsuki.db
 
 import me.aurieh.ares.exposed.async.asyncTransaction
 import me.noud02.akatsuki.Akatsuki
+import me.noud02.akatsuki.EventListener
 import me.noud02.akatsuki.db.schema.Guilds
 import me.noud02.akatsuki.db.schema.Logs
 import me.noud02.akatsuki.db.schema.Users
@@ -76,7 +77,7 @@ data class DBStar(
 )
 
 object DatabaseWrapper {
-    private val pool: ExecutorService = Akatsuki.client.pool
+    private val pool: ExecutorService = Akatsuki.instance.pool
 
     fun getGuild(guild: Guild) = getGuild(guild.idLong)
 
@@ -186,7 +187,7 @@ object DatabaseWrapper {
                 }.firstOrNull()
 
                 if (log != null) {
-                    Akatsuki.client.snipes[event.channel.idLong] = log[Logs.messageId]
+                    EventListener.instance.snipes[event.channel.idLong] = log[Logs.messageId]
 
                     Logs.insert {
                         it[Logs.event] = "DELETE"

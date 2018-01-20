@@ -25,6 +25,7 @@
 
 package me.noud02.akatsuki.commands
 
+import me.noud02.akatsuki.Akatsuki
 import me.noud02.akatsuki.annotations.Alias
 import me.noud02.akatsuki.entities.Command
 import me.noud02.akatsuki.entities.Context
@@ -68,7 +69,7 @@ class NowPlaying : Command() {
                     "https://www.googleapis.com/youtube/v3/search",
                     mapOf(),
                     mapOf(
-                            "key" to ctx.client.config.api.google,
+                            "key" to Akatsuki.instance.config.api.google,
                             "part" to "snippet",
                             "maxResults" to "10",
                             "type" to "video",

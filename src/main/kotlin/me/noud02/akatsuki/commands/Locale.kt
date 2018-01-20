@@ -26,6 +26,7 @@
 package me.noud02.akatsuki.commands
 
 import me.aurieh.ares.exposed.async.asyncTransaction
+import me.noud02.akatsuki.Akatsuki
 import me.noud02.akatsuki.annotations.Alias
 import me.noud02.akatsuki.annotations.Argument
 import me.noud02.akatsuki.annotations.Load
@@ -41,7 +42,7 @@ class SetLocale : AsyncCommand() {
     override val desc = "Set your language"
 
     override suspend fun asyncRun(ctx: Context) {
-        asyncTransaction(ctx.client.pool) {
+        asyncTransaction(Akatsuki.instance.pool) {
             Users.update({
                 Users.id.eq(ctx.author.id)
             }) {

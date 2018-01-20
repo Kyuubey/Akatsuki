@@ -44,11 +44,11 @@ import org.reflections.Reflections
 import org.reflections.util.ClasspathHelper
 import org.reflections.util.ConfigurationBuilder
 import java.util.*
+import kotlin.reflect.jvm.jvmName
 
 class CommandHandler {
+    private val logger = Logger(this::class.jvmName)
     private val aliases = mutableMapOf<String, String>()
-    // private val logger = LoggerFactory.getLogger(this::class.java)
-    private val logger = Logger(this::class)
 
     val commands = mutableMapOf<String, Command>()
 
@@ -96,7 +96,7 @@ class CommandHandler {
 
         val lang = ResourceBundle.getBundle("i18n.Kyubey", locale, UTF8Control())
 
-        val usedPrefix = Akatsuki.client.prefixes.lastOrNull {
+        val usedPrefix = Akatsuki.instance.config.prefixes.lastOrNull {
             event.message.contentRaw.startsWith(it)
         } ?: guildPrefixes.lastOrNull {
             event.message.contentRaw.startsWith(it)
@@ -121,7 +121,7 @@ class CommandHandler {
 
         var command = commands[cmd] as Command
 
-        if (command.ownerOnly && !Akatsuki.client.owners.contains(event.author.id))
+        if (command.ownerOnly && !Akatsuki.instance.config.owners.contains(event.author.id))
             return
 
         if (command.guildOnly && event.guild == null)
@@ -303,7 +303,7 @@ class CommandHandler {
                                 val channels = event.guild.getTextChannelsByName(arg2, true)
 
                                 if (channels.size > 1) {
-                                    val picker = TextChannelPicker(Akatsuki.client.waiter, event.member, channels, event.guild)
+                                    val picker = TextChannelPicker(EventListener.instance.waiter, event.member, channels, event.guild)
 
                                     picker.build(event.message).get()
                                 } else
@@ -344,7 +344,7 @@ class CommandHandler {
                             event.guild.getMembersByEffectiveName(arg2, true).isNotEmpty() -> {
                                 val users = event.guild.getMembersByEffectiveName(arg2, true)
                                 if (users.size > 1) {
-                                    val picker = UserPicker(Akatsuki.client.waiter, event.member, users, event.guild)
+                                    val picker = UserPicker(EventListener.instance.waiter, event.member, users, event.guild)
 
                                     picker.build(event.channel).get()
                                 } else
@@ -354,7 +354,7 @@ class CommandHandler {
                             event.guild.getMembersByName(arg2, true).isNotEmpty() -> {
                                 val users = event.guild.getMembersByName(arg2, true)
                                 if (users.size > 1) {
-                                    val picker = UserPicker(Akatsuki.client.waiter, event.member, users, event.guild)
+                                    val picker = UserPicker(EventListener.instance.waiter, event.member, users, event.guild)
 
                                     picker.build(event.channel).get()
                                 } else

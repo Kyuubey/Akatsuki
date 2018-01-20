@@ -84,7 +84,7 @@ class TrackScheduler(private val player: AudioPlayer, private val manager: Guild
                         "https://www.googleapis.com/youtube/v3/search",
                         mapOf(),
                         mapOf(
-                                "key" to Akatsuki.client.config.api.google,
+                                "key" to Akatsuki.instance.config.api.google,
                                 "part" to "snippet",
                                 "maxResults" to "10",
                                 "type" to "video",

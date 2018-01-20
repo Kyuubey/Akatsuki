@@ -26,6 +26,7 @@
 package me.noud02.akatsuki.commands
 
 import com.sedmelluq.discord.lavaplayer.track.AudioTrack
+import me.noud02.akatsuki.EventListener
 import me.noud02.akatsuki.entities.Command
 import me.noud02.akatsuki.entities.Context
 import me.noud02.akatsuki.annotations.Load
@@ -67,7 +68,7 @@ class Queue : Command() {
 
         if (formatted.length > 2048) {
             val parts = mutableListOf<String>()
-            val picker = ItemPicker(ctx.client.waiter, ctx.member!!, ctx.guild)
+            val picker = ItemPicker(EventListener.instance.waiter, ctx.member!!, ctx.guild)
             var part = ""
 
             val items = manager.scheduler.queue.mapIndexed {

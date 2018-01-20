@@ -29,6 +29,8 @@ import com.sedmelluq.discord.lavaplayer.player.AudioLoadResultHandler
 import com.sedmelluq.discord.lavaplayer.tools.FriendlyException
 import com.sedmelluq.discord.lavaplayer.track.AudioPlaylist
 import com.sedmelluq.discord.lavaplayer.track.AudioTrack
+import me.noud02.akatsuki.Akatsuki
+import me.noud02.akatsuki.EventListener
 import me.noud02.akatsuki.annotations.Argument
 import me.noud02.akatsuki.entities.Context
 import me.noud02.akatsuki.annotations.Load
@@ -84,12 +86,12 @@ class Play : Command() {
             override fun loadFailed(exception: FriendlyException) = ctx.send("Failed to add song to queue: ${exception.message}")
 
             override fun noMatches() {
-                val picker = ItemPicker(ctx.client.waiter, ctx.member as Member, ctx.guild as Guild, true)
+                val picker = ItemPicker(EventListener.instance.waiter, ctx.member as Member, ctx.guild as Guild, true)
 
                 val res = khttp.get(
                         "https://www.googleapis.com/youtube/v3/search",
                         params = mapOf(
-                                "key" to ctx.client.config.api.google,
+                                "key" to Akatsuki.instance.config.api.google,
                                 "part" to "snippet",
                                 "maxResults" to "10",
                                 "type" to "video",

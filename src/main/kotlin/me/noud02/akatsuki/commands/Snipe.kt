@@ -2,6 +2,7 @@ package me.noud02.akatsuki.commands
 
 import me.aurieh.ares.exposed.async.asyncTransaction
 import me.noud02.akatsuki.Akatsuki
+import me.noud02.akatsuki.EventListener
 import me.noud02.akatsuki.annotations.Load
 import me.noud02.akatsuki.db.schema.Logs
 import me.noud02.akatsuki.entities.AsyncCommand
@@ -15,8 +16,8 @@ class Snipe : AsyncCommand() {
     override val guildOnly = true
 
     override fun run(ctx: Context) {
-        asyncTransaction(ctx.client.pool) {
-            val snipe = Akatsuki.client.snipes.remove(ctx.channel.idLong)
+        asyncTransaction(Akatsuki.instance.pool) {
+            val snipe = EventListener.instance.snipes.remove(ctx.channel.idLong)
 
             if (snipe != null) {
                 val log = Logs.select {

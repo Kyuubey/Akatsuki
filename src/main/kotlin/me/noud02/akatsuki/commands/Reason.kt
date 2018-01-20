@@ -1,6 +1,7 @@
 package me.noud02.akatsuki.commands
 
 import me.aurieh.ares.exposed.async.asyncTransaction
+import me.noud02.akatsuki.Akatsuki
 import me.noud02.akatsuki.annotations.Argument
 import me.noud02.akatsuki.annotations.Arguments
 import me.noud02.akatsuki.annotations.Load
@@ -32,7 +33,7 @@ class Reason : AsyncCommand() {
 
         val caseArg = (ctx.args["case"] as String).toLowerCase()
 
-        asyncTransaction(ctx.client.pool) {
+        asyncTransaction(Akatsuki.instance.pool) {
             val cases = Modlogs.select { Modlogs.guildId eq ctx.guild!!.idLong }
             val caseIds: List<Int> = when (caseArg) {
                 "l" -> listOf(cases.count())

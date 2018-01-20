@@ -31,9 +31,10 @@ import me.noud02.akatsuki.entities.Context
 import me.noud02.akatsuki.utils.Logger
 import net.dv8tion.jda.core.entities.VoiceChannel
 import java.util.*
+import kotlin.reflect.jvm.jvmName
 
 object MusicManager {
-    private val logger = Logger(this::class)
+    private val logger = Logger(this::class.jvmName)
 
     val playerManager = DefaultAudioPlayerManager()
     val musicManagers = mutableMapOf<String, GuildMusicManager>()
