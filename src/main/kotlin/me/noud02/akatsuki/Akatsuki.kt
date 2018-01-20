@@ -25,14 +25,17 @@
 
 package me.noud02.akatsuki
 
+import me.aurieh.ares.exposed.async.asyncTransaction
+import me.noud02.akatsuki.db.schema.*
 import me.noud02.akatsuki.entities.Config
 import me.noud02.akatsuki.entities.CoroutineDispatcher
+import me.noud02.akatsuki.utils.Wolk
 import net.dv8tion.jda.bot.sharding.DefaultShardManagerBuilder
 import net.dv8tion.jda.bot.sharding.ShardManager
 import net.dv8tion.jda.core.AccountType
 import net.dv8tion.jda.core.JDABuilder
-import net.dv8tion.jda.core.requests.SessionReconnectQueue
 import org.jetbrains.exposed.sql.Database
+import org.jetbrains.exposed.sql.SchemaUtils
 import java.util.concurrent.ExecutorService
 import java.util.concurrent.Executors
 
@@ -59,13 +62,17 @@ class Akatsuki(val config: Config) {
                 config.database.user,
                 config.database.pass
         )
+
+        Wolk.setToken(config.api.weebsh)
+        asyncTransaction(pool) {
+            SchemaUtils.create(Guilds, Users, Starboard, Logs, Modlogs)
+        }.execute()
     }
 
     fun build() {
-        val jda = JDABuilder(AccountType.BOT).apply {
+        JDABuilder(AccountType.BOT).apply {
             setToken(config.token)
             addEventListener(EventListener())
-            setReconnectQueue(SessionReconnectQueue())
         }.buildAsync()
     }
 
@@ -91,7 +98,7 @@ class Akatsuki(val config: Config) : ListenerAdapter() {
     private val builder = JDABuilder(AccountType.BOT)
             .setToken(config.token)
             .addEventListener(this)
-            .setReconnectQueue(SessionReconnectQueue())
+            .setAutoReconnect(true)
     private lateinit var presenceTimer: Timer
 
     lateinit var jda: JDA
@@ -137,14 +144,13 @@ class Akatsuki(val config: Config) : ListenerAdapter() {
             jda = builder
                     .useSharding(shard, shards)
                     .buildAsync()
-        } else
+        } else {
             for (i in 0 until shards) {
                 jda = builder
                         .useSharding(i, shards)
                         .buildAsync()
-                
-                Thread.sleep(5000)
             }
+        }
 
         startPresenceTimer()
     }

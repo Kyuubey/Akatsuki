@@ -25,52 +25,45 @@
 
 package me.noud02.akatsuki.commands
 
-import me.aurieh.ares.exposed.async.asyncTransaction
-import me.noud02.akatsuki.Akatsuki
 import me.noud02.akatsuki.annotations.Alias
-import me.noud02.akatsuki.entities.AsyncCommand
 import me.noud02.akatsuki.entities.Context
 import me.noud02.akatsuki.annotations.Load
-import me.noud02.akatsuki.db.schema.Guilds
+import me.noud02.akatsuki.db.DatabaseWrapper
+import me.noud02.akatsuki.entities.Command
 import net.dv8tion.jda.core.EmbedBuilder
 import net.dv8tion.jda.core.Permission
-import org.jetbrains.exposed.sql.select
+
 
 @Load
 @Alias("guild", "serverinfo", "server")
-class GuildInfo : AsyncCommand() {
+class GuildInfo : Command() {
     override val desc = "Get info about the guild."
     override val guildOnly = true
 
-    override suspend fun asyncRun(ctx: Context) {
-        asyncTransaction(Akatsuki.instance.pool) {
-            val embed = EmbedBuilder()
-            val desc = embed.descriptionBuilder
-            val guild = Guilds.select { Guilds.id.eq(ctx.guild!!.id) }.first()
 
-            embed.setTitle(ctx.guild!!.name)
+    override fun run(ctx: Context) {
+        val guild = DatabaseWrapper.getGuildSafe(ctx.guild!!)
+        ctx.send(EmbedBuilder().apply {
+            setTitle("${ctx.guild.name} (${ctx.guild.id})")
 
-            desc.append("**Owner:** ${ctx.guild.owner.user.name}#${ctx.guild.owner.user.discriminator}\n")
-            desc.append("**Bots:** ${ctx.guild.members.filter { it.user.isBot }.size}\n")
-            desc.append("**Users:** ${ctx.guild.members.filter { !it.user.isBot }.size}\n")
-            desc.append("**Roles:** ${ctx.guild.roles.size - 1}\n")
-            desc.append("**Region:** ${ctx.guild.region.getName()}\n")
-            desc.append("**Language:** ${guild[Guilds.lang]}\n")
-            if (guild[Guilds.prefixes].isNotEmpty())
-                desc.append("**Prefixes:** ${guild[Guilds.prefixes].joinToString(", ")}\n")
+            descriptionBuilder.append("**Owner:** ${ctx.guild.owner.user.name}#${ctx.guild.owner.user.discriminator}\n")
+            descriptionBuilder.append("**Bots:** ${ctx.guild.members.filter { it.user.isBot }.size}\n")
+            descriptionBuilder.append("**Users:** ${ctx.guild.members.filter { !it.user.isBot }.size}\n")
+            descriptionBuilder.append("**Roles:** ${ctx.guild.roles.size - 1}\n")
+            descriptionBuilder.append("**Region:** ${ctx.guild.region.getName()}\n")
+            descriptionBuilder.append("**Language:** ${guild.lang}\n")
+
+            if (guild.prefixes.isNotEmpty())
+                descriptionBuilder.append("**Prefixes:** ${guild.prefixes.joinToString(", ")}\n")
 
             if (ctx.jda.shardInfo != null)
-                desc.append("**EventListener:** ${(ctx.guild.idLong shr 22) % ctx.jda.shardInfo.shardTotal}\n")
-            desc.append("**Emotes:** ${ctx.guild.emotes.joinToString(" ") { it.asMention }}\n")
-            desc.append("**Mods:**\n${ctx.guild.members.filter {
+                descriptionBuilder.append("**EventListener:** ${(ctx.guild.idLong shr 22) % ctx.jda.shardInfo.shardTotal}\n")
+            descriptionBuilder.append("**Emotes:** ${ctx.guild.emotes.joinToString(" ") { it.asMention }}\n")
+            descriptionBuilder.append("**Mods:**\n${ctx.guild.members.filter {
                 !it.user.isBot && (it.isOwner || it.hasPermission(Permission.BAN_MEMBERS) || it.hasPermission(Permission.KICK_MEMBERS) || it.hasPermission(Permission.ADMINISTRATOR))
             }.joinToString("\n") {
                 "${it.user.name}#${it.user.discriminator}${if (!it.nickname.isNullOrEmpty()) "(${it.nickname})" else ""}"
             }}")
-
-            embed.setDescription(desc)
-
-            ctx.send(embed.build())
-        }.await()
+        }.build())
     }
 }
