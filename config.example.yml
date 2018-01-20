@@ -22,6 +22,9 @@ database:
 api:
   google: google api key
   weebsh: weeb.sh api key
+  discordbots: bots.discord.pw api key
+  discordbotsorg: discordbots.org api key
+  myanimelist: username:password
 site:
   host: your site
   ssl: false

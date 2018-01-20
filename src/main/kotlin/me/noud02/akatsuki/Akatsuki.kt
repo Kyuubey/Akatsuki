@@ -125,7 +125,7 @@ class Akatsuki(val config: Config) : ListenerAdapter() {
         startPresenceTimer()
     }
 
-    fun startPresenceTimer() {
+    private fun startPresenceTimer() {
         presenceTimer = timer("presenceTimer", true, Date(), 60000L) {
             val presence = config.presences[Math.floor(Math.random() * config.presences.size).toInt()]
             val gameType = when(presence.type) {
@@ -143,6 +143,19 @@ class Akatsuki(val config: Config) : ListenerAdapter() {
             jda.presence.setPresence(
                     Game.of(gameType, presence.text),
                     false
+            )
+        }
+    }
+
+    fun updateBotlist() {
+        if (config.api.discordbots.isNotEmpty()) {
+            val json = mutableMapOf(
+                    "server_count" to jda.guilds.size
+            )
+
+            var req = khttp.post(
+                    "https://bots.discord.pw/api/bots/${jda.selfUser.id}/stats",
+                    json = json
             )
         }
     }

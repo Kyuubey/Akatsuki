@@ -27,7 +27,10 @@ package me.noud02.akatsuki.entities
 
 data class APIConfig(
         val google: String,
-        val weebsh: String
+        val weebsh: String,
+        val discordbots: String,
+        val discordbotsorg: String,
+        val myanimelist: String
 )
 
 data class DatabaseConfig(
