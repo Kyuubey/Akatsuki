@@ -33,14 +33,20 @@ import me.noud02.akatsuki.utils.Wolk
 import net.dv8tion.jda.bot.sharding.DefaultShardManagerBuilder
 import net.dv8tion.jda.bot.sharding.ShardManager
 import net.dv8tion.jda.core.AccountType
+import net.dv8tion.jda.core.JDA
 import net.dv8tion.jda.core.JDABuilder
+import net.dv8tion.jda.core.entities.Game
 import org.jetbrains.exposed.sql.Database
 import org.jetbrains.exposed.sql.SchemaUtils
+import java.util.*
 import java.util.concurrent.ExecutorService
 import java.util.concurrent.Executors
+import kotlin.concurrent.timer
 
 class Akatsuki(val config: Config) {
     lateinit var shardManager: ShardManager
+    lateinit var presenceTimer: Timer
+    var jda: JDA? = null
 
     val pool: ExecutorService by lazy {
         Executors.newCachedThreadPool {
@@ -69,11 +75,79 @@ class Akatsuki(val config: Config) {
         }.execute()
     }
 
+    private fun startPresenceTimer() {
+        presenceTimer = timer("presenceTimer", true, Date(), 60000L) {
+            val presence = config.presences[Math.floor(Math.random() * config.presences.size).toInt()]
+            val gameType = when(presence.type) {
+                "streaming" -> Game.GameType.STREAMING
+
+                "listening" -> Game.GameType.LISTENING
+
+                "watching" -> Game.GameType.WATCHING
+
+                "default" -> Game.GameType.DEFAULT
+                "playing" -> Game.GameType.DEFAULT
+                else -> Game.GameType.DEFAULT
+            }
+
+            if (jda != null)
+                jda!!.presence.setPresence(Game.of(gameType, presence.text), false)
+            else
+                shardManager.setGame(Game.of(gameType, presence.text))
+
+        }
+    }
+
+    fun updateStats() {
+        if (jda != null) {
+            val json = mutableMapOf(
+                    "server_count" to jda!!.guilds.size
+            )
+
+            if (config.api.discordbots.isNotEmpty())
+                khttp.post(
+                        "https://bots.discord.pw/api/bots/${jda!!.selfUser.id}/stats",
+                        json = json,
+                        headers = mapOf("Authorization" to config.api.discordbots)
+                )
+
+            if (config.api.discordbotsorg.isNotEmpty())
+                khttp.post(
+                        "https://discordbots.org/api/bots${jda!!.selfUser.id}/stats",
+                        json = json,
+                        headers = mapOf("Authorization" to config.api.discordbotsorg)
+                )
+        } else
+            for (shard in shardManager.shards) {
+                val json = mapOf(
+                        "server_count" to shard.guilds.size,
+                        "shard_id" to shard.shardInfo.shardId,
+                        "shard_count" to shardManager.shardsTotal
+                )
+
+                if (config.api.discordbots.isNotEmpty())
+                    khttp.post(
+                            "https://bots.discord.pw/api/bots/${shard.selfUser.id}/stats",
+                            json = json,
+                            headers = mapOf("Authorization" to config.api.discordbots)
+                    )
+
+                if (config.api.discordbotsorg.isNotEmpty())
+                    khttp.post(
+                            "https://discordbots.org/api/bots/${shard.selfUser.id}/stats",
+                            json = json,
+                            headers = mapOf("Authorization" to config.api.discordbotsorg)
+                    )
+            }
+    }
+
     fun build() {
-        JDABuilder(AccountType.BOT).apply {
+        jda = JDABuilder(AccountType.BOT).apply {
             setToken(config.token)
             addEventListener(EventListener())
         }.buildAsync()
+
+        startPresenceTimer()
     }
 
     fun build(firstShard: Int, lastShard: Int, total: Int) {
@@ -84,6 +158,8 @@ class Akatsuki(val config: Config) {
             setShardsTotal(total)
             setShards(firstShard, lastShard)
         }.build()
+
+        startPresenceTimer()
     }
 
     companion object {
