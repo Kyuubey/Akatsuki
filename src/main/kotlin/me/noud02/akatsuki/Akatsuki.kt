@@ -44,8 +44,8 @@ import java.util.concurrent.Executors
 import kotlin.concurrent.timer
 
 class Akatsuki(val config: Config) {
-    lateinit var shardManager: ShardManager
-    lateinit var presenceTimer: Timer
+    private lateinit var shardManager: ShardManager
+    private lateinit var presenceTimer: Timer
     var jda: JDA? = null
 
     val pool: ExecutorService by lazy {
