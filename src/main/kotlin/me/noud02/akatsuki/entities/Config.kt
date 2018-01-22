@@ -30,7 +30,8 @@ data class APIConfig(
         val weebsh: String,
         val discordbots: String,
         val discordbotsorg: String,
-        val myanimelist: String
+        val myanimelist: String,
+        val sentry: String
 )
 
 data class DatabaseConfig(

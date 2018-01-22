@@ -25,6 +25,7 @@ api:
   discordbots: bots.discord.pw api key
   discordbotsorg: discordbots.org api key
   myanimelist: username:password
+  sentry: sentry dsn
 site:
   host: your site
   ssl: false
