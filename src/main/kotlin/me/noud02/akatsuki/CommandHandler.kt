@@ -25,6 +25,9 @@
 
 package me.noud02.akatsuki
 
+import io.sentry.Sentry
+import io.sentry.event.BreadcrumbBuilder
+import io.sentry.event.UserBuilder
 import me.aurieh.ares.utils.ArgParser
 import me.noud02.akatsuki.annotations.*
 import me.noud02.akatsuki.db.DatabaseWrapper
@@ -119,6 +122,27 @@ class CommandHandler {
 
         logger.command(event)
 
+        Sentry.getContext().apply {
+            recordBreadcrumb(
+                    BreadcrumbBuilder().apply {
+                        setMessage("Command executed")
+                        setData(mapOf(
+                                "command" to cmd
+                        ))
+                    }.build()
+            )
+            setUser(
+                    UserBuilder().apply {
+                        setUsername(event.author.name)
+                        setData(mapOf(
+                                Pair("guildId", event.guild?.id ?: ""),
+                                Pair("userId", event.author.id),
+                                Pair("channelId", event.channel.id)
+                        ))
+                    }.build()
+            )
+        }
+
         var command = commands[cmd] as Command
 
         if (command.ownerOnly && !Akatsuki.instance.config.owners.contains(event.author.id))
@@ -158,12 +182,13 @@ class CommandHandler {
                         I18n.parse(
                                 lang.getString("error"),
                                 mapOf(
-                                        "error" to "$e\n${e.stackTrace.joinToString("\n") {
+                                        "error" to "$e"
+                                        /*"error" to "$e\n${e.stackTrace.joinToString("\n") {
                                             "\tat ${it.className}(${it.fileName ?: "Unknown Source"})"
-                                        }}"
+                                        }}"*/
                                 )
                         )
-                )
+                ).queue()
 
                 logger.error(
                         "Error while handling command $cmd, executed by user ${
@@ -180,6 +205,8 @@ class CommandHandler {
                         }",
                         e
                 )
+
+                Sentry.capture(e)
             }
         } else {
             val raw = args
@@ -205,12 +232,13 @@ class CommandHandler {
                         I18n.parse(
                                 lang.getString("error"),
                                 mapOf(
-                                        "error" to "$e\n${e.stackTrace.joinToString("\n") {
+                                        "error" to "$e"
+                                        /*"error" to "$e\n${e.stackTrace.joinToString("\n") {
                                             "\tat ${it.className}(${it.fileName ?: "Unknown Source"})"
-                                        }}"
+                                        }}"*/
                                 )
                         )
-                )
+                ).queue()
 
                 logger.error(
                         "Error while handling command $cmd, executed by user ${
@@ -227,6 +255,8 @@ class CommandHandler {
                         }",
                         e
                 )
+
+                Sentry.capture(e)
             }
         }
     }

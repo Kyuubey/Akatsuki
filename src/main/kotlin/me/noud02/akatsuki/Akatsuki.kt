@@ -25,6 +25,9 @@
 
 package me.noud02.akatsuki
 
+import io.sentry.Sentry
+import io.sentry.SentryClient
+import io.sentry.SentryClientFactory
 import me.aurieh.ares.exposed.async.asyncTransaction
 import me.noud02.akatsuki.db.schema.*
 import me.noud02.akatsuki.entities.Config
@@ -58,10 +61,12 @@ class Akatsuki(val config: Config) {
     val coroutineDispatcher by lazy {
         CoroutineDispatcher(pool)
     }
+    val sentry = SentryClientFactory.sentryClient()
 
     init {
         Akatsuki.instance = this
 
+        Sentry.init(config.api.sentry)
         Database.connect(
                 "jdbc:postgresql://${config.database.host}/${config.database.name}",
                 "org.postgresql.Driver",
