@@ -2,7 +2,7 @@ group 'me.noud02'
 version '1.0-SNAPSHOT'
 
 buildscript {
-    ext.kotlin_version = '1.2.10'
+    ext.kotlin_version = '1.2.20'
 
     repositories {
         mavenCentral()
@@ -48,7 +48,7 @@ dependencies {
     compile 'commons-validator:commons-validator:1.6'
     compile 'org.apache.commons:commons-lang3:3.7'
     compile 'khttp:khttp:0.1.0'
-    compile 'net.dv8tion:JDA:3.5.0_327'
+    compile 'net.dv8tion:JDA:3.5.0_329'
     compile 'com.sedmelluq:lavaplayer:1.2.45'
     compile 'org.jetbrains.exposed:exposed:0.9.1'
     compile 'org.postgresql:postgresql:42.1.4'
