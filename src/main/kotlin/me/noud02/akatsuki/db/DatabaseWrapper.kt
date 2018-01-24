@@ -42,6 +42,7 @@ import net.dv8tion.jda.core.events.message.MessageUpdateEvent
 import org.jetbrains.exposed.sql.deleteWhere
 import org.jetbrains.exposed.sql.insert
 import org.jetbrains.exposed.sql.select
+import org.joda.time.DateTime
 import org.json.JSONArray
 import org.json.JSONObject
 import java.util.concurrent.ExecutorService
@@ -75,6 +76,12 @@ data class DBStar(
         val stargazers: List<Long>,
         val content: String,
         val attachments: List<String>
+)
+
+data class DBContract(
+        val userId: Long,
+        val wish: String,
+        val date: DateTime
 )
 
 object DatabaseWrapper {
