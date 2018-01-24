@@ -27,20 +27,31 @@ package me.noud02.akatsuki.commands
 
 import khttp.extensions.fileLike
 import me.noud02.akatsuki.Akatsuki
+import me.noud02.akatsuki.annotations.Argument
 import me.noud02.akatsuki.annotations.Load
 import me.noud02.akatsuki.entities.Command
 import me.noud02.akatsuki.entities.Context
 import org.apache.commons.io.IOUtils
 import java.io.File
 import java.io.FileOutputStream
+import java.net.URL
 
 @Load
+@Argument("image", "url", true)
 class Haah : Command() {
     override fun run(ctx: Context) {
         val temp = File.createTempFile("image", "png")
         temp.deleteOnExit()
         val out = FileOutputStream(temp)
-        IOUtils.copy(ctx.msg.attachments.getOrNull(0)?.inputStream ?: ctx.getLastImage() ?: return ctx.send("No images found!"), out)
+        IOUtils.copy(
+                ctx.msg.attachments.getOrNull(0)?.inputStream
+                        ?: if (ctx.args["image"] as? String != null)
+                            khttp.get(ctx.args["image"] as String).content.inputStream()
+                        else
+                            ctx.getLastImage()
+                                    ?: return ctx.send("No images found!"),
+                out
+        )
 
 
         val req = khttp.post(
