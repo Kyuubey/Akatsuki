@@ -34,8 +34,6 @@ import me.noud02.akatsuki.entities.Context
 import org.apache.commons.io.IOUtils
 import java.io.File
 import java.io.FileOutputStream
-import java.net.HttpURLConnection
-import java.net.URL
 
 @Load
 @Argument("image", "url", true)
