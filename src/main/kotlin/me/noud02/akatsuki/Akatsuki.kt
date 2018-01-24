@@ -26,7 +26,6 @@
 package me.noud02.akatsuki
 
 import io.sentry.Sentry
-import io.sentry.SentryClient
 import io.sentry.SentryClientFactory
 import me.aurieh.ares.exposed.async.asyncTransaction
 import me.noud02.akatsuki.db.schema.*
@@ -47,8 +46,8 @@ import java.util.concurrent.Executors
 import kotlin.concurrent.timer
 
 class Akatsuki(val config: Config) {
-    private lateinit var shardManager: ShardManager
     private lateinit var presenceTimer: Timer
+    lateinit var shardManager: ShardManager
     var jda: JDA? = null
 
     val pool: ExecutorService by lazy {

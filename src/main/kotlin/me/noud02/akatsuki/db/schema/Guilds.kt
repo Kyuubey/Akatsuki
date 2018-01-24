@@ -25,6 +25,7 @@
 
 package me.noud02.akatsuki.db.schema
 
+import me.aurieh.ares.exposed.pg.jsonbMap
 import me.aurieh.ares.exposed.pg.pgArray
 import org.jetbrains.exposed.sql.Table
 
@@ -41,4 +42,5 @@ object Guilds : Table() {
     val logs = bool("logs")
     val modlogs = bool("modlogs")
     val modlogChannel = long("modlogChannel")
+    val rolemeRoles = jsonbMap<String, Long>("rolemeRoles")
 }
