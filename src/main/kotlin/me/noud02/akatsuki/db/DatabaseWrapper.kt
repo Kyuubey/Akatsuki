@@ -56,7 +56,8 @@ data class DBGuild(
         val starboardChannel: Long,
         val logs: Boolean,
         val modlogs: Boolean,
-        val modlogChannel: Long
+        val modlogChannel: Long,
+        val rolemeRoles: Map<String, Long>
 )
 
 data class DBUser(
@@ -97,7 +98,8 @@ object DatabaseWrapper {
                     guild[Guilds.starboardChannel],
                     guild[Guilds.logs],
                     guild[Guilds.modlogs],
-                    guild[Guilds.modlogChannel]
+                    guild[Guilds.modlogChannel],
+                    guild[Guilds.rolemeRoles]
             )
     }.execute().get()
 
@@ -118,6 +120,7 @@ object DatabaseWrapper {
                 it[logs] = false
                 it[modlogs] = false
                 it[modlogChannel] = guild.textChannels.first().idLong
+                it[rolemeRoles] = mapOf()
             }
     }.execute().get()
 

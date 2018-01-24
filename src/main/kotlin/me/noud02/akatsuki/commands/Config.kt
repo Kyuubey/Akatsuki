@@ -191,7 +191,7 @@ class Set : AsyncCommand() {
 }
 
 @Load
-@Alias("cfg", "conf")
+@Alias("cfg", "conf", "settings")
 class Config : Command() {
     override val guildOnly = true
 
