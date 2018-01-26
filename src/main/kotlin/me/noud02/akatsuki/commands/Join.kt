@@ -25,12 +25,14 @@
 
 package me.noud02.akatsuki.commands
 
+import me.noud02.akatsuki.annotations.Alias
 import me.noud02.akatsuki.entities.Command
 import me.noud02.akatsuki.entities.Context
 import me.noud02.akatsuki.annotations.Load
 import me.noud02.akatsuki.music.MusicManager
 
 @Load
+@Alias("connect")
 class Join : Command() {
     override val desc = "Have the bot join a voice channel"
     override val guildOnly = true

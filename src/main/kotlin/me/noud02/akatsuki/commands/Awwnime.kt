@@ -25,28 +25,31 @@
 
 package me.noud02.akatsuki.commands
 
-import khttp.get
+import me.noud02.akatsuki.Akatsuki
 import me.noud02.akatsuki.entities.Command
 import me.noud02.akatsuki.entities.Context
 import me.noud02.akatsuki.annotations.Load
+import okhttp3.Request
+import org.json.JSONObject
 
 @Load
 class Awwnime : Command() {
     override val desc = "Get a random post from /r/awwnime"
 
     override fun run(ctx: Context) {
-        val res = get("https://www.reddit.com/r/awwnime/random.json")
-                .jsonObject
+        val res = Akatsuki.instance.okhttp.newCall(Request.Builder().apply {
+            url("https://www.reddit.com/r/awwnime/random.json")
+            method("GET", null)
+        }.build()).execute()
+
+        val json = JSONObject(res.body()!!.string())
+
+        val posts = json
                 .getJSONObject("data")
                 .getJSONArray("children")
 
-        val post = res
-                .getJSONObject(Math.floor(Math.random() * res.count()).toInt())
+        val post = posts.getJSONObject(Math.floor(Math.random() * posts.count()).toInt())
 
-        ctx.send(
-                post
-                .getJSONObject("data")
-                .getString("url")
-        )
+        ctx.send(post.getJSONObject("data").getString("url"))
     }
 }

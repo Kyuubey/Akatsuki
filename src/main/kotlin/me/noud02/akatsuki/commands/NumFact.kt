@@ -25,14 +25,21 @@
 
 package me.noud02.akatsuki.commands
 
-import com.github.kittinunf.fuel.Fuel
+import me.noud02.akatsuki.Akatsuki
 import me.noud02.akatsuki.entities.Command
 import me.noud02.akatsuki.entities.Context
 import me.noud02.akatsuki.annotations.Load
+import okhttp3.Request
 
 @Load
 class NumFact : Command() {
     override val desc = "Get a random fact about a number!"
 
-    override fun run(ctx: Context) = ctx.send(Fuel.get("http://numbersapi.com/random").responseString().third.get())
+    override fun run(ctx: Context) {
+        val res = Akatsuki.instance.okhttp.newCall(Request.Builder().apply {
+            url("https://numbersapi.com/random")
+        }.build()).execute()
+
+        ctx.send(res.body()!!.string())
+    }
 }

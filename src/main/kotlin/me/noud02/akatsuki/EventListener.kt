@@ -30,7 +30,6 @@ import me.aurieh.ares.exposed.async.asyncTransaction
 import me.noud02.akatsuki.db.DatabaseWrapper
 import me.noud02.akatsuki.db.schema.Guilds
 import me.noud02.akatsuki.db.schema.Modlogs
-import me.noud02.akatsuki.entities.CoroutineDispatcher
 import me.noud02.akatsuki.extensions.addStar
 import me.noud02.akatsuki.extensions.log
 import me.noud02.akatsuki.extensions.removeStar
@@ -51,8 +50,6 @@ import net.dv8tion.jda.core.events.message.react.MessageReactionRemoveEvent
 import net.dv8tion.jda.core.hooks.ListenerAdapter
 import org.jetbrains.exposed.sql.insert
 import org.jetbrains.exposed.sql.select
-import java.util.concurrent.ExecutorService
-import java.util.concurrent.Executors
 import kotlin.reflect.jvm.jvmName
 
 class EventListener : ListenerAdapter() {
@@ -61,16 +58,7 @@ class EventListener : ListenerAdapter() {
     val cmdHandler = CommandHandler()
     val snipes = mutableMapOf<Long, Long>()
     val waiter = EventWaiter()
-    val pool: ExecutorService by lazy {
-        Executors.newCachedThreadPool {
-            Thread(it, "Akatsuki-Shard-Pool-Thread").apply {
-                isDaemon = true
-            }
-        }
-    }
-    val coroutineDispatcher by lazy {
-        CoroutineDispatcher(pool)
-    }
+    val pool = Akatsuki.instance.pool
 
     init {
         EventListener.instance = this

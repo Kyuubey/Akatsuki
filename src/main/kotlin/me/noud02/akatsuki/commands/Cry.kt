@@ -26,19 +26,11 @@
 package me.noud02.akatsuki.commands
 
 import me.noud02.akatsuki.annotations.Load
-import me.noud02.akatsuki.entities.Command
-import me.noud02.akatsuki.entities.Context
-import me.noud02.akatsuki.utils.Wolk
+import me.noud02.akatsuki.entities.WolkCommand
 import me.noud02.akatsuki.utils.WolkType
-import net.dv8tion.jda.core.EmbedBuilder
-import java.awt.Color
 
 @Load
-class Cry : Command() {
+class Cry : WolkCommand() {
     override val desc = ";-;"
-
-    override fun run(ctx: Context) = ctx.send(EmbedBuilder().apply {
-        setImage(Wolk.getByType(WolkType.CRY).url)
-        setColor(Color.CYAN)
-    }.build())
+    override val type = WolkType.CRY
 }

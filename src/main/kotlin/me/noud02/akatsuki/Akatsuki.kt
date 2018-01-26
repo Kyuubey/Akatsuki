@@ -38,8 +38,10 @@ import net.dv8tion.jda.core.AccountType
 import net.dv8tion.jda.core.JDA
 import net.dv8tion.jda.core.JDABuilder
 import net.dv8tion.jda.core.entities.Game
+import okhttp3.*
 import org.jetbrains.exposed.sql.Database
 import org.jetbrains.exposed.sql.SchemaUtils
+import org.json.JSONObject
 import java.util.*
 import java.util.concurrent.ExecutorService
 import java.util.concurrent.Executors
@@ -61,6 +63,7 @@ class Akatsuki(val config: Config) {
         CoroutineDispatcher(pool)
     }
     val sentry = SentryClientFactory.sentryClient()
+    val okhttp = OkHttpClient()
 
     init {
         Akatsuki.instance = this
@@ -109,18 +112,34 @@ class Akatsuki(val config: Config) {
             )
 
             if (config.api.discordbots.isNotEmpty())
-                khttp.post(
-                        "https://bots.discord.pw/api/bots/${jda!!.selfUser.id}/stats",
-                        json = json,
-                        headers = mapOf("Authorization" to config.api.discordbots)
-                )
+                okhttp.newCall(Request.Builder().apply {
+                    post(RequestBody.create(MediaType.parse("application/json"), JSONObject(json).toString()))
+                    url(HttpUrl.Builder().apply {
+                        scheme("https")
+                        host("bots.discord.pw")
+                        addPathSegment("api")
+                        addPathSegment("bots")
+                        addPathSegment(jda!!.selfUser.id)
+                        addPathSegment("stats")
+                    }.build())
+
+                    addHeader("Authorization", config.api.discordbots)
+                }.build())
 
             if (config.api.discordbotsorg.isNotEmpty())
-                khttp.post(
-                        "https://discordbots.org/api/bots${jda!!.selfUser.id}/stats",
-                        json = json,
-                        headers = mapOf("Authorization" to config.api.discordbotsorg)
-                )
+                okhttp.newCall(Request.Builder().apply {
+                    post(RequestBody.create(MediaType.parse("application/json"), JSONObject(json).toString()))
+                    url(HttpUrl.Builder().apply {
+                        scheme("https")
+                        host("discordbots.org")
+                        addPathSegment("api")
+                        addPathSegment("bots")
+                        addPathSegment(jda!!.selfUser.id)
+                        addPathSegment("stats")
+                    }.build())
+
+                    addHeader("Authorization", config.api.discordbotsorg)
+                }.build())
         } else
             for (shard in shardManager.shards) {
                 val json = mapOf(
@@ -130,18 +149,34 @@ class Akatsuki(val config: Config) {
                 )
 
                 if (config.api.discordbots.isNotEmpty())
-                    khttp.post(
-                            "https://bots.discord.pw/api/bots/${shard.selfUser.id}/stats",
-                            json = json,
-                            headers = mapOf("Authorization" to config.api.discordbots)
-                    )
+                    okhttp.newCall(Request.Builder().apply {
+                        post(RequestBody.create(MediaType.parse("application/json"), JSONObject(json).toString()))
+                        url(HttpUrl.Builder().apply {
+                            scheme("https")
+                            host("bots.discord.pw")
+                            addPathSegment("api")
+                            addPathSegment("bots")
+                            addPathSegment(shard.selfUser.id)
+                            addPathSegment("stats")
+                        }.build())
+
+                        addHeader("Authorization", config.api.discordbots)
+                    }.build())
 
                 if (config.api.discordbotsorg.isNotEmpty())
-                    khttp.post(
-                            "https://discordbots.org/api/bots/${shard.selfUser.id}/stats",
-                            json = json,
-                            headers = mapOf("Authorization" to config.api.discordbotsorg)
-                    )
+                    okhttp.newCall(Request.Builder().apply {
+                        post(RequestBody.create(MediaType.parse("application/json"), JSONObject(json).toString()))
+                        url(HttpUrl.Builder().apply {
+                            scheme("https")
+                            host("discordbots.org")
+                            addPathSegment("api")
+                            addPathSegment("bots")
+                            addPathSegment(shard.selfUser.id)
+                            addPathSegment("stats")
+                        }.build())
+
+                        addHeader("Authorization", config.api.discordbotsorg)
+                    }.build())
             }
     }
 

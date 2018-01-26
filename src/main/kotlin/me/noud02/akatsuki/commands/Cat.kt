@@ -25,14 +25,22 @@
 
 package me.noud02.akatsuki.commands
 
-import khttp.get
+import me.noud02.akatsuki.Akatsuki
 import me.noud02.akatsuki.entities.Command
 import me.noud02.akatsuki.entities.Context
 import me.noud02.akatsuki.annotations.Load
+import okhttp3.Request
+import org.json.JSONObject
 
 @Load
 class Cat : Command() {
     override val desc = "Get a random cat"
 
-    override fun run(ctx: Context) = ctx.send(get("https://random.cat/meow").jsonObject.getString("file"))
+    override fun run(ctx: Context) {
+        val res = Akatsuki.instance.okhttp.newCall(Request.Builder().apply {
+            url("https://random.cat/meow")
+        }.build()).execute()
+
+        ctx.send(JSONObject(res.body()!!.string()).getString("file"))
+    }
 }
