@@ -32,6 +32,9 @@ import me.noud02.akatsuki.entities.Context
 import me.noud02.akatsuki.annotations.Load
 import me.noud02.akatsuki.music.MusicManager
 import net.dv8tion.jda.core.EmbedBuilder
+import okhttp3.HttpUrl
+import okhttp3.Request
+import org.json.JSONObject
 import java.awt.Color
 import java.util.concurrent.TimeUnit
 
@@ -65,19 +68,22 @@ class NowPlaying : Command() {
         if (manager.scheduler.queue.isNotEmpty())
             embed.setFooter("Next: ${manager.scheduler.queue.peek().info.title}", null) // TODO add translations for "next"
         else if (manager.autoplay && manager.player.playingTrack.info.uri.indexOf("youtube") > -1) {
-            val res = khttp.get(
-                    "https://www.googleapis.com/youtube/v3/search",
-                    mapOf(),
-                    mapOf(
-                            "key" to Akatsuki.instance.config.api.google,
-                            "part" to "snippet",
-                            "maxResults" to "10",
-                            "type" to "video",
-                            "relatedToVideoId" to manager.player.playingTrack.info.identifier
-                    )
-            )
+            val res = Akatsuki.instance.okhttp.newCall(Request.Builder().apply {
+                url(HttpUrl.Builder().apply {
+                    scheme("https")
+                    host("www.googleapis.com")
+                    addPathSegment("youtube")
+                    addPathSegment("v3")
+                    addPathSegment("search")
+                    addQueryParameter("key", Akatsuki.instance.config.api.google)
+                    addQueryParameter("part", "snippet")
+                    addQueryParameter("maxResults", "10")
+                    addQueryParameter("type", "video")
+                    addQueryParameter("relatedToVideoId", manager.player.playingTrack.info.identifier)
+                }.build())
+            }.build()).execute()
 
-            val title = res.jsonObject
+            val title = JSONObject(res.body()!!.string())
                     .getJSONArray("items")
                     .getJSONObject(0)
                     .getJSONObject("snippet")

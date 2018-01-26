@@ -25,17 +25,21 @@
 
 package me.noud02.akatsuki.commands
 
-import khttp.get
+import me.noud02.akatsuki.Akatsuki
 import me.noud02.akatsuki.entities.Command
 import me.noud02.akatsuki.entities.Context
 import me.noud02.akatsuki.annotations.Load
+import okhttp3.Request
 
 @Load
 class Dog: Command() {
     override val desc = "Get a random dog"
 
     override fun run(ctx: Context) {
-        val dog = get("https://random.dog/woof").text
-        ctx.send("https://random.dog/$dog")
+        val res = Akatsuki.instance.okhttp.newCall(Request.Builder().apply {
+            url("https://random.dog/woof")
+        }.build()).execute()
+
+        ctx.send("https://random.dog/${res.body()!!.string()}")
     }
 }

@@ -5,14 +5,14 @@ import me.noud02.akatsuki.Akatsuki
 import me.noud02.akatsuki.EventListener
 import me.noud02.akatsuki.annotations.Load
 import me.noud02.akatsuki.db.schema.Logs
-import me.noud02.akatsuki.entities.AsyncCommand
+import me.noud02.akatsuki.entities.Command
 import me.noud02.akatsuki.entities.Context
 import net.dv8tion.jda.core.EmbedBuilder
 import org.jetbrains.exposed.sql.and
 import org.jetbrains.exposed.sql.select
 
 @Load
-class Snipe : AsyncCommand() {
+class Snipe : Command() {
     override val guildOnly = true
 
     override fun run(ctx: Context) {

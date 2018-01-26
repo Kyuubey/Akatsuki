@@ -25,11 +25,15 @@
 
 package me.noud02.akatsuki.commands
 
+import me.noud02.akatsuki.Akatsuki
 import me.noud02.akatsuki.annotations.Argument
 import me.noud02.akatsuki.annotations.Load
 import me.noud02.akatsuki.entities.Command
 import me.noud02.akatsuki.entities.Context
 import net.dv8tion.jda.core.EmbedBuilder
+import okhttp3.HttpUrl
+import okhttp3.Request
+import org.json.JSONObject
 
 @Load
 @Argument("term", "string")
@@ -37,12 +41,17 @@ class Urban : Command() {
     override val desc = "Search on the urban dictionary!"
 
     override fun run(ctx: Context) {
-        val req = khttp.get(
-                "https://api.urbandictionary.com/v0/define",
-                params = mapOf("term" to ctx.args["term"] as String)
-        )
+        val res = Akatsuki.instance.okhttp.newCall(Request.Builder().apply {
+            url(HttpUrl.Builder().apply {
+                scheme("https")
+                host("api.urbandictionary.com")
+                addPathSegment("v0")
+                addPathSegment("define")
+                addQueryParameter("term", ctx.args["term"] as String)
+            }.build())
+        }.build()).execute()
 
-        val json = req.jsonObject
+        val json = JSONObject(res.body()!!.string())
 
         if (json.getString("result_type") == "no_results")
             return ctx.send("No results found!")

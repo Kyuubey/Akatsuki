@@ -25,6 +25,11 @@
 
 package me.noud02.akatsuki.utils
 
+import me.noud02.akatsuki.Akatsuki
+import okhttp3.HttpUrl
+import okhttp3.Request
+import org.json.JSONObject
+
 enum class WolkType(val str: String) {
     AWOO("awoo"),
     BANG("bang"),
@@ -108,21 +113,25 @@ object Wolk {
         if (token.isNullOrBlank())
             throw Exception("Invalid or no token")
 
-        val req = khttp.get(
-                "https://api.weeb.sh/images/random",
-                mapOf(
-                        "User-Agent" to "Akatsuki (https://github.com/noud02/Akatsuki)",
-                        "Authorization" to if (wolkeToken) "Wolke ${token}" else "Bearer ${token}"
-                ),
-                mapOf(
-                        "type" to type
-                )
-        )
-        val json = req.jsonObject
+        val res = Akatsuki.instance.okhttp.newCall(Request.Builder().apply {
+            url(HttpUrl.Builder().apply {
+                scheme("https")
+                host("api.weeb.sh")
+                addPathSegment("images")
+                addPathSegment("random")
+                addQueryParameter("type", type)
+            }.build())
+
+
+            addHeader("User-Agent", "Akatsuki (https://github.com/noud02/Akatsuki)")
+            addHeader("Authorization", if (wolkeToken) "Wolke $token" else "Bearer $token")
+        }.build()).execute()
+
+        val json = JSONObject(res.body()!!.string())
         val tags = mutableListOf<WolkTag>()
 
-        if (req.statusCode != 200)
-            throw Exception("Expected status code 200, got ${req.statusCode}")
+        if (res.code() != 200)
+            throw Exception("Expected status code 200, got ${res.code()}")
 
         (0 until json.getJSONArray("tags").length())
                 .map {

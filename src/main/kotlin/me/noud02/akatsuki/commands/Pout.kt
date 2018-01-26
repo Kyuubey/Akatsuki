@@ -26,17 +26,10 @@
 package me.noud02.akatsuki.commands
 
 import me.noud02.akatsuki.annotations.Load
-import me.noud02.akatsuki.entities.Command
-import me.noud02.akatsuki.entities.Context
-import me.noud02.akatsuki.utils.Wolk
+import me.noud02.akatsuki.entities.WolkCommand
 import me.noud02.akatsuki.utils.WolkType
-import net.dv8tion.jda.core.EmbedBuilder
-import java.awt.Color
 
 @Load
-class Pout : Command() {
-    override fun run(ctx: Context) = ctx.send(EmbedBuilder().apply {
-        setImage(Wolk.getByType(WolkType.POUT).url)
-        setColor(Color.CYAN)
-    }.build())
+class Pout : WolkCommand() {
+    override val type = WolkType.POUT
 }

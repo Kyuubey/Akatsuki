@@ -26,18 +26,17 @@
 package me.noud02.akatsuki.commands
 
 import me.noud02.akatsuki.annotations.Argument
-import me.noud02.akatsuki.entities.AsyncCommand
 import me.noud02.akatsuki.entities.Context
 import me.noud02.akatsuki.annotations.Load
+import me.noud02.akatsuki.entities.Command
 import net.dv8tion.jda.core.entities.Member
 
 @Load
 @Argument("user", "user", true)
-class Avatar : AsyncCommand() {
+class Avatar : Command() {
     override val desc = "Get someones avatar"
     override val guildOnly = true
 
-    override suspend fun asyncRun(ctx: Context) {
-        ctx.send((ctx.args["user"] as? Member ?: ctx.member!!).user.avatarUrl + "?size=2048")
-    }
+    override fun run(ctx: Context)
+            = ctx.send((ctx.args["user"] as? Member ?: ctx.member!!).user.avatarUrl + "?size=2048")
 }

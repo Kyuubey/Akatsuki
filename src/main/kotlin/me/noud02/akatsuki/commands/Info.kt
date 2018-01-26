@@ -30,6 +30,8 @@ import me.noud02.akatsuki.entities.Command
 import me.noud02.akatsuki.entities.Context
 import me.noud02.akatsuki.annotations.Load
 import net.dv8tion.jda.core.EmbedBuilder
+import okhttp3.Request
+import org.json.JSONObject
 
 @Load
 class Info : Command() {
@@ -37,7 +39,11 @@ class Info : Command() {
 
     override fun run(ctx: Context) {
         val embed = EmbedBuilder().apply {
-            val json = khttp.get("https://api.github.com/repos/noud02/Akatsuki").jsonObject
+            val res = Akatsuki.instance.okhttp.newCall(Request.Builder().apply {
+                url("https://api.github.com/repos/noud02/Akatsuki")
+            }.build()).execute()
+
+            val json = JSONObject(res.body()!!.string())
             val stars = json.getInt("stargazers_count")
             val issues = json.getInt("open_issues")
             val forks = json.getInt("forks_count")

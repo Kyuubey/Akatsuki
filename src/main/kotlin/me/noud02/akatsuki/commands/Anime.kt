@@ -2,16 +2,14 @@
 
 package me.noud02.akatsuki.commands
 
-import khttp.structures.authorization.BasicAuthorization
 import me.noud02.akatsuki.Akatsuki
 import me.noud02.akatsuki.annotations.Argument
 import me.noud02.akatsuki.annotations.Load
 import me.noud02.akatsuki.entities.Command
 import me.noud02.akatsuki.entities.Context
 import net.dv8tion.jda.core.EmbedBuilder
+import okhttp3.*
 import org.apache.commons.lang3.StringEscapeUtils
-import org.json.JSONArray
-import org.json.JSONObject
 import org.json.XML
 
 @Load
@@ -20,17 +18,25 @@ class Anime : Command() {
     override val desc = "Search for anime on MyAnimeList"
 
     override fun run(ctx: Context) {
-        val req = khttp.get(
-                "https://myanimelist.net/api/anime/search.xml",
-                params = mapOf("q" to ctx.args["anime"] as String),
-                auth = BasicAuthorization(
-                        Akatsuki.instance.config.api.myanimelist.split(":")[0],
-                        Akatsuki.instance.config.api.myanimelist.split(":")[1]
-                )
-        )
+        val res = Akatsuki.instance.okhttp.newCall(Request.Builder().apply {
+            url(HttpUrl.Builder().apply {
+                scheme("https")
+                host("myanimelist.net")
+                addPathSegment("api")
+                addPathSegment("anime")
+                addPathSegment("search.xml")
+                addQueryParameter("q", ctx.args["anime"] as String)
+            }.build())
+
+            val mal = Akatsuki.instance.config.api.myanimelist
+            val cred = Credentials.basic(mal.split(":")[0], mal.split(":")[1])
+
+            header("Authorization", cred)
+
+        }.build()).execute()
 
         val json = XML
-                .toJSONObject(req.text)
+                .toJSONObject(res.body()!!.string())
                 .getJSONObject("anime")
 
         val entry = json.getJSONObject("entry") ?: json.getJSONArray("entry").getJSONObject(0)
@@ -38,7 +44,7 @@ class Anime : Command() {
         val embed = EmbedBuilder().apply {
             setTitle(entry.getString("title"))
 
-            descriptionBuilder.append("${entry.getInt("score")} \u2606 | ${entry.getDouble("episodes")} ${
+            descriptionBuilder.append("${entry.getInt("score")} \u2606 | ${entry.getInt("episodes")} ${
             when (entry.getString("type")) {
                 "TV" -> "\uD83D\uDCFA"
 

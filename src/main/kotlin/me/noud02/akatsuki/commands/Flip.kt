@@ -25,12 +25,12 @@
 
 package me.noud02.akatsuki.commands
 
-import khttp.extensions.fileLike
 import me.noud02.akatsuki.Akatsuki
 import me.noud02.akatsuki.annotations.Argument
 import me.noud02.akatsuki.annotations.Load
 import me.noud02.akatsuki.entities.Command
 import me.noud02.akatsuki.entities.Context
+import okhttp3.*
 import org.apache.commons.io.IOUtils
 import java.io.File
 import java.io.FileOutputStream
@@ -44,26 +44,36 @@ class Flip : Command() {
         val out = FileOutputStream(temp)
         IOUtils.copy(
                 ctx.msg.attachments.getOrNull(0)?.inputStream
-                        ?: if (ctx.args["image"] as? String != null)
-                            khttp.get(ctx.args["image"] as String).content.inputStream()
+                        ?: if (ctx.args.containsKey("image"))
+                            Akatsuki.instance.okhttp
+                                    .newCall(Request.Builder().url(ctx.args["image"] as String).build())
+                                    .execute()
+                                    .body()!!
+                                    .byteStream()
                         else
-                            ctx.getLastImage()
-                                    ?: return ctx.send("No images found!"),
+                            ctx.getLastImage() ?: return ctx.send("No images found!"),
                 out
         )
 
 
-        val req = khttp.post(
-                "${
-                if (Akatsuki.instance.config.backend.ssl) "https" else "http"
-                }://${
-                Akatsuki.instance.config.backend.host
-                }${
-                if (Akatsuki.instance.config.backend.port != 80) ":${Akatsuki.instance.config.backend.port}" else ""
-                }/api/flip",
-                files = listOf(temp.fileLike())
-        )
+        val res = Akatsuki.instance.okhttp.newCall(Request.Builder().apply {
+            url(HttpUrl.Builder().apply {
+                scheme(if (Akatsuki.instance.config.backend.ssl) "https" else "http")
+                host(Akatsuki.instance.config.backend.host)
+                port(Akatsuki.instance.config.backend.port)
+                addPathSegment("api")
+                addPathSegment("flip")
+            }.build())
+            post(MultipartBody.Builder().apply {
+                setType(MultipartBody.FORM)
+                addFormDataPart(
+                        "image",
+                        "image",
+                        RequestBody.create(MediaType.parse("image/${temp.extension}"), temp)
+                )
+            }.build())
+        }.build()).execute()
 
-        ctx.channel.sendFile(req.content, "flip.png", null).queue()
+        ctx.channel.sendFile(res.body()!!.byteStream(), "flip.png", null).queue()
     }
 }

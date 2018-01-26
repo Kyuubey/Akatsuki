@@ -25,6 +25,7 @@
 
 package me.noud02.akatsuki.commands
 
+import me.noud02.akatsuki.annotations.Alias
 import me.noud02.akatsuki.annotations.Argument
 import me.noud02.akatsuki.entities.Command
 import me.noud02.akatsuki.entities.Context
@@ -33,6 +34,7 @@ import javax.script.ScriptEngineManager
 
 @Load
 @Argument("code", "string")
+@Alias("eval")
 class JS : Command() {
     override val desc = "Evaluate (js) code"
     override val ownerOnly = true

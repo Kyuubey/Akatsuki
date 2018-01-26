@@ -25,12 +25,15 @@
 
 package me.noud02.akatsuki.commands
 
+import me.noud02.akatsuki.Akatsuki
 import me.noud02.akatsuki.annotations.Argument
 import me.noud02.akatsuki.annotations.Load
 import me.noud02.akatsuki.entities.Command
 import me.noud02.akatsuki.entities.Context
 import me.noud02.akatsuki.utils.I18n
 import net.dv8tion.jda.core.EmbedBuilder
+import okhttp3.HttpUrl
+import okhttp3.Request
 import org.json.XML
 
 @Load
@@ -45,18 +48,20 @@ class Rule34 : Command() {
         if (tags.indexOf("loli") > -1)
             return ctx.send(I18n.parse(ctx.lang.getString("loli_is_illegal"), mapOf("username" to ctx.author.name)))
 
-        val req = khttp.get(
-                "https://rule34.xxx/index.php",
-                params = mapOf(
-                        "page" to "dapi",
-                        "s" to "post",
-                        "q" to "index",
-                        "tags" to tags
-                )
-        )
+        val res = Akatsuki.instance.okhttp.newCall(Request.Builder().apply {
+            url(HttpUrl.Builder().apply {
+                scheme("https")
+                host("rule34.xxx")
+                addPathSegment("index.php")
+                addQueryParameter("page", "dapi")
+                addQueryParameter("s", "post")
+                addQueryParameter("q", "index")
+                addQueryParameter("tags", tags)
+            }.build())
+        }.build()).execute()
 
         val posts = XML
-                .toJSONObject(req.text)
+                .toJSONObject(res.body()!!.string())
                 .getJSONObject("posts")
                 .getJSONArray("post")
 

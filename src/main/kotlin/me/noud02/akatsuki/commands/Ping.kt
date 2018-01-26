@@ -25,42 +25,17 @@
 
 package me.noud02.akatsuki.commands
 
-import khttp.get
 import me.noud02.akatsuki.annotations.Argument
-import me.noud02.akatsuki.annotations.Flag
 import me.noud02.akatsuki.annotations.Load
 import me.noud02.akatsuki.entities.*
 import me.noud02.akatsuki.extensions.await
 import net.dv8tion.jda.core.entities.Member
 import java.time.temporal.ChronoUnit
 
-@Flag("meme", 'm', "this is a meme")
-class Pong : Command() {
-    override val desc = "Ping!"
-
-    override fun run(ctx: Context) {
-        if (ctx.flags.argMap.containsKey("meme")) {
-            val res = get("https://www.reddit.com/r/dankmemes.json")
-                    .jsonObject
-                    .getJSONObject("data")
-                    .getJSONArray("children")
-                    .getJSONObject(Math.floor(Math.random() * 10).toInt())
-                    .getJSONObject("data")
-                    .getString("url")
-            ctx.send(res)
-        } else
-            ctx.send("Ping!")
-    }
-}
-
 @Load
 @Argument("meme", "user", true)
 class Ping : AsyncCommand() {
     override val desc = "Pings a user if specified"
-
-    init {
-        addSubcommand(Pong())
-    }
 
     override suspend fun asyncRun(ctx: Context) {
         if (ctx.args["meme"] != null && ctx.args["meme"] is Member) {

@@ -34,6 +34,9 @@ import com.sedmelluq.discord.lavaplayer.track.AudioTrack
 import com.sedmelluq.discord.lavaplayer.track.AudioTrackEndReason
 import me.noud02.akatsuki.Akatsuki
 import net.dv8tion.jda.core.EmbedBuilder
+import okhttp3.HttpUrl
+import okhttp3.Request
+import org.json.JSONObject
 import java.awt.Color
 import java.util.concurrent.LinkedBlockingQueue
 import kotlin.concurrent.timerTask
@@ -80,19 +83,22 @@ class TrackScheduler(private val player: AudioPlayer, private val manager: Guild
                 embed.setFooter("Next: ${nextTrack.info.title}", null)
             // TODO impl autoplay from yt
             if (manager.autoplay && track.info.uri.indexOf("youtube") > -1) {
-                val res = khttp.get(
-                        "https://www.googleapis.com/youtube/v3/search",
-                        mapOf(),
-                        mapOf(
-                                "key" to Akatsuki.instance.config.api.google,
-                                "part" to "snippet",
-                                "maxResults" to "10",
-                                "type" to "video",
-                                "relatedToVideoId" to track.info.identifier
-                        )
-                )
+                val res = Akatsuki.instance.okhttp.newCall(Request.Builder().apply {
+                    url(HttpUrl.Builder().apply {
+                        scheme("https")
+                        host("www.googleapis.com")
+                        addPathSegment("youtube")
+                        addPathSegment("v3")
+                        addPathSegment("search")
+                        addQueryParameter("key", Akatsuki.instance.config.api.google)
+                        addQueryParameter("part", "snippet")
+                        addQueryParameter("maxResults", "10")
+                        addQueryParameter("type", "video")
+                        addQueryParameter("relatedToVideoId", track.info.identifier)
+                    }.build())
+                }.build()).execute()
 
-                val id = res.jsonObject
+                val id = JSONObject(res.body()!!.string())
                         .getJSONArray("items")
                         .getJSONObject(0)
                         .getJSONObject("id")

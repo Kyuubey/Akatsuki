@@ -45,6 +45,9 @@ import net.dv8tion.jda.core.audio.hooks.ConnectionStatus
 import net.dv8tion.jda.core.entities.Guild
 import net.dv8tion.jda.core.entities.Member
 import net.dv8tion.jda.core.entities.User
+import okhttp3.HttpUrl
+import okhttp3.Request
+import org.json.JSONObject
 import java.awt.Color
 
 @Load
@@ -88,20 +91,22 @@ class Play : Command() {
             override fun noMatches() {
                 val picker = ItemPicker(EventListener.instance.waiter, ctx.member as Member, ctx.guild as Guild, true)
 
-                val res = khttp.get(
-                        "https://www.googleapis.com/youtube/v3/search",
-                        params = mapOf(
-                                "key" to Akatsuki.instance.config.api.google,
-                                "part" to "snippet",
-                                "maxResults" to "10",
-                                "type" to "video",
-                                "q" to search
-                        )
-                )
+                val res = Akatsuki.instance.okhttp.newCall(Request.Builder().apply {
+                    url(HttpUrl.Builder().apply {
+                        scheme("https")
+                        host("www.googleapis.com")
+                        addPathSegment("youtube")
+                        addPathSegment("v3")
+                        addPathSegment("search")
+                        addQueryParameter("key", Akatsuki.instance.config.api.google)
+                        addQueryParameter("part", "snippet")
+                        addQueryParameter("maxResults", "10")
+                        addQueryParameter("type", "video")
+                        addQueryParameter("q", search)
+                    }.build())
+                }.build()).execute()
 
-                val items = res
-                        .jsonObject
-                        .getJSONArray("items")
+                val items = JSONObject(res.body()!!.string()).getJSONArray("items")
 
                 for (i in 0 until items.length()) {
                     val item = items.getJSONObject(i)
