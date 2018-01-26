@@ -124,7 +124,7 @@ class Akatsuki(val config: Config) {
                     }.build())
 
                     addHeader("Authorization", config.api.discordbots)
-                }.build())
+                }.build()).execute()
 
             if (config.api.discordbotsorg.isNotEmpty())
                 okhttp.newCall(Request.Builder().apply {
@@ -139,7 +139,7 @@ class Akatsuki(val config: Config) {
                     }.build())
 
                     addHeader("Authorization", config.api.discordbotsorg)
-                }.build())
+                }.build()).execute()
         } else
             for (shard in shardManager.shards) {
                 val json = mapOf(
@@ -161,7 +161,7 @@ class Akatsuki(val config: Config) {
                         }.build())
 
                         addHeader("Authorization", config.api.discordbots)
-                    }.build())
+                    }.build()).execute()
 
                 if (config.api.discordbotsorg.isNotEmpty())
                     okhttp.newCall(Request.Builder().apply {
@@ -176,7 +176,7 @@ class Akatsuki(val config: Config) {
                         }.build())
 
                         addHeader("Authorization", config.api.discordbotsorg)
-                    }.build())
+                    }.build()).execute()
             }
     }
 
