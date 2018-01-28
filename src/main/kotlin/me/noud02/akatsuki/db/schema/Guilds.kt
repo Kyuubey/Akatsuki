@@ -47,4 +47,5 @@ object Guilds : Table() {
     val welcomeChannel = long("welcomeCHannel")
     val welcomeMessage = varchar("welcomeMessage", 2000)
     val leaveMessage = varchar("leaveMessage", 2000)
+    val ignoredChannels = pgArray<Long>("ignoredChannels", "BIGINT")
 }
