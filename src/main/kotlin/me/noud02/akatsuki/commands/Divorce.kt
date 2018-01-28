@@ -23,16 +23,38 @@
  *  OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package me.noud02.akatsuki.db.schema
+package me.noud02.akatsuki.commands
 
-import org.jetbrains.exposed.sql.Table
+import me.aurieh.ares.exposed.async.asyncTransaction
+import me.noud02.akatsuki.Akatsuki
+import me.noud02.akatsuki.annotations.Load
+import me.noud02.akatsuki.db.schema.Users
+import me.noud02.akatsuki.entities.Command
+import me.noud02.akatsuki.entities.Context
+import org.jetbrains.exposed.sql.update
 
-object Users : Table() {
-    val id = long("id")
-            .uniqueIndex()
-            .primaryKey()
-    val username = varchar("username", 33)
-    val discriminator = varchar("discriminator", 4)
-    val lang = varchar("lang", 5)
-    val marriedUserId = long("marriedUserId")
+@Load
+class Divorce : Command() {
+    override val guildOnly = true
+
+    override fun run(ctx: Context) {
+        if (ctx.storedUser.marriedUserId == 0L)
+            return ctx.send("You aren't married!")
+
+        asyncTransaction(Akatsuki.instance.pool) {
+            Users.update({
+                Users.id.eq(ctx.author.idLong)
+            }) {
+                it[marriedUserId] = 0
+            }
+
+            Users.update({
+                Users.id.eq(ctx.storedUser.marriedUserId)
+            }) {
+                it[marriedUserId] = 0
+            }
+
+            ctx.send("${ctx.member!!.effectiveName} \uD83D\uDC94 ${ctx.jda.getUserById(ctx.storedUser.marriedUserId).name}")
+        }.execute()
+    }
 }
