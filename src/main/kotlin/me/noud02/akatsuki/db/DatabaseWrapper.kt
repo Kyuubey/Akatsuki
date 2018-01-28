@@ -58,14 +58,19 @@ data class DBGuild(
         val logs: Boolean,
         val modlogs: Boolean,
         val modlogChannel: Long,
-        val rolemeRoles: Map<String, Long>
+        val rolemeRoles: Map<String, Long>,
+        val welcome: Boolean,
+        val welcomeChannel: Long,
+        val welcomeMessage: String,
+        val leaveMessage: String
 )
 
 data class DBUser(
         val id: Long,
         val username: String,
         val discriminator: String,
-        val lang: String
+        val lang: String,
+        val marriedUserId: Long
 )
 
 data class DBStar(
@@ -106,7 +111,11 @@ object DatabaseWrapper {
                     guild[Guilds.logs],
                     guild[Guilds.modlogs],
                     guild[Guilds.modlogChannel],
-                    guild[Guilds.rolemeRoles]
+                    guild[Guilds.rolemeRoles],
+                    guild[Guilds.welcome],
+                    guild[Guilds.welcomeChannel],
+                    guild[Guilds.welcomeMessage],
+                    guild[Guilds.leaveMessage]
             )
     }.execute().get()
 
@@ -128,6 +137,10 @@ object DatabaseWrapper {
                 it[modlogs] = false
                 it[modlogChannel] = guild.textChannels.first().idLong
                 it[rolemeRoles] = mapOf()
+                it[welcome] = false
+                it[welcomeChannel] = guild.textChannels.first().idLong
+                it[welcomeMessage] = "Welcome %USER% to %SERVER%!"
+                it[leaveMessage] = "%USER% \uD83D\uDC4B"
             }
     }.execute().get()
 
@@ -153,7 +166,8 @@ object DatabaseWrapper {
                     user[Users.id],
                     user[Users.username],
                     user[Users.discriminator],
-                    user[Users.lang]
+                    user[Users.lang],
+                    user[Users.marriedUserId]
             )
     }.execute().get()
 
@@ -170,6 +184,7 @@ object DatabaseWrapper {
                 it[username] = user.name
                 it[discriminator] = user.discriminator
                 it[lang] = "en_US"
+                it[marriedUserId] = 0
             }
     }.execute().get()
 

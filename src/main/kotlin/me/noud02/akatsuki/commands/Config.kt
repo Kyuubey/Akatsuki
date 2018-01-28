@@ -47,6 +47,10 @@ class Set : AsyncCommand() {
         - starboardChannel: text channel
         - modlogs: yes/no
         - modlogChannel: text channel
+        - welcome: yes/no
+        - welcomeChannel: text channel
+        - welcomeMessage: text
+        - leaveMessage: text
     """.trimIndent()
     override val guildOnly = true
 
@@ -184,6 +188,76 @@ class Set : AsyncCommand() {
                     ctx.send("Set `modlogChannel` to ${channel.asMention}")
                 }
 
+                "welcome" -> {
+                    if (!yes.contains(value) && !no.contains(value))
+                        return@asyncTransaction ctx.send("Invalid value: $value")
+
+                    Guilds.update({
+                        Guilds.id.eq(ctx.guild!!.idLong)
+                    }) {
+                        it[welcome] = yes.contains(value)
+                    }
+
+                    ctx.send("Set `welcome` to `${yes.contains(value)}`")
+                }
+
+                "welcomechannel" -> {
+                    val channel: TextChannel = when {
+                        "<#\\d+>".toRegex().matches(value) -> try {
+                            ctx.guild!!.getTextChannelById("<#(\\d+)>".toRegex().matchEntire(value)?.groupValues?.get(1))
+                        } catch (e: Throwable) {
+                            return@asyncTransaction ctx.send("Couldn't find that channel!")
+                        }
+
+                        ctx.guild!!.getTextChannelsByName(value, true).isNotEmpty() -> {
+                            val channels = ctx.guild.getTextChannelsByName(value, true)
+
+                            if (channels.size > 1) {
+                                val picker = TextChannelPicker(EventListener.instance.waiter, ctx.member!!, channels, ctx.guild)
+
+                                picker.build(ctx.channel).get()
+                            } else
+                                channels[0]
+                        }
+
+                        value.toLongOrNull() != null && ctx.guild.getTextChannelById(value) != null -> ctx.guild.getTextChannelById(value)
+
+                        else -> return@asyncTransaction ctx.send("Couldn't find that channel!")
+                    }
+
+                    Guilds.update({
+                        Guilds.id.eq(ctx.guild.idLong)
+                    }) {
+                        it[welcomeChannel] = channel.idLong
+                    }
+
+                    ctx.send("Set `welcomeChannel` to ${channel.asMention}")
+                }
+
+                "welcomemessage" -> {
+                    val text = ctx.args["value"] as String
+
+                    Guilds.update({
+                        Guilds.id.eq(ctx.guild!!.idLong)
+                    }) {
+                        it[welcomeMessage] = text
+                    }
+
+                    ctx.send("Set `welcomeMessage` to \"$text\"")
+                }
+
+                "leavemessage" -> {
+                    val text = ctx.args["value"] as String
+
+                    Guilds.update({
+                        Guilds.id.eq(ctx.guild!!.idLong)
+                    }) {
+                        it[leaveMessage] = text
+                    }
+
+                    ctx.send("Set `leaveMessage` to \"$text\"")
+                }
+
                 else -> return@asyncTransaction ctx.send("Invalid key: $key")
             }
         }.await()
@@ -202,17 +276,23 @@ class Config : Command() {
     override fun run(ctx: Context) = ctx.send("""```ini
 [Guild Config]
 # Modlogs
-modlogs = ${ctx.storedGuild!!.modlogs}
-modlogChannel = #${ctx.guild!!.getTextChannelById(ctx.storedGuild.modlogChannel).name}
+modlogs         = ${ctx.storedGuild!!.modlogs}
+modlogChannel   = #${ctx.guild!!.getTextChannelById(ctx.storedGuild.modlogChannel).name}
 
 # Starboard
-starboard = ${ctx.storedGuild.starboard}
-starboardChannel = #${ctx.guild.getTextChannelById(ctx.storedGuild.starboardChannel).name}
+starboard       = ${ctx.storedGuild.starboard}
+starboardChannel= #${ctx.guild.getTextChannelById(ctx.storedGuild.starboardChannel).name}
 
 # Logs
-logs = ${ctx.storedGuild.logs}
+logs            = ${ctx.storedGuild.logs}
 
 # Locale
-lang = ${ctx.storedGuild.lang}
-forceLang = ${ctx.storedGuild.forceLang}```""")
+lang            = ${ctx.storedGuild.lang}
+forceLang       = ${ctx.storedGuild.forceLang}
+
+# Welcome
+welcome         = ${ctx.storedGuild.welcome}
+welcomeChannel  = #${ctx.guild.getTextChannelById(ctx.storedGuild.welcomeChannel).name}
+welcomeMessage  = "${ctx.storedGuild.welcomeMessage}"
+leaveMessage    = "${ctx.storedGuild.leaveMessage}"```""")
 }

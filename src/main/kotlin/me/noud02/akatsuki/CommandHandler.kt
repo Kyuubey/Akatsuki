@@ -268,7 +268,9 @@ class CommandHandler {
         for (perm in perms) {
             newPerms[perm.name.name] = event.member?.hasPermission(event.channel as Channel, perm.name)
                     ?: event.member?.hasPermission(Permission.ADMINISTRATOR) ?: false
-            if (!perm.optional && !newPerms[perm.name.name]!! && !event.member?.hasPermission(Permission.ADMINISTRATOR)!!)
+            if (!perm.optional && !newPerms[perm.name.name]!!
+                    && !event.member?.hasPermission(Permission.ADMINISTRATOR)!!
+                    && !Akatsuki.instance.config.owners.contains(event.member.user.id))
                 throw Exception(
                         I18n.parse(
                                 lang.getString("user_lack_perms"),
@@ -312,8 +314,8 @@ class CommandHandler {
                     return newArgs
             }
 
-            if (cmdArgs.size == 1)
-                arg2 = args.joinToString(" ")
+            if (cmdArgs.last() == arg)
+                arg2 = args.slice(cmdArgs.indexOf(arg) until args.size).joinToString(" ")
 
             when (arg.type) {
                 // TODO do these later
