@@ -14,7 +14,7 @@ import net.dv8tion.jda.core.entities.TextChannel
 import org.jetbrains.exposed.sql.update
 
 @Arguments(
-        Argument("key", "string"),
+        Argument("option", "string"),
         Argument("value", "any")
 )
 @Perm(Permission.MANAGE_SERVER)
@@ -35,27 +35,11 @@ class Set : AsyncCommand() {
             "disabled"
     )
 
-    override val desc = """
-        Set something in the config
-
-        Available keys:
-
-        - forceLang: yes/no
-        - lang: language
-        - logs: yes/no
-        - starboard: yes/no
-        - starboardChannel: text channel
-        - modlogs: yes/no
-        - modlogChannel: text channel
-        - welcome: yes/no
-        - welcomeChannel: text channel
-        - welcomeMessage: text
-        - leaveMessage: text
-    """.trimIndent()
+    override val desc = "Set something in the config"
     override val guildOnly = true
 
     override suspend fun asyncRun(ctx: Context) {
-        val key = (ctx.args["key"] as String).toLowerCase()
+        val key = (ctx.args["option"] as String).toLowerCase()
         val value = (ctx.args["value"] as String).toLowerCase()
 
         asyncTransaction(Akatsuki.instance.pool) {
@@ -275,6 +259,9 @@ class Config : Command() {
 
     override fun run(ctx: Context) = ctx.send("""```ini
 [Guild Config]
+# To set something in the config use: 'config set <option> <value>'
+# Example: 'config set logs true'
+
 # Modlogs
 modlogs         = ${ctx.storedGuild!!.modlogs}
 modlogChannel   = #${ctx.guild!!.getTextChannelById(ctx.storedGuild.modlogChannel).name}
