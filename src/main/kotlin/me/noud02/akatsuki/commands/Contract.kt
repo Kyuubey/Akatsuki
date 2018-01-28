@@ -28,18 +28,45 @@ package me.noud02.akatsuki.commands
 import me.aurieh.ares.exposed.async.asyncTransaction
 import me.noud02.akatsuki.Akatsuki
 import me.noud02.akatsuki.EventListener
+import me.noud02.akatsuki.annotations.Argument
 import me.noud02.akatsuki.annotations.Load
 import me.noud02.akatsuki.db.schema.Contracts
 import me.noud02.akatsuki.entities.Command
 import me.noud02.akatsuki.entities.Context
 import me.noud02.akatsuki.extensions.createContract
 import me.noud02.akatsuki.utils.I18n
+import net.dv8tion.jda.core.EmbedBuilder
+import net.dv8tion.jda.core.entities.Member
 import net.dv8tion.jda.core.events.message.MessageReceivedEvent
 import org.jetbrains.exposed.sql.select
+
+@Argument("user", "user")
+class ViewContract : Command() {
+    override val desc = "View someone's contract!"
+
+    override fun run(ctx: Context) {
+        val member = ctx.args["user"] as Member
+
+        asyncTransaction(Akatsuki.instance.pool) {
+            val contract = Contracts.select { Contracts.userId.eq(member.user.idLong) }.firstOrNull()
+                    ?: return@asyncTransaction ctx.send("That user hasn't made a contract with me (yet)!")
+
+            ctx.send(EmbedBuilder().apply {
+                setTitle("${member.user.name}'s Contract")
+                descriptionBuilder.append("*${contract[Contracts.wish]}*")
+                setFooter(contract[Contracts.date].toString(), null)
+            }.build())
+        }.execute()
+    }
+}
 
 @Load
 class Contract : Command() {
     override val desc = "\"I will make you a magical girl!\""
+
+    init {
+        addSubcommand(ViewContract(), "view")
+    }
 
     override fun run(ctx: Context) {
         asyncTransaction(Akatsuki.instance.pool) {
