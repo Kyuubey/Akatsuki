@@ -78,7 +78,7 @@ class Akatsuki(val config: Config) {
 
         Wolk.setToken(config.api.weebsh)
         asyncTransaction(pool) {
-            SchemaUtils.create(Guilds, Users, Starboard, Logs, Modlogs, Contracts)
+            SchemaUtils.create(Guilds, Users, Starboard, Logs, Modlogs, Contracts, Tags)
         }.execute()
     }
 
