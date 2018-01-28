@@ -44,7 +44,7 @@ class SetLocale : AsyncCommand() {
     override suspend fun asyncRun(ctx: Context) {
         asyncTransaction(Akatsuki.instance.pool) {
             Users.update({
-                Users.id.eq(ctx.author.id)
+                Users.id.eq(ctx.author.idLong)
             }) {
                 it[lang] = ctx.args["lang"] as String
             }

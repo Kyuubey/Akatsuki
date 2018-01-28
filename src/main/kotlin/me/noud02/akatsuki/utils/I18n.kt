@@ -42,11 +42,8 @@ object I18n {
         return new
     }
 
-    fun permission(lang: ResourceBundle, perm: String): String {
-        val new = perm.replace("_", "").toCharArray()
-
-        new[0] = new[0].toString().decapitalize().toCharArray()[0]
-
-        return lang.getString(new.joinToString(""))
-    }
+    fun permission(lang: ResourceBundle, perm: String): String = lang.getString(
+            perm.split("_")[0].toLowerCase()
+                    + perm.split("_").getOrElse(1, { "" }).toLowerCase().capitalize()
+    )
 }
