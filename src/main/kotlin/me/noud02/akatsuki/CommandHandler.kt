@@ -120,6 +120,11 @@ class CommandHandler {
             else
                 return
 
+        if (event.guild != null
+                && DatabaseWrapper.getGuildSafe(event.guild).ignoredChannels.contains(event.channel.idLong)
+                && cmd != "unignore")
+            return
+
         logger.command(event)
 
         Sentry.getContext().apply {

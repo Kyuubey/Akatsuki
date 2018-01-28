@@ -62,7 +62,8 @@ data class DBGuild(
         val welcome: Boolean,
         val welcomeChannel: Long,
         val welcomeMessage: String,
-        val leaveMessage: String
+        val leaveMessage: String,
+        val ignoredChannels: List<Long>
 )
 
 data class DBUser(
@@ -115,7 +116,8 @@ object DatabaseWrapper {
                     guild[Guilds.welcome],
                     guild[Guilds.welcomeChannel],
                     guild[Guilds.welcomeMessage],
-                    guild[Guilds.leaveMessage]
+                    guild[Guilds.leaveMessage],
+                    guild[Guilds.ignoredChannels].toList()
             )
     }.execute().get()
 
@@ -141,6 +143,7 @@ object DatabaseWrapper {
                 it[welcomeChannel] = guild.textChannels.first().idLong
                 it[welcomeMessage] = "Welcome %USER% to %SERVER%!"
                 it[leaveMessage] = "%USER% \uD83D\uDC4B"
+                it[ignoredChannels] = arrayOf()
             }
     }.execute().get()
 
