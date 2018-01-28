@@ -45,12 +45,12 @@ class AddPrefix : AsyncCommand() {
     override suspend fun asyncRun(ctx: Context) {
         asyncTransaction(Akatsuki.instance.pool) {
             val guild = Guilds.select {
-                Guilds.id.eq(ctx.guild?.id)
+                Guilds.id.eq(ctx.guild!!.idLong)
             }.first()
 
             try {
                 Guilds.update({
-                    Guilds.id.eq(ctx.guild?.id)
+                    Guilds.id.eq(ctx.guild!!.idLong)
                 }) {
                     it[prefixes] = guild[Guilds.prefixes] + ctx.args["prefix"].toString()
                 }
@@ -71,7 +71,7 @@ class RemPrefix : AsyncCommand() {
     override suspend fun asyncRun(ctx: Context) {
         asyncTransaction(Akatsuki.instance.pool) {
             val guild = Guilds.select { // TODO add guild from db to Context class
-                Guilds.id.eq(ctx.guild?.id)
+                Guilds.id.eq(ctx.guild!!.idLong)
             }.first()
 
             if (guild[Guilds.prefixes].size == 1)
@@ -82,7 +82,7 @@ class RemPrefix : AsyncCommand() {
 
             try {
                 Guilds.update({
-                    Guilds.id.eq(ctx.guild?.id)
+                    Guilds.id.eq(ctx.guild!!.idLong)
                 }) {
                     val list = guild[Guilds.prefixes].toMutableList()
                     list.remove(ctx.args["prefix"])
@@ -108,7 +108,7 @@ class Prefix : AsyncCommand() {
     override suspend fun asyncRun(ctx: Context) {
         asyncTransaction(Akatsuki.instance.pool) {
             val guild = Guilds.select {
-                Guilds.id.eq(ctx.guild?.id)
+                Guilds.id.eq(ctx.guild!!.idLong)
             }.first()
 
             ctx.send("Current prefixes: ${guild[Guilds.prefixes].joinToString(", ")}") // TODO change this translation to allow more prefixes
