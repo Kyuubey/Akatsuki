@@ -53,11 +53,11 @@ class Kick : Command() {
         if (!ctx.selfMember!!.canInteract(user))
             return ctx.send("I can't kick that user!")
 
-        ctx.guild!!.controller.kick(user).queue({ ctx.send("Kicked ${user.user.name}") }, { err -> run {
+        ctx.guild!!.controller.kick(user).queue({ ctx.send("Kicked ${user.user.name}") }, { err ->
             if (err is PermissionException)
                 ctx.send("I couldn't kick ${user.user.name} because I'm missing the '${err.permission}' permission!")
             else
                 ctx.send("I couldn't kick ${user.user.name} because of an unknown error: ${err.message}")
-        }})
+        })
     }
 }
