@@ -43,4 +43,8 @@ object Guilds : Table() {
     val modlogs = bool("modlogs")
     val modlogChannel = long("modlogChannel")
     val rolemeRoles = jsonbMap<String, Long>("rolemeRoles")
+    val welcome = bool("welcome")
+    val welcomeChannel = long("welcomeCHannel")
+    val welcomeMessage = varchar("welcomeMessage", 2000)
+    val leaveMessage = varchar("leaveMessage", 2000)
 }

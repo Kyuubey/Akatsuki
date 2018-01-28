@@ -41,6 +41,7 @@ import net.dv8tion.jda.core.events.guild.GuildBanEvent
 import net.dv8tion.jda.core.events.guild.GuildJoinEvent
 import net.dv8tion.jda.core.events.guild.GuildLeaveEvent
 import net.dv8tion.jda.core.events.guild.GuildUnbanEvent
+import net.dv8tion.jda.core.events.guild.member.GuildMemberJoinEvent
 import net.dv8tion.jda.core.events.guild.member.GuildMemberLeaveEvent
 import net.dv8tion.jda.core.events.message.MessageDeleteEvent
 import net.dv8tion.jda.core.events.message.MessageReceivedEvent
@@ -130,7 +131,33 @@ class EventListener : ListenerAdapter() {
         }
     }
 
+    override fun onGuildMemberJoin(event: GuildMemberJoinEvent) {
+        val storedGuild = DatabaseWrapper.getGuildSafe(event.guild)
+        val channel = event.guild.getTextChannelById(storedGuild.welcomeChannel) ?: return
+
+        if (storedGuild.welcome && storedGuild.welcomeMessage.isNotBlank())
+            channel.sendMessage(
+                    storedGuild.welcomeMessage
+                            .replace("%USER%", event.user.asMention)
+                            .replace("%USERNAME%", event.user.name)
+                            .replace("%SERVER%", event.guild.name)
+                            .replace("%MEMBERNUM%", (event.guild.members.indexOf(event.member) + 1).toString())
+            ).queue()
+
+    }
+
     override fun onGuildMemberLeave(event: GuildMemberLeaveEvent) {
+        val storedGuild = DatabaseWrapper.getGuildSafe(event.guild)
+        val channel = event.guild.getTextChannelById(storedGuild.welcomeChannel) ?: return
+
+        if (storedGuild.welcome && storedGuild.leaveMessage.isNotBlank())
+            channel.sendMessage(
+                    storedGuild.leaveMessage
+                            .replace("%USER%", event.user.asMention)
+                            .replace("%USERNAME%", event.user.name)
+                            .replace("%SERVER%", event.guild.name)
+            ).queue()
+
         asyncTransaction(pool) {
             val guild = Guilds.select { Guilds.id.eq(event.guild.idLong) }.firstOrNull()
 
