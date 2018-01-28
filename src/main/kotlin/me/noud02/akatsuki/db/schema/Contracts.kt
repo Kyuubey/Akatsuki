@@ -29,6 +29,8 @@ import org.jetbrains.exposed.sql.Table
 
 object Contracts : Table() {
     val userId = long("userId")
+            .primaryKey()
+            .uniqueIndex()
     val date = date("date")
     val wish = varchar("wish", 2000)
 }
