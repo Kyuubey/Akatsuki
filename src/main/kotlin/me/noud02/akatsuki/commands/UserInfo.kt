@@ -66,7 +66,7 @@ class UserInfo : Command() {
             setThumbnail(member.user.avatarUrl)
 
             descriptionBuilder.append("**ID:** ${member.user.id}\n")
-            descriptionBuilder.append("**Highest role:** ${member.roles.last()?.name ?: "none"}\n")
+            descriptionBuilder.append("**Highest role:** ${member.roles.sortedBy { it.position }.last()?.name ?: "none"}\n")
             descriptionBuilder.append("**Playing:** ${member.game?.name ?: "nothing"}")
 
             setFooter(
