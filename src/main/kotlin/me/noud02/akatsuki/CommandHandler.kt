@@ -33,6 +33,8 @@ import me.noud02.akatsuki.annotations.*
 import me.noud02.akatsuki.db.DatabaseWrapper
 import me.noud02.akatsuki.entities.*
 import me.noud02.akatsuki.extensions.UTF8Control
+import me.noud02.akatsuki.extensions.searchMembers
+import me.noud02.akatsuki.extensions.searchTextChannels
 import me.noud02.akatsuki.utils.UserPicker
 import me.noud02.akatsuki.utils.I18n
 import me.noud02.akatsuki.utils.Logger
@@ -336,11 +338,27 @@ class CommandHandler {
                                 throw Exception("Couldn't find that channel!")
                             }
 
-                            event.guild.getTextChannelsByName(arg2, true).isNotEmpty() -> {
+                            /*event.guild.getTextChannelsByName(arg2, true).isNotEmpty() -> {
                                 val channels = event.guild.getTextChannelsByName(arg2, true)
 
                                 if (channels.size > 1) {
                                     val picker = TextChannelPicker(EventListener.instance.waiter, event.member, channels, event.guild)
+
+                                    picker.build(event.message).get()
+                                } else
+                                    channels[0]
+                            }*/
+
+                            event.guild.searchTextChannels(arg2).isNotEmpty() -> {
+                                val channels = event.guild.searchTextChannels(arg2)
+
+                                if (channels.size > 1) {
+                                    val picker = TextChannelPicker(
+                                            EventListener.instance.waiter,
+                                            event.member,
+                                            channels,
+                                            event.guild
+                                    )
 
                                     picker.build(event.message).get()
                                 } else
@@ -378,7 +396,18 @@ class CommandHandler {
                                 throw Exception("Couldn't find that user!")
                             }
 
-                            event.guild.getMembersByEffectiveName(arg2, true).isNotEmpty() -> {
+                            event.guild.searchMembers(arg2).isNotEmpty() -> {
+                                val users = event.guild.searchMembers(arg2)
+
+                                if (users.size > 1) {
+                                    val picker = UserPicker(EventListener.instance.waiter, event.member, users, event.guild)
+
+                                    picker.build(event.channel).get()
+                                } else
+                                    users[0]
+                            }
+
+                            /*event.guild.getMembersByEffectiveName(arg2, true).isNotEmpty() -> {
                                 val users = event.guild.getMembersByEffectiveName(arg2, true)
                                 if (users.size > 1) {
                                     val picker = UserPicker(EventListener.instance.waiter, event.member, users, event.guild)
@@ -396,7 +425,7 @@ class CommandHandler {
                                     picker.build(event.channel).get()
                                 } else
                                     users[0]
-                            }
+                            }*/
 
                             arg2.toLongOrNull() != null && event.guild.getMemberById(arg2) != null -> event.guild.getMemberById(arg2)
 
