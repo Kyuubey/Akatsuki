@@ -30,6 +30,7 @@ import me.noud02.akatsuki.annotations.Alias
 import me.noud02.akatsuki.entities.Command
 import me.noud02.akatsuki.entities.Context
 import me.noud02.akatsuki.annotations.Load
+import me.noud02.akatsuki.entities.ThreadedCommand
 import me.noud02.akatsuki.music.MusicManager
 import net.dv8tion.jda.core.EmbedBuilder
 import okhttp3.HttpUrl
@@ -40,11 +41,11 @@ import java.util.concurrent.TimeUnit
 
 @Load
 @Alias("np")
-class NowPlaying : Command() {
+class NowPlaying : ThreadedCommand() {
     override val desc = "Get the current song"
     override val guildOnly = true
 
-    override fun run(ctx: Context) {
+    override fun threadedRun(ctx: Context) {
         val manager = MusicManager.musicManagers[ctx.guild?.id] ?: return ctx.send("Not connected!") // TODO add translations for "not connected"
         val embed = EmbedBuilder().apply {
             setAuthor(ctx.lang.getString("now_playing"), null, null)

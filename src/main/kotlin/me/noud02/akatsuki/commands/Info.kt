@@ -29,19 +29,20 @@ import me.noud02.akatsuki.Akatsuki
 import me.noud02.akatsuki.entities.Command
 import me.noud02.akatsuki.entities.Context
 import me.noud02.akatsuki.annotations.Load
+import me.noud02.akatsuki.entities.ThreadedCommand
 import net.dv8tion.jda.core.EmbedBuilder
 import okhttp3.Request
 import org.json.JSONObject
 
 @Load
-class Info : Command() {
+class Info : ThreadedCommand() {
     override val desc = "Get info on the bot."
 
-    override fun run(ctx: Context) {
+    override fun threadedRun(ctx: Context) {
         val embed = EmbedBuilder().apply {
-            val res = Akatsuki.instance.okhttp.newCall(Request.Builder().apply {
-                url("https://api.github.com/repos/noud02/Akatsuki")
-            }.build()).execute()
+            val res = Akatsuki.instance.okhttp.newCall(
+                    Request.Builder().url("https://api.github.com/repos/noud02/Akatsuki").build()
+            ).execute()
 
             val json = JSONObject(res.body()!!.string())
             val stars = json.getInt("stargazers_count")

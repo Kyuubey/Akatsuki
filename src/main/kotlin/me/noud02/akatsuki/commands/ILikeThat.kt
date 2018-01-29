@@ -30,15 +30,16 @@ import me.noud02.akatsuki.annotations.Argument
 import me.noud02.akatsuki.annotations.Load
 import me.noud02.akatsuki.entities.Command
 import me.noud02.akatsuki.entities.Context
+import me.noud02.akatsuki.entities.ThreadedCommand
 import okhttp3.HttpUrl
 import okhttp3.Request
 
 @Load
 @Argument("text", "string")
-class ILikeThat : Command() {
+class ILikeThat : ThreadedCommand() {
     override val desc = "It's OK, I like that..."
 
-    override fun run(ctx: Context) {
+    override fun threadedRun(ctx: Context) {
         val res = Akatsuki.instance.okhttp.newCall(Request.Builder().apply {
             url(HttpUrl.Builder().apply {
                 scheme(if (Akatsuki.instance.config.backend.ssl) "https" else "http")

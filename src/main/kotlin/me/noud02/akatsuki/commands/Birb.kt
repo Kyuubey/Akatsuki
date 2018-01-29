@@ -31,7 +31,8 @@ import me.noud02.akatsuki.entities.Context
 import me.noud02.akatsuki.annotations.Load
 import okhttp3.Request
 
-@Load
+// TODO find a different api
+// @Load
 class Birb : Command() {
     override val name = "birb"
     override val desc = "Get a random birb"
