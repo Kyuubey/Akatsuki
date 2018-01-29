@@ -23,21 +23,31 @@
  *   OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package me.noud02.akatsuki.entities
+package me.noud02.akatsuki.commands
 
-import me.noud02.akatsuki.utils.Wolk
-import me.noud02.akatsuki.utils.WolkType
-import net.dv8tion.jda.core.EmbedBuilder
-import java.awt.Color
+import me.noud02.akatsuki.Akatsuki
+import me.noud02.akatsuki.annotations.Argument
+import me.noud02.akatsuki.annotations.Load
+import me.noud02.akatsuki.entities.Context
+import me.noud02.akatsuki.entities.ThreadedCommand
+import net.dv8tion.jda.core.entities.Member
+import okhttp3.MediaType
+import okhttp3.Request
+import okhttp3.RequestBody
+import org.json.JSONObject
 
-open class WolkCommand : Command() {
-    open val type = WolkType.AWOO
+@Load
+@Argument("user", "user")
+class ShitWaifu : ThreadedCommand() {
+    override fun threadedRun(ctx: Context) {
+        val member = ctx.args["user"] as Member
 
-    override fun run(ctx: Context) {
-        ctx.send(EmbedBuilder().apply {
-            setImage(Wolk.getByType(type).url)
-            setColor(Color.CYAN)
-            setFooter("Powered by weeb.sh", null)
-        }.build())
+        val res = Akatsuki.instance.okhttp.newCall(Request.Builder().apply {
+            url("https://api.weeb.sh/auto-image/waifu-insult")
+            header("Authorization", "Wolke ${Akatsuki.instance.config.api.weebsh}")
+            post(RequestBody.create(MediaType.parse("application/json"), "{\"avatar\":\"${member.user.avatarUrl}\"}"))
+        }.build()).execute()
+
+        ctx.channel.sendFile(res.body()!!.bytes(), "shitwaifu.png").queue()
     }
 }

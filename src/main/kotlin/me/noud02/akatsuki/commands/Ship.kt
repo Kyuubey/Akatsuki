@@ -99,7 +99,7 @@ class Ship : Command() {
 
         ctx.channel
                 .sendMessage("Happy shipping!\nYour shipname: $ship")
-                .addFile(res.body()!!.byteStream(), "ship.png")
+                .addFile(res.body()!!.bytes(), "ship.png")
                 .queue()
     }
 }
