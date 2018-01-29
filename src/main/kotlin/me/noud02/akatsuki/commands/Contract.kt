@@ -103,6 +103,7 @@ class Contract : Command() {
                         if (it.author.id == ctx.author.id && it.channel.id == ctx.channel.id) {
                             val ans2 = it.message.contentRaw
 
+                            @Suppress("LABEL_NAME_CLASH")
                             if (!ans2.toLowerCase().startsWith("y"))
                                 return@await true
 

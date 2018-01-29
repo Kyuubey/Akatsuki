@@ -50,11 +50,9 @@ class Ship : Command() {
 
         val temp1 = File.createTempFile("image", "png")
         temp1.deleteOnExit()
-        val out1 = FileOutputStream(temp1)
 
         val temp2 = File.createTempFile("image", "png")
         temp2.deleteOnExit()
-        val out2 = FileOutputStream(temp2)
 
         temp1.writeBytes(
                 Akatsuki.instance.okhttp
