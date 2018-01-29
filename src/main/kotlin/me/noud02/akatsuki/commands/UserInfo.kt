@@ -43,42 +43,41 @@ class UserInfo : Command() {
 
     override fun run(ctx: Context) {
         val member = ctx.args["user"] as? Member ?: ctx.member!!
-        val embed = EmbedBuilder()
-        val desc = embed.descriptionBuilder
-        
-        val statusEmote =if (member.game.type == Game.GameType.STREAMING) 
-            "<:streaming:313956277132853248>" 
-        else 
-            when (member.onlineStatus.name) {
-            "ONLINE" -> "<:online:313956277808005120>"
-            "OFFLINE" -> "<:offline:313956277237710868>"
-            "IDLE" -> "<:away:313956277220802560>"
-            else -> "<:invisible:313956277107556352>"
+        val embed = EmbedBuilder().apply {
+            val statusEmote = if (member.game != null && member.game.type == Game.GameType.STREAMING)
+                "<:streaming:313956277132853248>"
+            else
+                when (member.onlineStatus.name) {
+                    "ONLINE" -> "<:online:313956277808005120>"
+                    "OFFLINE" -> "<:offline:313956277237710868>"
+                    "IDLE" -> "<:away:313956277220802560>"
+                    else -> "<:invisible:313956277107556352>"
+                }
+
+            setTitle(
+                    "$statusEmote ${member.user.name}#${member.user.discriminator}${
+                    if (!member.nickname.isNullOrEmpty())
+                        " (${member.nickname})"
+                    else
+                        ""
+                    }"
+            )
+
+            setThumbnail(member.user.avatarUrl)
+
+            descriptionBuilder.append("**ID:** ${member.user.id}\n")
+            descriptionBuilder.append("**Highest role:** ${member.roles.last()?.name ?: "none"}\n")
+            descriptionBuilder.append("**Playing:** ${member.game?.name ?: "nothing"}")
+
+            setFooter(
+                    "Joined Discord on ${
+                    member.user.creationTime.format(DateTimeFormatter.RFC_1123_DATE_TIME)
+                    }, ${ctx.guild!!.name} on ${
+                    member.joinDate.format(DateTimeFormatter.RFC_1123_DATE_TIME)
+                    }",
+                    null
+            )
         }
-        
-        embed.setTitle(
-                "$statusEmote ${member.user.name}#${member.user.discriminator}${
-                if (!member.nickname.isNullOrEmpty()) 
-                    " (${member.nickname})" 
-                else 
-                    ""
-                }"
-        )
-        
-        embed.setThumbnail(member.user.avatarUrl)
-        
-        desc.append("**Playing:** ${member.game.name}")
-        
-        embed.setDescription(desc)
-        
-        embed.setFooter(
-                "Joined Discord on ${
-                member.user.creationTime.format(DateTimeFormatter.RFC_1123_DATE_TIME)
-                }, ${ctx.guild!!.name} on ${
-                member.joinDate.format(DateTimeFormatter.RFC_1123_DATE_TIME)
-                }",
-                null
-        )
         
         ctx.send(embed.build())
     }
