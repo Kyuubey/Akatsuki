@@ -43,7 +43,7 @@ class Stats : Command() {
 
         val embed = EmbedBuilder().apply {
             if (ctx.jda.shardInfo != null) {
-                setTitle("EventListener ${ctx.jda.shardInfo.shardString}")
+                setTitle("Shard [${ctx.jda.shardInfo.shardId + 1} / ${ctx.jda.shardInfo.shardTotal}]")
             }
 
             val uptimeHours = TimeUnit.MILLISECONDS.toHours(rb.uptime)
