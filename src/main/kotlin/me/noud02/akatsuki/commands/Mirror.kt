@@ -30,6 +30,7 @@ import me.noud02.akatsuki.annotations.Argument
 import me.noud02.akatsuki.annotations.Load
 import me.noud02.akatsuki.entities.Command
 import me.noud02.akatsuki.entities.Context
+import me.noud02.akatsuki.entities.ThreadedCommand
 import okhttp3.*
 import org.apache.commons.io.IOUtils
 import java.io.File
@@ -37,8 +38,8 @@ import java.io.FileOutputStream
 
 @Load
 @Argument("image", "url", true)
-class Mirror : Command() {
-    override fun run(ctx: Context) {
+class Mirror : ThreadedCommand() {
+    override fun threadedRun(ctx: Context) {
         val temp = File.createTempFile("image", "png")
         temp.deleteOnExit()
         val out = FileOutputStream(temp)

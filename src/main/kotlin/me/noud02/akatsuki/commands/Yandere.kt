@@ -30,6 +30,7 @@ import me.noud02.akatsuki.annotations.Argument
 import me.noud02.akatsuki.annotations.Load
 import me.noud02.akatsuki.entities.Command
 import me.noud02.akatsuki.entities.Context
+import me.noud02.akatsuki.entities.ThreadedCommand
 import me.noud02.akatsuki.utils.I18n
 import net.dv8tion.jda.core.EmbedBuilder
 import okhttp3.HttpUrl
@@ -38,11 +39,11 @@ import org.json.JSONArray
 
 @Load
 @Argument("tags", "string")
-class Yandere : Command() {
+class Yandere : ThreadedCommand() {
     override val nsfw = true
     override val desc = "Search for (lewd) images on yande.re"
 
-    override fun run(ctx: Context) {
+    override fun threadedRun(ctx: Context) {
         val query = ctx.args["tags"] as String
 
         if (query.indexOf("loli") > -1)

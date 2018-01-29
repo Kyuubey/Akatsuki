@@ -36,6 +36,7 @@ import me.noud02.akatsuki.entities.Context
 import me.noud02.akatsuki.annotations.Load
 import me.noud02.akatsuki.entities.Command
 import me.noud02.akatsuki.entities.PickerItem
+import me.noud02.akatsuki.entities.ThreadedCommand
 import me.noud02.akatsuki.music.GuildMusicManager
 import me.noud02.akatsuki.utils.I18n
 import me.noud02.akatsuki.music.MusicManager
@@ -52,11 +53,11 @@ import java.awt.Color
 
 @Load
 @Argument("url|query", "string")
-class Play : Command() {
+class Play : ThreadedCommand() {
     override val desc = "Play music!"
     override val guildOnly = true
 
-    override fun run(ctx: Context) {
+    override fun threadedRun(ctx: Context) {
         if (!ctx.member!!.voiceState.inVoiceChannel())
             return ctx.send(I18n.parse(ctx.lang.getString("join_voice_channel_fail"), mapOf("username" to ctx.author.name)))
 

@@ -42,11 +42,11 @@ import java.awt.Color
 @Load
 @Argument("query", "string")
 @Alias("yt")
-class Youtube : Command() {
+class Youtube : ThreadedCommand() {
     override val desc = "Search for videos on YouTube"
     override val guildOnly = true
 
-    override fun run(ctx: Context) {
+    override fun threadedRun(ctx: Context) {
         val picker = ItemPicker(EventListener.instance.waiter, ctx.member as Member, ctx.guild as Guild)
 
         val res = Akatsuki.instance.okhttp.newCall(Request.Builder().apply {

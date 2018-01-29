@@ -30,6 +30,7 @@ import me.noud02.akatsuki.annotations.Argument
 import me.noud02.akatsuki.annotations.Load
 import me.noud02.akatsuki.entities.Command
 import me.noud02.akatsuki.entities.Context
+import me.noud02.akatsuki.entities.ThreadedCommand
 import me.noud02.akatsuki.utils.I18n
 import net.dv8tion.jda.core.EmbedBuilder
 import okhttp3.HttpUrl
@@ -38,11 +39,11 @@ import org.json.XML
 
 @Load
 @Argument("tags", "string")
-class Rule34 : Command() {
+class Rule34 : ThreadedCommand() {
     override val nsfw = true
     override val desc = "Search for (nsfw) images on rule34"
 
-    override fun run(ctx: Context) {
+    override fun threadedRun(ctx: Context) {
         val tags = ctx.args["tags"] as String
 
         if (tags.indexOf("loli") > -1)

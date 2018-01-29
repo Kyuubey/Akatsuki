@@ -29,14 +29,15 @@ import me.noud02.akatsuki.Akatsuki
 import me.noud02.akatsuki.entities.Command
 import me.noud02.akatsuki.entities.Context
 import me.noud02.akatsuki.annotations.Load
+import me.noud02.akatsuki.entities.ThreadedCommand
 import okhttp3.Request
 import org.json.JSONObject
 
 @Load
-class Cat : Command() {
+class Cat : ThreadedCommand() {
     override val desc = "Get a random cat"
 
-    override fun run(ctx: Context) {
+    override fun threadedRun(ctx: Context) {
         val res = Akatsuki.instance.okhttp.newCall(Request.Builder().apply {
             url("https://random.cat/meow")
         }.build()).execute()

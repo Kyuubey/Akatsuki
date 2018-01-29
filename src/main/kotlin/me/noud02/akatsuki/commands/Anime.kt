@@ -32,6 +32,7 @@ import me.noud02.akatsuki.annotations.Argument
 import me.noud02.akatsuki.annotations.Load
 import me.noud02.akatsuki.entities.Command
 import me.noud02.akatsuki.entities.Context
+import me.noud02.akatsuki.entities.ThreadedCommand
 import net.dv8tion.jda.core.EmbedBuilder
 import okhttp3.*
 import org.apache.commons.lang3.StringEscapeUtils
@@ -40,10 +41,10 @@ import java.awt.Color
 
 @Load
 @Argument("anime", "string")
-class Anime : Command() {
+class Anime : ThreadedCommand() {
     override val desc = "Search for anime on MyAnimeList"
 
-    override fun run(ctx: Context) {
+    override fun threadedRun(ctx: Context) {
         val res = Akatsuki.instance.okhttp.newCall(Request.Builder().apply {
             url(HttpUrl.Builder().apply {
                 scheme("https")
