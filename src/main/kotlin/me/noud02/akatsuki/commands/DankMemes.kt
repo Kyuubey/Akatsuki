@@ -26,28 +26,26 @@
 package me.noud02.akatsuki.commands
 
 import me.noud02.akatsuki.Akatsuki
-import me.noud02.akatsuki.entities.Command
-import me.noud02.akatsuki.entities.Context
 import me.noud02.akatsuki.annotations.Load
+import me.noud02.akatsuki.entities.Context
 import me.noud02.akatsuki.entities.ThreadedCommand
 import okhttp3.Request
+import org.json.JSONArray
 import org.json.JSONObject
 
 @Load
-class Awwnime : ThreadedCommand() {
-    override val desc = "Get a random post from /r/awwnime"
+class DankMemes : ThreadedCommand() {
+    override val desc = "Get a random meme from /r/dankmemes"
 
     override fun threadedRun(ctx: Context) {
-        val res = Akatsuki.instance.okhttp.newCall(Request.Builder().url("https://www.reddit.com/r/awwnime/random.json").build()).execute()
-
-        val json = JSONObject(res.body()!!.string())
-
+        val res = Akatsuki.instance.okhttp.newCall(Request.Builder().url("https://www.reddit.com/r/dankmemes/random.json").build()).execute()
+        val json = JSONArray(res.body()!!.string()).getJSONObject(0)
         val posts = json
                 .getJSONObject("data")
                 .getJSONArray("children")
-
         val post = posts.getJSONObject(Math.floor(Math.random() * posts.count()).toInt())
 
         ctx.send(post.getJSONObject("data").getString("url"))
+        res.close()
     }
 }
