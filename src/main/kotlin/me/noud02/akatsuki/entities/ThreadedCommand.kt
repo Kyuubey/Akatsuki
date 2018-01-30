@@ -27,10 +27,8 @@ package me.noud02.akatsuki.entities
 
 import me.noud02.akatsuki.Akatsuki
 
-open class ThreadedCommand : Command() {
-    open fun threadedRun(ctx: Context)
-            = ctx.send("no command here!")
+abstract class ThreadedCommand : Command() {
+    abstract fun threadedRun(ctx: Context)
 
-    override fun run(ctx: Context)
-            = Akatsuki.instance.pool.execute { threadedRun(ctx) }
+    override fun run(ctx: Context) = Akatsuki.instance.pool.execute { threadedRun(ctx) }
 }

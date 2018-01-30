@@ -28,8 +28,8 @@ package me.noud02.akatsuki.entities
 import kotlinx.coroutines.experimental.async
 import me.noud02.akatsuki.Akatsuki
 
-open class AsyncCommand : Command() {
-    open suspend fun asyncRun(ctx: Context) = ctx.send("Empty command")
+abstract class AsyncCommand : Command() {
+    abstract suspend fun asyncRun(ctx: Context)
 
     override fun run(ctx: Context) {
         async(Akatsuki.instance.coroutineDispatcher) {

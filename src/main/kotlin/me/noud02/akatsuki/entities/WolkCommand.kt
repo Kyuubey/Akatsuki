@@ -30,8 +30,8 @@ import me.noud02.akatsuki.utils.WolkType
 import net.dv8tion.jda.core.EmbedBuilder
 import java.awt.Color
 
-open class WolkCommand : Command() {
-    open val type = WolkType.AWOO
+abstract class WolkCommand : Command() {
+    abstract val type: WolkType
 
     override fun run(ctx: Context) {
         ctx.send(EmbedBuilder().apply {
