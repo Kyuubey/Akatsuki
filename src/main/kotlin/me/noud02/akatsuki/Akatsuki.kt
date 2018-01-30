@@ -27,6 +27,8 @@ package me.noud02.akatsuki
 
 import io.sentry.Sentry
 import io.sentry.SentryClientFactory
+import kotlinx.coroutines.experimental.async
+import kotlinx.coroutines.experimental.delay
 import me.aurieh.ares.exposed.async.asyncTransaction
 import me.noud02.akatsuki.db.schema.*
 import me.noud02.akatsuki.entities.Config
@@ -39,12 +41,13 @@ import net.dv8tion.jda.core.JDA
 import net.dv8tion.jda.core.JDABuilder
 import net.dv8tion.jda.core.entities.Game
 import okhttp3.*
-import org.jetbrains.exposed.sql.Database
-import org.jetbrains.exposed.sql.SchemaUtils
+import org.jetbrains.exposed.sql.*
 import org.json.JSONObject
 import java.util.*
+import java.util.Date
 import java.util.concurrent.ExecutorService
 import java.util.concurrent.Executors
+import java.util.concurrent.TimeUnit
 import kotlin.concurrent.timer
 
 class Akatsuki(val config: Config) {
@@ -78,8 +81,36 @@ class Akatsuki(val config: Config) {
 
         Wolk.setToken(config.api.weebsh)
         asyncTransaction(pool) {
-            SchemaUtils.create(Guilds, Users, Starboard, Logs, Modlogs, Contracts, Tags)
+            SchemaUtils.create(Guilds, Users, Starboard, Logs, Modlogs, Contracts, Tags, Reminders)
         }.execute()
+    }
+
+    private fun startReminderChecker(checkDelay: Long = 60) {
+        async(coroutineDispatcher) {
+            while (isActive) {
+                delay(checkDelay, TimeUnit.SECONDS)
+                asyncTransaction(pool) {
+                    val now = System.currentTimeMillis()
+                    val results = Reminders.select { Reminders.timestamp.less(now).or(Reminders.timestamp.eq(now)) }
+
+                    results.forEach {
+                        (if (jda != null)
+                            jda!!.getTextChannelById(it[Reminders.channelId])
+                        else
+                            shardManager.getTextChannelById(it[Reminders.channelId]))?.sendMessage(
+                                "Hello <@${it[Reminders.userId]}>! You wanted me to remind you ${it[Reminders.reminder]}"
+                        )?.queue()
+
+                        Reminders.deleteWhere {
+                            Reminders.userId
+                                    .eq(it[Reminders.userId])
+                                    .and(Reminders.reminder.eq(it[Reminders.reminder]))
+                                    .and(Reminders.timestamp.eq(it[Reminders.timestamp]))
+                        }
+                    }
+                }.await()
+            }
+        }
     }
 
     private fun startPresenceTimer() {
@@ -187,6 +218,7 @@ class Akatsuki(val config: Config) {
         }.buildAsync()
 
         startPresenceTimer()
+        startReminderChecker()
     }
 
     fun build(firstShard: Int, lastShard: Int, total: Int) {
@@ -199,6 +231,7 @@ class Akatsuki(val config: Config) {
         }.build()
 
         startPresenceTimer()
+        startReminderChecker()
     }
 
     companion object {
