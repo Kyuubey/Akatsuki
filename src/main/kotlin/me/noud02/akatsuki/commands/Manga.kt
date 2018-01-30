@@ -108,5 +108,6 @@ class Manga : ThreadedCommand() {
         }
 
         ctx.send(embed.build())
+        res.close()
     }
 }

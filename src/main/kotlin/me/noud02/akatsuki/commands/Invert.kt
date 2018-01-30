@@ -76,5 +76,6 @@ class Invert : ThreadedCommand() {
         }.build()).execute()
 
         ctx.channel.sendFile(res.body()!!.byteStream(), "invert.png", null).queue()
+        res.close()
     }
 }

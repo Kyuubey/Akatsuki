@@ -132,6 +132,7 @@ class Play : ThreadedCommand() {
                 picker.color = Color(255, 0, 0)
 
                 val item = picker.build(ctx.channel).get()
+                res.close()
 
                 MusicManager.playerManager.loadItemOrdered(manager, item.url, object : AudioLoadResultHandler {
                     override fun loadFailed(exception: FriendlyException) = ctx.send("Failed to add song to queue: ${exception.message}")

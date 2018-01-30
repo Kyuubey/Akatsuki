@@ -49,5 +49,6 @@ class ShitWaifu : ThreadedCommand() {
         }.build()).execute()
 
         ctx.channel.sendFile(res.body()!!.bytes(), "shitwaifu.png").queue()
+        res.close()
     }
 }

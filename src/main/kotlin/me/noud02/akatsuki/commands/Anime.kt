@@ -102,5 +102,6 @@ class Anime : ThreadedCommand() {
         }
 
         ctx.send(embed.build())
+        res.close()
     }
 }

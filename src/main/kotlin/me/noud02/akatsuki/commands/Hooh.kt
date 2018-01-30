@@ -76,5 +76,6 @@ class Hooh : ThreadedCommand() {
         }.build()).execute()
 
         ctx.channel.sendFile(res.body()!!.byteStream(), "hooh.png", null).queue()
+        res.close()
     }
 }

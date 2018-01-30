@@ -76,5 +76,6 @@ class Mirror : ThreadedCommand() {
         }.build()).execute()
 
         ctx.channel.sendFile(res.body()!!.byteStream(), "mirror.png", null).queue()
+        res.close()
     }
 }

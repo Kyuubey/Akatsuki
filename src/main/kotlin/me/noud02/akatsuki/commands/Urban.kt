@@ -68,5 +68,6 @@ class Urban : ThreadedCommand() {
         }
 
         ctx.send(embed.build())
+        res.close()
     }
 }

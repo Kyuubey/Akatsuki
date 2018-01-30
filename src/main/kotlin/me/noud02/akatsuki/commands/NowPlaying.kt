@@ -91,6 +91,7 @@ class NowPlaying : ThreadedCommand() {
                     .getString("title")
 
             embed.setFooter("Next: $title (autoplay)", null)
+            res.close()
         }
 
         ctx.send(embed.build())

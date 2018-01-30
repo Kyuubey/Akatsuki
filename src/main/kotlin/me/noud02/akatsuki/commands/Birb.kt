@@ -43,5 +43,6 @@ class Birb : Command() {
         }.build()).execute()
 
         ctx.send("https://random.birb.pw/img/${res.body()!!.string()}")
+        res.close()
     }
 }

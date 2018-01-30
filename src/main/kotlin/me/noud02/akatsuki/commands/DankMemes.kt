@@ -31,7 +31,6 @@ import me.noud02.akatsuki.entities.Context
 import me.noud02.akatsuki.entities.ThreadedCommand
 import okhttp3.Request
 import org.json.JSONArray
-import org.json.JSONObject
 
 @Load
 class DankMemes : ThreadedCommand() {

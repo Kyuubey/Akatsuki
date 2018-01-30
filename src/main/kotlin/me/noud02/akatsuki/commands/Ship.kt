@@ -101,5 +101,6 @@ class Ship : Command() {
                 .sendMessage("Happy shipping!\nYour shipname: $ship")
                 .addFile(res.body()!!.bytes(), "ship.png")
                 .queue()
+        res.close()
     }
 }

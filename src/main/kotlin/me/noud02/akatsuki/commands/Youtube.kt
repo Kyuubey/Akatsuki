@@ -90,5 +90,6 @@ class Youtube : ThreadedCommand() {
         picker.color = Color(255, 0, 0)
 
         picker.build(ctx.channel)
+        res.close()
     }
 }
