@@ -1,2 +1,2 @@
 Pillow
-aiohttp
+git+https://github.com/squeaky-pl/japronto
