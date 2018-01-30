@@ -27,8 +27,10 @@ package me.noud02.akatsuki.commands
 
 import me.noud02.akatsuki.annotations.Load
 import me.noud02.akatsuki.entities.WolkCommand
+import me.noud02.akatsuki.utils.WolkType
 
 @Load
 class Awoo : WolkCommand() {
+    override val type = WolkType.AWOO
     override val desc = "awoo~"
 }
