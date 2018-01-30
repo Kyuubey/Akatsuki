@@ -74,5 +74,6 @@ class Danbooru : Command() {
         }
 
         ctx.send(embed.build())
+        res.close()
     }
 }

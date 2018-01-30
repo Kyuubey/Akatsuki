@@ -43,5 +43,6 @@ class Cat : ThreadedCommand() {
         }.build()).execute()
 
         ctx.send(JSONObject(res.body()!!.string()).getString("file"))
+        res.close()
     }
 }

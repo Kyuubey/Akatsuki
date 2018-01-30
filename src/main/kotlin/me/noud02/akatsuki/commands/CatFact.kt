@@ -43,5 +43,6 @@ class CatFact : ThreadedCommand() {
         }.build()).execute()
 
         ctx.send(JSONObject(res.body()!!.string()).getString("fact"))
+        res.close()
     }
 }

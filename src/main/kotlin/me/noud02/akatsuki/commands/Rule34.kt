@@ -76,5 +76,6 @@ class Rule34 : ThreadedCommand() {
         }
 
         ctx.send(embed.build())
+        res.close()
     }
 }

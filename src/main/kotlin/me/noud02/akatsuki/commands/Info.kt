@@ -55,6 +55,7 @@ class Info : ThreadedCommand() {
             descriptionBuilder.append("\n${Akatsuki.instance.config.description}\n\n")
             descriptionBuilder.append("[Bugs](https://github.com/noud02/Akatsuki/issues) | [GitHub](https://github.com/noud02/Akatsuki)\n")
             descriptionBuilder.append("\n\u2B50 $stars | \u26A0 $issues | \uD83C\uDF74 $forks\n")
+            res.close()
         }
         
         ctx.send(embed.build())

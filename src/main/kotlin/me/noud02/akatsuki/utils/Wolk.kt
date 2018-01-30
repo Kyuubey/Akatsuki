@@ -147,6 +147,8 @@ object Wolk {
                     )
                 }
 
+        res.close()
+
         return WolkResponse(
                 json.getString("id"),
                 json.getString("baseType"),

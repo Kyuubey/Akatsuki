@@ -49,5 +49,6 @@ class Awwnime : ThreadedCommand() {
         val post = posts.getJSONObject(Math.floor(Math.random() * posts.count()).toInt())
 
         ctx.send(post.getJSONObject("data").getString("url"))
+        res.close()
     }
 }

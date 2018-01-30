@@ -76,5 +76,6 @@ class Flip : ThreadedCommand() {
         }.build()).execute()
 
         ctx.channel.sendFile(res.body()!!.byteStream(), "flip.png", null).queue()
+        res.close()
     }
 }

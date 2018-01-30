@@ -40,5 +40,6 @@ class NumFact : ThreadedCommand() {
         val res = Akatsuki.instance.okhttp.newCall(Request.Builder().url("https://numbersapi.com/random").build()).execute()
 
         ctx.send(res.body()!!.string())
+        res.close()
     }
 }

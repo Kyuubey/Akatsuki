@@ -76,5 +76,6 @@ class NeedsMoreJpeg : ThreadedCommand() {
         }.build()).execute()
 
         ctx.channel.sendFile(res.body()!!.byteStream(), "needsmorejpeg.jpg", null).queue()
+        res.close()
     }
 }

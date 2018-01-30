@@ -76,5 +76,6 @@ class Woow : ThreadedCommand() {
         }.build()).execute()
 
         ctx.channel.sendFile(res.body()!!.byteStream(), "woow.png", null).queue()
+        res.close()
     }
 }
