@@ -49,6 +49,7 @@ import org.reflections.Reflections
 import org.reflections.util.ClasspathHelper
 import org.reflections.util.ConfigurationBuilder
 import java.util.*
+import java.util.concurrent.CompletableFuture
 import kotlin.reflect.jvm.jvmName
 
 class CommandHandler {
@@ -113,7 +114,6 @@ class CommandHandler {
         if (args.isNotEmpty())
             args = args.drop(1)
 
-        val newArgs: MutableMap<String, Any>
         val newPerms: MutableMap<String, Boolean>
 
         if (!commands.contains(cmd))
@@ -177,43 +177,43 @@ class CommandHandler {
 
             try {
                 newPerms = checkPermissions(event, command, lang)
-                newArgs = checkArguments(event, command, args, lang)
+                checkArguments(event, command, args, lang).thenAccept {
+                    try {
+                        command.run(Context(event, command, it, raw, flags, newPerms, lang, user, guild))
+                    } catch (e: Exception) {
+                        event.channel.sendMessage(
+                                I18n.parse(
+                                        lang.getString("error"),
+                                        mapOf(
+                                                "error" to "$e"
+                                                /*"error" to "$e\n${e.stackTrace.joinToString("\n") {
+                                                    "\tat ${it.className}(${it.fileName ?: "Unknown Source"})"
+                                                }}"*/
+                                        )
+                                )
+                        ).queue()
+
+                        logger.error(
+                                "Error while handling command $cmd, executed by user ${
+                                event.author.name
+                                }#${
+                                event.author.discriminator
+                                } (${
+                                event.author.id
+                                } in ${
+                                if (event.guild != null)
+                                    "guild ${event.guild.name} (${event.guild.id}) with channel ${event.channel.name} (${event.channel.id}"
+                                else
+                                    "DMs"
+                                }",
+                                e
+                        )
+
+                        Sentry.capture(e)
+                    }
+                }
             } catch (err: Exception) {
                 return event.channel.sendMessage(err.message).queue()
-            }
-
-            try {
-                command.run(Context(event, command, newArgs, raw, flags, newPerms, lang, user, guild))
-            } catch (e: Exception) {
-                event.channel.sendMessage(
-                        I18n.parse(
-                                lang.getString("error"),
-                                mapOf(
-                                        "error" to "$e"
-                                        /*"error" to "$e\n${e.stackTrace.joinToString("\n") {
-                                            "\tat ${it.className}(${it.fileName ?: "Unknown Source"})"
-                                        }}"*/
-                                )
-                        )
-                ).queue()
-
-                logger.error(
-                        "Error while handling command $cmd, executed by user ${
-                        event.author.name
-                        }#${
-                        event.author.discriminator
-                        } (${
-                        event.author.id
-                        } in ${
-                        if (event.guild != null)
-                            "guild ${event.guild.name} (${event.guild.id}) with channel ${event.channel.name} (${event.channel.id}"
-                        else
-                            "DMs"
-                        }",
-                        e
-                )
-
-                Sentry.capture(e)
             }
         } else {
             val raw = args
@@ -227,43 +227,43 @@ class CommandHandler {
 
             try {
                 newPerms = checkPermissions(event, commands[cmd] as Command, lang)
-                newArgs = checkArguments(event, commands[cmd] as Command, args, lang)
+                checkArguments(event, commands[cmd] as Command, args, lang).thenAccept {
+                    try {
+                        command.run(Context(event, command, it, raw, flags, newPerms, lang, user, guild))
+                    } catch (e: Exception) {
+                        event.channel.sendMessage(
+                                I18n.parse(
+                                        lang.getString("error"),
+                                        mapOf(
+                                                "error" to "$e"
+                                                /*"error" to "$e\n${e.stackTrace.joinToString("\n") {
+                                                    "\tat ${it.className}(${it.fileName ?: "Unknown Source"})"
+                                                }}"*/
+                                        )
+                                )
+                        ).queue()
+
+                        logger.error(
+                                "Error while handling command $cmd, executed by user ${
+                                event.author.name
+                                }#${
+                                event.author.discriminator
+                                } (${
+                                event.author.id
+                                } in ${
+                                if (event.guild != null)
+                                    "guild ${event.guild.name} (${event.guild.id}) with channel ${event.channel.name} (${event.channel.id}"
+                                else
+                                    "DMs"
+                                }",
+                                e
+                        )
+
+                        Sentry.capture(e)
+                    }
+                }
             } catch (err: Exception) {
                 return event.channel.sendMessage(err.message).queue()
-            }
-
-            try {
-                command.run(Context(event, command, newArgs, raw, flags, newPerms, lang, user, guild))
-            } catch (e: Exception) {
-                event.channel.sendMessage(
-                        I18n.parse(
-                                lang.getString("error"),
-                                mapOf(
-                                        "error" to "$e"
-                                        /*"error" to "$e\n${e.stackTrace.joinToString("\n") {
-                                            "\tat ${it.className}(${it.fileName ?: "Unknown Source"})"
-                                        }}"*/
-                                )
-                        )
-                ).queue()
-
-                logger.error(
-                        "Error while handling command $cmd, executed by user ${
-                        event.author.name
-                        }#${
-                        event.author.discriminator
-                        } (${
-                        event.author.id
-                        } in ${
-                        if (event.guild != null)
-                            "guild ${event.guild.name} (${event.guild.id}) with channel ${event.channel.name} (${event.channel.id}"
-                        else
-                            "DMs"
-                        }",
-                        e
-                )
-
-                Sentry.capture(e)
             }
         }
     }
@@ -292,8 +292,14 @@ class CommandHandler {
         return newPerms
     }
 
-    private fun checkArguments(event: MessageReceivedEvent, cmd: Command, args: List<String>, lang: ResourceBundle): MutableMap<String, Any> {
+    private fun checkArguments(
+            event: MessageReceivedEvent,
+            cmd: Command,
+            args: List<String>,
+            lang: ResourceBundle
+    ): CompletableFuture<MutableMap<String, Any>> {
         val newArgs = mutableMapOf<String, Any>()
+        val fut = CompletableFuture<MutableMap<String, Any>>()
 
         val cmdArgs = cmd::class.annotations.filterIsInstance(Argument::class.java).toMutableList()
         val other = cmd::class.annotations.filterIsInstance(Arguments::class.java)
@@ -301,12 +307,19 @@ class CommandHandler {
         if (other.isNotEmpty())
             cmdArgs += other.first().args
 
-        for (arg in cmdArgs) {
-            val i = cmdArgs.indexOf(arg)
+        var i = 0
+
+        fun next() {
+            if (i == cmdArgs.size)  {
+                fut.complete(newArgs)
+                return
+            }
+
+            val arg = cmdArgs[i]
             var arg2: String?
             try {
                 arg2 = args[i]
-            } catch (e: Exception) {
+            } catch(e: Exception) {
                 if (!arg.optional)
                     throw Exception(
                             I18n.parse(
@@ -317,37 +330,28 @@ class CommandHandler {
                                     )
                             )
                     )
-                else
-                    return newArgs
+                else {
+                    fut.complete(newArgs)
+                    return
+                }
             }
 
             if (cmdArgs.last() == arg)
                 arg2 = args.slice(cmdArgs.indexOf(arg) until args.size).joinToString(" ")
 
             when (arg.type) {
-                // TODO do these later
-                // "channel" -> TODO()
-                // "role" -> TODO()
-
                 "textchannel" -> {
-                    if (event.guild != null) {
-                        val channel: TextChannel = when {
+                    if (event.guild != null)
+                        when {
                             "<#\\d+>".toRegex().matches(arg2) -> try {
-                                event.guild.getTextChannelById("<#(\\d+)>".toRegex().matchEntire(arg2)?.groupValues?.get(1))
+                                newArgs[arg.name] = event.guild.getTextChannelById("<#(\\d+)>"
+                                                .toRegex()
+                                                .matchEntire(arg2)?.groupValues?.get(1))
+                                i++
+                                next()
                             } catch (e: Throwable) {
                                 throw Exception("Couldn't find that channel!")
                             }
-
-                            /*event.guild.getTextChannelsByName(arg2, true).isNotEmpty() -> {
-                                val channels = event.guild.getTextChannelsByName(arg2, true)
-
-                                if (channels.size > 1) {
-                                    val picker = TextChannelPicker(EventListener.instance.waiter, event.member, channels, event.guild)
-
-                                    picker.build(event.message).get()
-                                } else
-                                    channels[0]
-                            }*/
 
                             event.guild.searchTextChannels(arg2).isNotEmpty() -> {
                                 val channels = event.guild.searchTextChannels(arg2)
@@ -360,12 +364,17 @@ class CommandHandler {
                                             event.guild
                                     )
 
-                                    picker.build(event.message).get()
-                                } else
-                                    channels[0]
+                                    picker.build(event.message).thenAccept {
+                                        newArgs[arg.name] = it
+                                        i++
+                                        next()
+                                    }
+                                } else {
+                                    newArgs[arg.name] = channels[0]
+                                    i++
+                                    next()
+                                }
                             }
-
-                            arg2.toLongOrNull() != null && event.guild.getTextChannelById(arg2) != null -> event.guild.getTextChannelById(arg2)
 
                             else -> throw Exception(
                                     I18n.parse(
@@ -376,22 +385,15 @@ class CommandHandler {
                                     )
                             )
                         }
-
-                        newArgs[arg.name] = channel
-                    }
                 }
 
-                "url" -> {
-                    if (!UrlValidator().isValid(arg2))
-                        throw Exception("Argument is not a valid URL!")
-                    else
-                        newArgs[arg.name] = arg2
-                }
                 "user" -> {
-                    if (event.guild != null) {
-                        val user: Member = when {
+                    if (event.guild != null)
+                        when {
                             "<@!?\\d+>".toRegex().matches(arg2) -> try {
-                                event.guild.getMemberById("<@!?(\\d+)>".toRegex().matchEntire(arg2)?.groupValues?.get(1))
+                                newArgs[arg.name] = event.guild.getMemberById("<@!?(\\d+)>".toRegex().matchEntire(arg2)?.groupValues?.get(1))
+                                i++
+                                next()
                             } catch (e: Throwable) {
                                 throw Exception("Couldn't find that user!")
                             }
@@ -402,32 +404,17 @@ class CommandHandler {
                                 if (users.size > 1) {
                                     val picker = UserPicker(EventListener.instance.waiter, event.member, users, event.guild)
 
-                                    picker.build(event.channel).get()
-                                } else
-                                    users[0]
+                                    picker.build(event.message).thenAccept {
+                                        newArgs[arg.name] = it
+                                        i++
+                                        next()
+                                    }
+                                } else {
+                                    newArgs[arg.name] = users[0]
+                                    i++
+                                    next()
+                                }
                             }
-
-                            /*event.guild.getMembersByEffectiveName(arg2, true).isNotEmpty() -> {
-                                val users = event.guild.getMembersByEffectiveName(arg2, true)
-                                if (users.size > 1) {
-                                    val picker = UserPicker(EventListener.instance.waiter, event.member, users, event.guild)
-
-                                    picker.build(event.channel).get()
-                                } else
-                                    users[0]
-                            }
-
-                            event.guild.getMembersByName(arg2, true).isNotEmpty() -> {
-                                val users = event.guild.getMembersByName(arg2, true)
-                                if (users.size > 1) {
-                                    val picker = UserPicker(EventListener.instance.waiter, event.member, users, event.guild)
-
-                                    picker.build(event.channel).get()
-                                } else
-                                    users[0]
-                            }*/
-
-                            arg2.toLongOrNull() != null && event.guild.getMemberById(arg2) != null -> event.guild.getMemberById(arg2)
 
                             else -> throw Exception(
                                     I18n.parse(
@@ -438,18 +425,27 @@ class CommandHandler {
                                     )
                             )
                         }
-
-                        newArgs[arg.name] = user
-                    }
                 }
-                "number" -> newArgs[arg.name] = arg2.toIntOrNull()
-                        ?: throw Exception("Argument at pos ${i + 1} needs type 'number' but type 'string' was given") // TODO translate this
-                "string" -> newArgs[arg.name] = arg2
-                else -> newArgs[arg.name] = arg2
+
+                "number" -> {
+                    newArgs[arg.name] = arg2.toIntOrNull()
+                            ?: throw Exception("Argument at pos ${i + 1} needs type 'number' but type 'string' was given")
+                    i++
+                    next()
+                }
+
+                else -> {
+                    newArgs[arg.name] = arg2
+                    i++
+                    next()
+                }
             }
         }
 
-        return newArgs
+        if (cmdArgs.isNotEmpty())
+            next()
+
+        return fut
     }
 
     fun help(cmdd: String): String {
