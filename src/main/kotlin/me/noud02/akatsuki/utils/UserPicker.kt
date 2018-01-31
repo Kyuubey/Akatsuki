@@ -64,79 +64,77 @@ class UserPicker(
         users = users.subList(0, min(users.size, 5))
     }
 
-    fun build(msg: Message): CompletableFuture<Member> = build(msg.channel)
+    fun build(msg: Message) = build(msg.channel)
 
-    fun build(channel: MessageChannel): CompletableFuture<Member> {
-        return if (guild.selfMember.hasPermission(Permission.MESSAGE_ADD_REACTION) || guild.selfMember.hasPermission(Permission.ADMINISTRATOR))
-            buildReactions(channel)
-        else
-            buildInput(channel)
-    }
+    fun build(channel: MessageChannel)
+            = if (guild.selfMember.hasPermission(Permission.MESSAGE_ADD_REACTION)
+            || guild.selfMember.hasPermission(Permission.ADMINISTRATOR)) buildReactions(channel) else buildInput(channel)
 
     private fun buildReactions(channel: MessageChannel): CompletableFuture<Member> {
-        val msg = channel.sendMessage(text).complete()
         val fut = CompletableFuture<Member>()
+        channel.sendMessage(text).queue({ msg ->
+            msg.addReaction(upEmote).queue()
+            msg.addReaction(confirmEmote).queue()
+            msg.addReaction(cancelEmote).queue()
+            msg.addReaction(downEmote).queue()
 
-        msg.addReaction(upEmote).queue()
-        msg.addReaction(confirmEmote).queue()
-        msg.addReaction(cancelEmote).queue()
-        msg.addReaction(downEmote).queue()
+            waiter.await<MessageReactionAddEvent>(20, timeout) {
+                if (it.messageId == msg.id && it.user.id == user.user.id) {
+                    when (it.reactionEmote.name) {
+                        upEmote -> {
+                            it.reaction.removeReaction(it.user).queue()
+                            if (index - 1 >= 0) {
+                                index--
+                                msg.editMessage(text).queue()
+                            }
+                        }
 
-        waiter.await<MessageReactionAddEvent>(20, timeout) {
-            if (it.messageId == msg.id && it.user.id == user.user.id) {
-                when (it.reaction.reactionEmote.name) {
-                    upEmote -> {
-                        it.reaction.removeReaction(it.user).queue()
-                        if (index - 1 >= 0) {
-                            index--
-                            msg.editMessage(text).queue()
+                        downEmote -> {
+                            it.reaction.removeReaction(it.user).queue()
+                            if (index + 1 <= users.size) {
+                                index++
+                                msg.editMessage(text).queue()
+                            }
+                        }
+
+                        cancelEmote -> {
+                            msg.delete().queue()
+                        }
+
+                        confirmEmote -> {
+                            msg.delete().queue()
+                            fut.complete(users[index])
                         }
                     }
-
-                    downEmote -> {
-                        it.reaction.removeReaction(it.user).queue()
-                        if (index + 1 <= users.size) {
-                            index++
-                            msg.editMessage(text).queue()
-                        }
-                    }
-
-                    cancelEmote -> {
-                        msg.delete().queue()
-                    }
-
-                    confirmEmote -> {
-                        msg.delete().queue()
-                        fut.complete(users[index])
-                    }
-                }
-                true
-            } else
-                false
-        }
+                    true
+                } else
+                    false
+            }
+        })
 
         return fut
     }
 
     private fun buildInput(channel: MessageChannel): CompletableFuture<Member> {
-        val msg = channel.sendMessage(inputText).complete()
         val fut = CompletableFuture<Member>()
 
-        waiter.await<MessageReceivedEvent>(1, timeout) {
-            if (it.channel.id == msg.channel.id && it.author.id == user.user.id) {
-                if (it.message.contentRaw.toIntOrNull() == null)
-                    msg.channel.sendMessage("Invalid number").queue()
-                else if (it.message.contentRaw.toInt() - 1 > users.size || it.message.contentRaw.toInt() - 1 < 0)
-                    msg.channel.sendMessage("Number out of bounds!").queue()
-                else {
-                    index = it.message.contentRaw.toInt() - 1
-                    msg.delete().queue()
-                    fut.complete(users[index])
-                }
-                true
-            } else
-                false
-        }
+        channel.sendMessage(inputText).queue({ msg ->
+            waiter.await<MessageReceivedEvent>(1, timeout) {
+                if (it.channel.id == msg.channel.id && it.author.id == user.user.id) {
+                    if (it.message.contentRaw.toIntOrNull() == null)
+                        msg.channel.sendMessage("Invalid number").queue()
+                    else if (it.message.contentRaw.toInt() - 1 > users.size || it.message.contentRaw.toInt() - 1 < 0)
+                        msg.channel.sendMessage("Number out of bounds!").queue()
+                    else {
+                        index = it.message.contentRaw.toInt() - 1
+                        msg.delete().queue()
+                        fut.complete(users[index])
+                    }
+                    true
+                } else
+                    false
+            }
+        })
 
         return fut
     }
