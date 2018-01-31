@@ -52,7 +52,7 @@ class Youtube : ThreadedCommand() {
         val res = Akatsuki.instance.okhttp.newCall(Request.Builder().apply {
             url(HttpUrl.Builder().apply {
                 scheme("https")
-                host("googleapis.com")
+                host("www.googleapis.com")
                 addPathSegment("youtube")
                 addPathSegment("v3")
                 addPathSegment("search")
@@ -64,7 +64,8 @@ class Youtube : ThreadedCommand() {
             }.build())
         }.build()).execute()
 
-        val items = JSONObject(res.body()!!.string()).getJSONArray("items")
+        val body = res.body()!!.string()
+        val items = JSONObject(body).getJSONArray("items")
 
         for (i in 0 until items.length()) {
             val item = items.getJSONObject(i)
