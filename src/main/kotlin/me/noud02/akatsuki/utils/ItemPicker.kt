@@ -59,14 +59,11 @@ class ItemPicker(
         return this
     }
 
-    fun build(msg: Message): CompletableFuture<PickerItem> = build(msg.channel)
+    fun build(msg: Message) = build(msg.channel)
 
-    fun build(channel: MessageChannel): CompletableFuture<PickerItem> {
-        return if (guild.selfMember.hasPermission(Permission.MESSAGE_ADD_REACTION) || guild.selfMember.hasPermission(Permission.ADMINISTRATOR))
-            buildReactions(channel)
-        else
-            buildInput(channel)
-    }
+    fun build(channel: MessageChannel)
+            = if (guild.selfMember.hasPermission(Permission.MESSAGE_ADD_REACTION)
+            || guild.selfMember.hasPermission(Permission.ADMINISTRATOR)) buildReactions(channel) else buildInput(channel)
 
     private fun buildReactions(channel: MessageChannel): CompletableFuture<PickerItem> {
         val fut = CompletableFuture<PickerItem>()
@@ -94,44 +91,44 @@ class ItemPicker(
             embeds.add(embed.build())
         }
 
-        val msg = channel.sendMessage(embeds[index]).complete()
+        channel.sendMessage(embeds[index]).queue({ msg ->
+            msg.addReaction(leftEmote).queue()
+            if (confirm)
+                msg.addReaction(confirmEmote).queue()
+            msg.addReaction(cancelEmote).queue()
+            msg.addReaction(rightEmote).queue()
 
-        msg.addReaction(leftEmote).queue()
-        if (confirm)
-            msg.addReaction(confirmEmote).queue()
-        msg.addReaction(cancelEmote).queue()
-        msg.addReaction(rightEmote).queue()
+            waiter.await<MessageReactionAddEvent>(30, timeout) {
+                if (it.messageId == msg.id && it.user.id == user.user.id) {
+                    when (it.reactionEmote.name) {
+                        leftEmote -> {
+                            it.reaction.removeReaction(it.user).queue()
+                            if (index - 1 >= 0)
+                                msg.editMessage(embeds[--index]).queue()
+                        }
 
-        waiter.await<MessageReactionAddEvent>(30, timeout) {
-            if (it.messageId == msg.id && it.user.id == user.user.id) {
-                when (it.reaction.reactionEmote.name) {
-                    leftEmote -> {
-                        it.reaction.removeReaction(it.user).queue()
-                        if (index - 1 >= 0)
-                            msg.editMessage(embeds[--index]).queue()
-                    }
+                        rightEmote -> {
+                            it.reaction.removeReaction(it.user).queue()
+                            if (index + 1 <= items.size - 1)
+                                msg.editMessage(embeds[++index]).queue()
+                        }
 
-                    rightEmote -> {
-                        it.reaction.removeReaction(it.user).queue()
-                        if (index + 1 <= items.size - 1)
-                            msg.editMessage(embeds[++index]).queue()
-                    }
+                        confirmEmote -> {
+                            if (confirm) {
+                                msg.delete().queue()
+                                fut.complete(items[index])
+                            }
+                        }
 
-                    confirmEmote -> {
-                        if (confirm) {
+                        cancelEmote -> {
                             msg.delete().queue()
-                            fut.complete(items[index])
                         }
                     }
-
-                    cancelEmote -> {
-                        msg.delete().queue()
-                    }
-                }
-                true
-            } else
-                false
-        }
+                    true
+                } else
+                    false
+            }
+        })
 
         return fut
     }
@@ -141,23 +138,23 @@ class ItemPicker(
         val msg = channel.sendMessage(
                 "Please choose an item from the list by sending its number:\n```\n${items.mapIndexed {
                     i, item -> " ${i + 1}. ${item.title}"
-                }.joinToString("\n")}```").complete()
-
-        waiter.await<MessageReceivedEvent>(1, timeout) {
-            if (it.channel.id == msg.channel.id && it.author.id == user.user.id) {
-                if (it.message.contentRaw.toIntOrNull() == null)
-                    msg.channel.sendMessage("Invalid number").queue()
-                else if (it.message.contentRaw.toInt() - 1 > items.size || it.message.contentRaw.toInt() - 1 < 0)
-                    msg.channel.sendMessage("Number out of bounds!")
-                else {
-                    index = it.message.contentRaw.toInt() - 1
-                    msg.delete().queue()
-                    fut.complete(items[index])
-                }
-                true
-            } else
-                false
-        }
+                }.joinToString("\n")}```").queue({ msg ->
+            waiter.await<MessageReceivedEvent>(1, timeout) {
+                if (it.channel.id == msg.channel.id && it.author.id == user.user.id) {
+                    if (it.message.contentRaw.toIntOrNull() == null)
+                        msg.channel.sendMessage("Invalid number").queue()
+                    else if (it.message.contentRaw.toInt() - 1 > items.size || it.message.contentRaw.toInt() - 1 < 0)
+                        msg.channel.sendMessage("Number out of bounds!")
+                    else {
+                        index = it.message.contentRaw.toInt() - 1
+                        msg.delete().queue()
+                        fut.complete(items[index])
+                    }
+                    true
+                } else
+                    false
+            }
+        })
 
         return fut
     }
