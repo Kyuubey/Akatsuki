@@ -442,8 +442,7 @@ class CommandHandler {
             }
         }
 
-        if (cmdArgs.isNotEmpty())
-            next()
+        next()
 
         return fut
     }
