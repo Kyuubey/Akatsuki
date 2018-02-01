@@ -33,4 +33,8 @@ object Contracts : Table() {
             .uniqueIndex()
     val date = date("date")
     val wish = varchar("wish", 2000)
+    val level = integer("level")
+    val experience = integer("experience")
+    val gem = varchar("gem", 20)
+    val corruption = integer("corruption")
 }

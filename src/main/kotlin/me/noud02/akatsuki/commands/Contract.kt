@@ -54,6 +54,27 @@ class ViewContract : Command() {
             ctx.send(EmbedBuilder().apply {
                 setTitle("${member.user.name}'s Contract")
                 descriptionBuilder.append("*${contract[Contracts.wish]}*")
+
+                val corruption = contract[Contracts.corruption]
+                val xp = contract[Contracts.experience]
+                val level = contract[Contracts.level]
+
+                val xpNeeded = level.toFloat() * 500f * (level.toFloat() / 3f)
+                val progress = xp.toFloat() / xpNeeded * 10f
+
+                addField(
+                        "Stats",
+                        """**Rank:** ${contract[Contracts.level]}
+                            |**Progress:** [${"#".repeat(progress.toInt())}${"-".repeat(10 - progress.toInt())}] ${progress.toInt() * 10}%
+                        """.trimMargin(),
+                        true
+                )
+
+                addField(
+                        "Corruption",
+                        "[${"#".repeat(if (corruption != 0) corruption / 10 else 0)}${"-".repeat(10 - corruption)}] $corruption%",
+                        true
+                )
                 setFooter(contract[Contracts.date].toString(), null)
             }.build())
         }.execute()

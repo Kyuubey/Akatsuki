@@ -40,6 +40,10 @@ fun User.createContract(wish: String) {
             it[userId] = idLong
             it[this.wish] = wish
             it[date] = DateTime.now()
+            it[gem] = "common"
+            it[corruption] = 0
+            it[level] = 1
+            it[experience] = 0
         }
     }.execute()
 }
