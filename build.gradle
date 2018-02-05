@@ -61,6 +61,7 @@ dependencies {
     compile 'com.squareup.okio:okio:1.13.0'
     compile 'com.squareup.okhttp3:okhttp:3.9.1'
     compile 'com.joestelmach:natty:0.11'
+    compile 'org.luaj:luaj-jse:3.0.1'
 }
 
 compileKotlin {
