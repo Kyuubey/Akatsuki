@@ -2,7 +2,11 @@
 
 A multipurpose Discord bot written in Kotlin.
 
-## Compiling and running the bot
+### Downloads
+
+You can download the latest version from my [CI](https://ci.noud02.me/viewLog.html?buildId=lastSuccessful&buildTypeId=Akatsuki_Build&tab=artifacts&guest=1)
+
+### Compiling and running the bot
 
 ```bash
 # Clone and build
@@ -20,7 +24,7 @@ $ java -jar builds/libs/Akatsuki.jar
 $ ./backend/main.py
 ```
 
-### Docker
+#### Docker
 
 Same steps as above except instead of building it with gradle and running it with java run the following command
 
