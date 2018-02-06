@@ -28,12 +28,14 @@ package me.noud02.akatsuki
 import me.aurieh.ares.core.entities.EventWaiter
 import me.aurieh.ares.exposed.async.asyncTransaction
 import me.noud02.akatsuki.db.DatabaseWrapper
+import me.noud02.akatsuki.db.schema.Contracts
 import me.noud02.akatsuki.db.schema.Guilds
 import me.noud02.akatsuki.db.schema.Modlogs
 import me.noud02.akatsuki.extensions.addStar
 import me.noud02.akatsuki.extensions.log
 import me.noud02.akatsuki.extensions.removeStar
 import me.noud02.akatsuki.utils.Logger
+import net.dv8tion.jda.core.EmbedBuilder
 import net.dv8tion.jda.core.audit.ActionType
 import net.dv8tion.jda.core.events.Event
 import net.dv8tion.jda.core.events.ReadyEvent
@@ -51,6 +53,9 @@ import net.dv8tion.jda.core.events.message.react.MessageReactionRemoveEvent
 import net.dv8tion.jda.core.hooks.ListenerAdapter
 import org.jetbrains.exposed.sql.insert
 import org.jetbrains.exposed.sql.select
+import org.jetbrains.exposed.sql.update
+import java.awt.Color
+import kotlin.math.exp
 import kotlin.reflect.jvm.jvmName
 
 class EventListener : ListenerAdapter() {
@@ -68,8 +73,38 @@ class EventListener : ListenerAdapter() {
     override fun onGenericEvent(event: Event) = waiter.emit(event)
 
     override fun onMessageReceived(event: MessageReceivedEvent) {
-        if (event.guild != null && DatabaseWrapper.getGuildSafe(event.guild).logs)
-            event.message.log()
+        if (event.guild != null) {
+            val stored = DatabaseWrapper.getGuildSafe(event.guild)
+            if (stored.logs)
+                event.message.log()
+
+            asyncTransaction(Akatsuki.instance.pool) {
+                val contract = Contracts.select { Contracts.userId.eq(event.author.idLong) }.firstOrNull() ?: return@asyncTransaction
+                val curLevel = contract[Contracts.level]
+                val xp = contract[Contracts.experience]
+
+                val xpNeeded = curLevel.toFloat() * 500f * (curLevel.toFloat() / 3f)
+
+                if (xp >= xpNeeded) {
+                    Contracts.update({
+                        Contracts.userId.eq(event.author.idLong)
+                    }) {
+                        it[level] = curLevel + 1
+                        it[experience] = 0
+                        it[balance] = contract[Contracts.balance] + 2500
+                    }
+
+                    if (stored.levelMessages)
+                        event.channel.sendMessage(EmbedBuilder().apply {
+                            setTitle("${event.author.name}, you are now rank ${curLevel+1}!")
+                            setColor(Color.CYAN)
+                            descriptionBuilder.append("+2500$\n")
+
+                            // TODO add random items on levelup
+                        }.build()).queue()
+                }
+            }.execute()
+        }
 
         if (event.author.isBot)
             return

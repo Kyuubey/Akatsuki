@@ -44,16 +44,8 @@ fun User.createContract(wish: String) {
             it[corruption] = 0
             it[level] = 1
             it[experience] = 0
+            it[inventory] = arrayOf()
+            it[balance] = 5000
         }
     }.execute()
 }
-
-fun User.getContract(): DBContract = asyncTransaction(Akatsuki.instance.pool) {
-    val contract = Contracts.select { Contracts.userId.eq(idLong) }.first()
-
-    return@asyncTransaction DBContract(
-            idLong,
-            contract[Contracts.wish],
-            contract[Contracts.date]
-    )
-}.execute().get()

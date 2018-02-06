@@ -31,6 +31,7 @@ import me.noud02.akatsuki.EventListener
 import me.noud02.akatsuki.annotations.Argument
 import me.noud02.akatsuki.annotations.Load
 import me.noud02.akatsuki.db.schema.Contracts
+import me.noud02.akatsuki.db.schema.Items
 import me.noud02.akatsuki.entities.Command
 import me.noud02.akatsuki.entities.Context
 import me.noud02.akatsuki.extensions.createContract
@@ -40,12 +41,13 @@ import net.dv8tion.jda.core.entities.Member
 import net.dv8tion.jda.core.events.message.MessageReceivedEvent
 import org.jetbrains.exposed.sql.select
 
-@Argument("user", "user")
+@Argument("user", "user", true)
 class ViewContract : Command() {
+    override val guildOnly = true
     override val desc = "View someone's contract!"
 
     override fun run(ctx: Context) {
-        val member = ctx.args["user"] as Member
+        val member = ctx.args.getOrDefault("member", ctx.member!!) as Member
 
         asyncTransaction(Akatsuki.instance.pool) {
             val contract = Contracts.select { Contracts.userId.eq(member.user.idLong) }.firstOrNull()
@@ -62,11 +64,24 @@ class ViewContract : Command() {
                 val xpNeeded = level.toFloat() * 500f * (level.toFloat() / 3f)
                 val progress = xp.toFloat() / xpNeeded * 10f
 
+                val itemMap = mutableMapOf<String, Int>()
+
+                contract[Contracts.inventory].forEach {
+                    val item = Items.select { Items.id.eq(it) }.firstOrNull() ?: return@forEach
+                    val content = item[Items.content]
+
+                    if (itemMap.containsKey(content))
+                        itemMap[content] = itemMap[content]!! + 1
+                    else
+                        itemMap[content] = 1
+                }
+
                 addField(
                         "Stats",
                         """**Rank:** ${contract[Contracts.level]}
                             |**Progress:** [${"#".repeat(progress.toInt())}${"-".repeat(10 - progress.toInt())}] ${progress.toInt() * 10}%
-                        """.trimMargin(),
+                            |**Balance:** ${contract[Contracts.balance]}$
+                         """.trimMargin(),
                         true
                 )
 
@@ -75,6 +90,13 @@ class ViewContract : Command() {
                         "[${"#".repeat(if (corruption != 0) corruption / 10 else 0)}${"-".repeat(10 - corruption)}] $corruption%",
                         true
                 )
+
+                addField(
+                        "Inventory",
+                        itemMap.map { "${it.value}x ${it.key}" }.joinToString(", "),
+                        false
+                )
+
                 setFooter(contract[Contracts.date].toString(), null)
             }.build())
         }.execute()

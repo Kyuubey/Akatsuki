@@ -25,19 +25,14 @@
 
 package me.noud02.akatsuki.db.schema
 
-import me.aurieh.ares.exposed.pg.jsonbArray
 import org.jetbrains.exposed.sql.Table
 
-object Contracts : Table() {
-    val userId = long("userId")
+object Items : Table() {
+    val id = varchar("id", 20)
             .primaryKey()
             .uniqueIndex()
-    val date = date("date")
-    val wish = varchar("wish", 2000)
-    val level = integer("level")
-    val experience = integer("experience")
-    val gem = varchar("gem", 20)
-    val corruption = integer("corruption")
-    val inventory = jsonbArray<String>("inventory")
-    val balance = integer("balance")
+    val type = varchar("type", 20)
+    val description = varchar("description", 500)
+    val content = varchar("item", 50)
+    val price = integer("price")
 }

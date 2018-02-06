@@ -63,7 +63,8 @@ data class DBGuild(
         val welcomeChannel: Long,
         val welcomeMessage: String,
         val leaveMessage: String,
-        val ignoredChannels: List<Long>
+        val ignoredChannels: List<Long>,
+        val levelMessages: Boolean
 )
 
 data class DBUser(
@@ -117,7 +118,8 @@ object DatabaseWrapper {
                     guild[Guilds.welcomeChannel],
                     guild[Guilds.welcomeMessage],
                     guild[Guilds.leaveMessage],
-                    guild[Guilds.ignoredChannels].toList()
+                    guild[Guilds.ignoredChannels].toList(),
+                    guild[Guilds.levelMessages]
             )
     }.execute().get()
 
@@ -144,6 +146,7 @@ object DatabaseWrapper {
                 it[welcomeMessage] = "Welcome %USER% to %SERVER%!"
                 it[leaveMessage] = "%USER% \uD83D\uDC4B"
                 it[ignoredChannels] = arrayOf()
+                it[levelMessages] = false
             }
     }.execute().get()
 
