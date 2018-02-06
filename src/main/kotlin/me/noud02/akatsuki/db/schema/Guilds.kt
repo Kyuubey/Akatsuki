@@ -48,4 +48,5 @@ object Guilds : Table() {
     val welcomeMessage = varchar("welcomeMessage", 2000)
     val leaveMessage = varchar("leaveMessage", 2000)
     val ignoredChannels = pgArray<Long>("ignoredChannels", "BIGINT")
+    val levelMessages = bool("levelMessages")
 }
