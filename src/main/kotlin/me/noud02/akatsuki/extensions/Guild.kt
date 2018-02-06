@@ -45,6 +45,10 @@ fun Guild.searchTextChannels(query: String): List<TextChannel> = textChannels.fi
     "${it.asMention} ${it.name.toLowerCase()} ${it.id}".indexOf(query.toLowerCase()) > -1
 }
 
+fun Guild.searchRoles(query: String): List<Role> = roles.filter {
+    "${it.asMention} ${it.name.toLowerCase()} ${it.id}".indexOf(query.toLowerCase()) > -1
+}
+
 fun getStarColor(stars: Int): Color {
     var c = stars / 13
 

@@ -47,7 +47,7 @@ class TestCommand : Command() {
     override fun run(ctx: Context) {
         val script = ctx.rawArgs.joinToString(" ")
 
-        val result = LuaSandbox.eval(script, ctx.rawArgs)
+        val result = LuaSandbox.eval(script, ctx.rawArgs, ctx)
 
         ctx.send(result)
     }
@@ -140,7 +140,7 @@ class CustomCommand : Command() {
             if (command[Scripts.ownerOnly] && !hasPerm)
                 return@asyncTransaction ctx.send("This command is owner-only!")
 
-            val res = LuaSandbox.eval(command[Scripts.script], ctx.rawArgs.slice(1 until ctx.rawArgs.size))
+            val res = LuaSandbox.eval(command[Scripts.script], ctx.rawArgs.slice(1 until ctx.rawArgs.size), ctx)
 
             ctx.send(res)
         }.execute()
