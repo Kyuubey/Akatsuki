@@ -25,25 +25,17 @@
 
 package me.noud02.akatsuki.commands
 
-import me.noud02.akatsuki.annotations.Argument
 import me.noud02.akatsuki.annotations.Load
-import me.noud02.akatsuki.entities.*
-import me.noud02.akatsuki.extensions.await
-import net.dv8tion.jda.core.entities.Member
+import me.noud02.akatsuki.entities.Command
+import me.noud02.akatsuki.entities.Context
 import java.time.temporal.ChronoUnit
 
 @Load
-@Argument("meme", "user", true)
-class Ping : AsyncCommand() {
-    override val desc = "Pings a user if specified"
+class Ping : Command() {
+    override val desc = "Pong!"
 
-    override suspend fun asyncRun(ctx: Context) {
-        if (ctx.args["meme"] != null && ctx.args["meme"] is Member) {
-            val user = ctx.args["meme"] as Member
-            ctx.send(user.asMention)
-        } else {
-            val msg = ctx.event.channel.sendMessage("Pong!").await()
-            msg.editMessage("Pong! `${ctx.msg.creationTime.until(msg.creationTime, ChronoUnit.MILLIS)}ms`").queue()
-        }
+    override fun run(ctx: Context)
+            = ctx.event.channel.sendMessage("Pong!").queue {
+        it.editMessage("Pong! `${ctx.msg.creationTime.until(it.creationTime, ChronoUnit.MILLIS)}ms`").queue()
     }
 }

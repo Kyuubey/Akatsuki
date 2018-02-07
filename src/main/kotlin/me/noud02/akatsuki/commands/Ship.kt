@@ -31,6 +31,7 @@ import me.noud02.akatsuki.annotations.Arguments
 import me.noud02.akatsuki.annotations.Load
 import me.noud02.akatsuki.entities.Command
 import me.noud02.akatsuki.entities.Context
+import me.noud02.akatsuki.entities.ThreadedCommand
 import net.dv8tion.jda.core.entities.Member
 import okhttp3.*
 import java.io.File
@@ -41,10 +42,10 @@ import java.io.FileOutputStream
         Argument("user1", "user"),
         Argument("user2", "user")
 )
-class Ship : Command() {
+class Ship : ThreadedCommand() {
     override val desc = "Ship people with eachother"
 
-    override fun run(ctx: Context) {
+    override fun threadedRun(ctx: Context) {
         val user1 = ctx.args["user1"] as Member
         val user2 = ctx.args["user2"] as Member
 
@@ -54,20 +55,21 @@ class Ship : Command() {
         val temp2 = File.createTempFile("image", "png")
         temp2.deleteOnExit()
 
-        temp1.writeBytes(
-                Akatsuki.instance.okhttp
-                        .newCall(Request.Builder().url(user1.user.avatarUrl).build())
-                        .execute()
-                        .body()!!
-                        .bytes()
-        )
-        temp2.writeBytes(
-                Akatsuki.instance.okhttp
-                        .newCall(Request.Builder().url(user2.user.avatarUrl).build())
-                        .execute()
-                        .body()!!
-                        .bytes()
-        )
+        Akatsuki.instance.okhttp
+                .newCall(Request.Builder().url(user1.user.avatarUrl).build())
+                .execute()
+                .apply {
+                    temp1.writeBytes(body()!!.bytes())
+                }
+                .close()
+
+        Akatsuki.instance.okhttp
+                .newCall(Request.Builder().url(user2.user.avatarUrl).build())
+                .execute()
+                .apply {
+                    temp2.writeBytes(body()!!.bytes())
+                }
+                .close()
 
         val first = user1.user.name
         val sec = user2.user.name
@@ -100,7 +102,8 @@ class Ship : Command() {
         ctx.channel
                 .sendMessage("Happy shipping!\nYour shipname: $ship")
                 .addFile(res.body()!!.bytes(), "ship.png")
-                .queue()
-        res.close()
+                .queue {
+                    res.close()
+                }
     }
 }

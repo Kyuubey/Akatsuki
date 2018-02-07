@@ -32,11 +32,9 @@ import me.noud02.akatsuki.annotations.Arguments
 import me.noud02.akatsuki.annotations.Load
 import me.noud02.akatsuki.annotations.Perm
 import me.noud02.akatsuki.db.schema.Modlogs
-import me.noud02.akatsuki.entities.AsyncCommand
+import me.noud02.akatsuki.entities.Command
 import me.noud02.akatsuki.entities.Context
-import me.noud02.akatsuki.extensions.await
 import net.dv8tion.jda.core.Permission
-import net.dv8tion.jda.core.entities.User
 import org.jetbrains.exposed.sql.and
 import org.jetbrains.exposed.sql.select
 import org.jetbrains.exposed.sql.update
@@ -47,10 +45,10 @@ import org.jetbrains.exposed.sql.update
         Argument("case", "string"),
         Argument("reason", "string")
 )
-class Reason : AsyncCommand() {
+class Reason : Command() {
     override val guildOnly = true
 
-    override suspend fun asyncRun(ctx: Context) {
+    override fun run(ctx: Context) {
         val reasonArg = ctx.args["reason"] as String
 
         if (reasonArg.length > 512)
@@ -108,6 +106,6 @@ class Reason : AsyncCommand() {
             }
 
             ctx.send("\uD83D\uDC4C")
-        }.await()
+        }.execute()
     }
 }

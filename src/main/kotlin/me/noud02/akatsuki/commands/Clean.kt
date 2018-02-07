@@ -26,12 +26,15 @@
 package me.noud02.akatsuki.commands
 
 import me.noud02.akatsuki.annotations.Alias
+import me.noud02.akatsuki.annotations.Argument
 import me.noud02.akatsuki.entities.AsyncCommand
 import me.noud02.akatsuki.entities.Context
 import me.noud02.akatsuki.annotations.Load
 import me.noud02.akatsuki.extensions.await
+import kotlin.math.min
 
 @Load
+@Argument("messages", "number", true)
 @Alias("clear", "cls")
 class Clean : AsyncCommand() {
     override val desc = "Clean the last 10 messages sent by me"
@@ -43,7 +46,7 @@ class Clean : AsyncCommand() {
         val botmsgs = msgs
                 .retrievedHistory
                 .filter { it.author.id == ctx.selfMember!!.user.id }
-                .subList(0, 10)
+                .subList(0, min(ctx.args.getOrDefault("messages", 10) as Int, 10))
 
         botmsgs
                 .forEach { it.delete().await() }

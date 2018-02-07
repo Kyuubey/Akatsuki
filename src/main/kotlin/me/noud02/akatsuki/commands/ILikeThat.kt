@@ -51,7 +51,8 @@ class ILikeThat : ThreadedCommand() {
             }.build())
         }.build()).execute()
 
-        ctx.event.channel.sendFile(res.body()!!.byteStream(), "ilikethat.png", null).queue()
-        res.close()
+        ctx.event.channel.sendFile(res.body()!!.byteStream(), "ilikethat.png", null).queue {
+            res.close()
+        }
     }
 }

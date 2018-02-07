@@ -48,7 +48,8 @@ class ShitWaifu : ThreadedCommand() {
             post(RequestBody.create(MediaType.parse("application/json"), "{\"avatar\":\"${member.user.avatarUrl}\"}"))
         }.build()).execute()
 
-        ctx.channel.sendFile(res.body()!!.bytes(), "shitwaifu.png").queue()
-        res.close()
+        ctx.channel.sendFile(res.body()!!.bytes(), "shitwaifu.png").queue {
+            res.close()
+        }
     }
 }
