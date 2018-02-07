@@ -42,15 +42,16 @@ class Woow : ThreadedCommand() {
     override fun threadedRun(ctx: Context) {
         val temp = File.createTempFile("image", "png")
         temp.deleteOnExit()
+
+        val imgRes = Akatsuki.instance.okhttp
+                .newCall(Request.Builder().url(ctx.args["image"] as String).build())
+                .execute()
+
         val out = FileOutputStream(temp)
         IOUtils.copy(
                 ctx.msg.attachments.getOrNull(0)?.inputStream
                         ?: if (ctx.args.containsKey("image"))
-                            Akatsuki.instance.okhttp
-                                    .newCall(Request.Builder().url(ctx.args["image"] as String).build())
-                                    .execute()
-                                    .body()!!
-                                    .byteStream()
+                            imgRes.body()!!.byteStream()
                         else
                             ctx.getLastImage() ?: return ctx.send("No images found!"),
                 out
@@ -75,7 +76,9 @@ class Woow : ThreadedCommand() {
             }.build())
         }.build()).execute()
 
-        ctx.channel.sendFile(res.body()!!.byteStream(), "woow.png", null).queue()
-        res.close()
+        ctx.channel.sendFile(res.body()!!.byteStream(), "woow.png", null).queue {
+            res.close()
+            imgRes.close()
+        }
     }
 }

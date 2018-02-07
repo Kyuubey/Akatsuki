@@ -38,9 +38,13 @@ import org.jetbrains.exposed.sql.select
 
 @Load
 class Snipe : Command() {
+    override val desc = "Snipe the latest deleted message."
     override val guildOnly = true
 
     override fun run(ctx: Context) {
+        if (!ctx.storedGuild!!.logs)
+            return ctx.send("Logs aren't enabled!")
+
         asyncTransaction(Akatsuki.instance.pool) {
             val snipe = EventListener.instance.snipes.remove(ctx.channel.idLong)
 

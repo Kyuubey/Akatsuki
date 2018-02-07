@@ -42,7 +42,7 @@ class Py : Command() {
         val py = PythonInterpreter()
         py.set("ctx", ctx)
         try {
-            val res = py.exec(ctx.rawArgs.joinToString(" "))
+            val res = py.eval(ctx.rawArgs.joinToString(" "))
             ctx.sendCode("py", res)
             py.set("ctx", null)
         } catch(e: Throwable) {

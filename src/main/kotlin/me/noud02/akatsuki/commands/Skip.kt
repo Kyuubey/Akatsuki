@@ -54,6 +54,9 @@ class Skip : Command() {
             )
         val manager = MusicManager.musicManagers[ctx.guild!!.id] ?: return ctx.send("Not connected!")
 
+        if (manager.scheduler.queue.isEmpty())
+            return ctx.send("There's nothing in the queue!")
+
         if (ctx.perms["MANAGE_SERVER"] == true) {
             manager.scheduler.next()
             ctx.send(

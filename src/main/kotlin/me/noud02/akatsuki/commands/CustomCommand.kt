@@ -28,15 +28,13 @@ package me.noud02.akatsuki.commands
 import me.aurieh.ares.exposed.async.asyncTransaction
 import me.noud02.akatsuki.Akatsuki
 import me.noud02.akatsuki.annotations.*
+import me.noud02.akatsuki.annotations.Alias
 import me.noud02.akatsuki.db.schema.Scripts
 import me.noud02.akatsuki.entities.Command
 import me.noud02.akatsuki.entities.Context
 import me.noud02.akatsuki.utils.LuaSandbox
 import net.dv8tion.jda.core.Permission
-import org.jetbrains.exposed.sql.and
-import org.jetbrains.exposed.sql.deleteWhere
-import org.jetbrains.exposed.sql.insert
-import org.jetbrains.exposed.sql.select
+import org.jetbrains.exposed.sql.*
 
 @Perm(Permission.MANAGE_SERVER)
 @Argument("script", "string")
@@ -86,7 +84,10 @@ class AddCommand : Command() {
     }
 }
 
-@Perm(Permission.ADMINISTRATOR, true)
+@Perms(
+        Perm(Permission.ADMINISTRATOR, true),
+        Perm(Permission.MANAGE_SERVER)
+)
 @Argument("name", "string")
 class RemoveCommand : Command() {
     override val guildOnly = true
@@ -108,6 +109,40 @@ class RemoveCommand : Command() {
             }
 
             ctx.send("Deleted command **${match[Scripts.scriptName]}**!")
+        }.execute()
+    }
+}
+
+@Perms(
+        Perm(Permission.MANAGE_SERVER),
+        Perm(Permission.ADMINISTRATOR, true)
+)
+@Arguments(
+        Argument("name", "string"),
+        Argument("script", "string")
+)
+class EditCommand : Command() {
+    override val desc = "Edit custom commands."
+    override val guildOnly = true
+
+    override fun run(ctx: Context) {
+        val name = ctx.args["name"]
+        val hasPerm = ctx.perms["ADMINISTRATOR"] as Boolean
+
+        asyncTransaction(Akatsuki.instance.pool) {
+            val match = Scripts.select { Scripts.guildId.eq(ctx.guild!!.idLong).and(Scripts.scriptName.eq(name)) }.firstOrNull()
+                    ?: return@asyncTransaction ctx.send("Couldn't find that command!")
+
+            if (!hasPerm && match[Scripts.ownerId] != ctx.author.idLong)
+                return@asyncTransaction ctx.send("You can't edit that command!")
+
+            Scripts.update({
+                Scripts.scriptName.eq(name).and(Scripts.guildId.eq(ctx.guild!!.idLong))
+            }) {
+                it[script] = ctx.args["script"] as String
+            }
+
+            ctx.send("Edited command **${match[Scripts.scriptName]}**!")
         }.execute()
     }
 }
