@@ -2,10 +2,12 @@ version: '3'
 
 services:
   akatsuki:
-    build: .
+    image: noud02/akatsuki:latest
+    env_file:
+      - config.env
 
   akatsuki-backend:
-    build: ./backend/
+    image: noud02/akatsuki-backend:latest
     hostname: backend
     ports:
       - 5050:5050
