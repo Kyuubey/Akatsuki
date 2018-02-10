@@ -27,7 +27,6 @@ package me.noud02.akatsuki.utils
 
 import me.aurieh.ares.core.entities.EventWaiter
 import me.noud02.akatsuki.entities.PickerItem
-import me.noud02.akatsuki.extensions.await
 import net.dv8tion.jda.core.EmbedBuilder
 import net.dv8tion.jda.core.Permission
 import net.dv8tion.jda.core.entities.*

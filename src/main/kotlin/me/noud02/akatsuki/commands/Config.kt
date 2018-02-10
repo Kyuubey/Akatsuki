@@ -30,11 +30,14 @@ import me.noud02.akatsuki.Akatsuki
 import me.noud02.akatsuki.EventListener
 import me.noud02.akatsuki.annotations.*
 import me.noud02.akatsuki.db.schema.Guilds
-import me.noud02.akatsuki.entities.AsyncCommand
 import me.noud02.akatsuki.entities.Command
 import me.noud02.akatsuki.entities.Context
+import me.noud02.akatsuki.extensions.searchRoles
+import me.noud02.akatsuki.extensions.searchTextChannels
+import me.noud02.akatsuki.utils.RolePicker
 import me.noud02.akatsuki.utils.TextChannelPicker
 import net.dv8tion.jda.core.Permission
+import net.dv8tion.jda.core.entities.Role
 import net.dv8tion.jda.core.entities.TextChannel
 import org.jetbrains.exposed.sql.update
 
@@ -43,7 +46,7 @@ import org.jetbrains.exposed.sql.update
         Argument("value", "any")
 )
 @Perm(Permission.MANAGE_SERVER)
-class Set : AsyncCommand() {
+class Set : Command() {
     private val yes = listOf(
             "y",
             "yes",
@@ -63,7 +66,7 @@ class Set : AsyncCommand() {
     override val desc = "Set something in the config"
     override val guildOnly = true
 
-    override suspend fun asyncRun(ctx: Context) {
+    override fun run(ctx: Context) {
         val key = (ctx.args["option"] as String).toLowerCase()
         val value = (ctx.args["value"] as String).toLowerCase()
 
@@ -119,36 +122,34 @@ class Set : AsyncCommand() {
                 }
 
                 "starboardchannel" -> {
-                    val channel: TextChannel = when {
-                        "<#\\d+>".toRegex().matches(value) -> try {
-                            ctx.guild!!.getTextChannelById("<#(\\d+)>".toRegex().matchEntire(value)?.groupValues?.get(1))
-                        } catch (e: Throwable) {
-                            return@asyncTransaction ctx.send("Couldn't find that channel!")
+                    val channels = ctx.guild!!.searchTextChannels(value)
+
+                    if (channels.isEmpty())
+                        return@asyncTransaction ctx.send("Couldn't find that channel!")
+
+                    fun updateChannel(channel: TextChannel) {
+                        Guilds.update({
+                            Guilds.id.eq(ctx.guild.idLong)
+                        }) {
+                            it[starboardChannel] = channel.idLong
                         }
 
-                        ctx.guild!!.getTextChannelsByName(value, true).isNotEmpty() -> {
-                            val channels = ctx.guild.getTextChannelsByName(value, true)
-
-                            if (channels.size > 1) {
-                                val picker = TextChannelPicker(EventListener.instance.waiter, ctx.member!!, channels, ctx.guild)
-
-                                picker.build(ctx.channel).get()
-                            } else
-                                channels[0]
-                        }
-
-                        value.toLongOrNull() != null && ctx.guild.getTextChannelById(value) != null -> ctx.guild.getTextChannelById(value)
-
-                        else -> return@asyncTransaction ctx.send("Couldn't find that channel!")
+                        ctx.send("Set `starboardChannel` to ${channel.asMention}")
                     }
 
-                    Guilds.update({
-                        Guilds.id.eq(ctx.guild.idLong)
-                    }) {
-                        it[starboardChannel] = channel.idLong
-                    }
-
-                    ctx.send("Set `starboardChannel` to ${channel.asMention}")
+                    if (channels.size > 1)
+                        TextChannelPicker(
+                                EventListener.instance.waiter,
+                                ctx.member!!,
+                                channels,
+                                ctx.guild
+                        )
+                                .build(ctx.channel)
+                                .thenAccept {
+                                    updateChannel(it)
+                                }
+                    else
+                        updateChannel(channels[0])
                 }
 
                 "modlogs" -> {
@@ -165,36 +166,34 @@ class Set : AsyncCommand() {
                 }
 
                 "modlogchannel" -> {
-                    val channel: TextChannel = when {
-                        "<#\\d+>".toRegex().matches(value) -> try {
-                            ctx.guild!!.getTextChannelById("<#(\\d+)>".toRegex().matchEntire(value)?.groupValues?.get(1))
-                        } catch (e: Throwable) {
-                            return@asyncTransaction ctx.send("Couldn't find that channel!")
+                    val channels = ctx.guild!!.searchTextChannels(value)
+
+                    if (channels.isEmpty())
+                        return@asyncTransaction ctx.send("Couldn't find that channel!")
+
+                    fun updateChannel(channel: TextChannel) {
+                        Guilds.update({
+                            Guilds.id.eq(ctx.guild.idLong)
+                        }) {
+                            it[modlogChannel] = channel.idLong
                         }
 
-                        ctx.guild!!.getTextChannelsByName(value, true).isNotEmpty() -> {
-                            val channels = ctx.guild.getTextChannelsByName(value, true)
-
-                            if (channels.size > 1) {
-                                val picker = TextChannelPicker(EventListener.instance.waiter, ctx.member!!, channels, ctx.guild)
-
-                                picker.build(ctx.channel).get()
-                            } else
-                                channels[0]
-                        }
-
-                        value.toLongOrNull() != null && ctx.guild.getTextChannelById(value) != null -> ctx.guild.getTextChannelById(value)
-
-                        else -> return@asyncTransaction ctx.send("Couldn't find that channel!")
+                        ctx.send("Set `modlogChannel` to ${channel.asMention}")
                     }
 
-                    Guilds.update({
-                        Guilds.id.eq(ctx.guild.idLong)
-                    }) {
-                        it[modlogChannel] = channel.idLong
-                    }
-
-                    ctx.send("Set `modlogChannel` to ${channel.asMention}")
+                    if (channels.size > 1)
+                        TextChannelPicker(
+                                EventListener.instance.waiter,
+                                ctx.member!!,
+                                channels,
+                                ctx.guild
+                        )
+                                .build(ctx.channel)
+                                .thenAccept {
+                                    updateChannel(it)
+                                }
+                    else
+                        updateChannel(channels[0])
                 }
 
                 "welcome" -> {
@@ -211,36 +210,34 @@ class Set : AsyncCommand() {
                 }
 
                 "welcomechannel" -> {
-                    val channel: TextChannel = when {
-                        "<#\\d+>".toRegex().matches(value) -> try {
-                            ctx.guild!!.getTextChannelById("<#(\\d+)>".toRegex().matchEntire(value)?.groupValues?.get(1))
-                        } catch (e: Throwable) {
-                            return@asyncTransaction ctx.send("Couldn't find that channel!")
+                    val channels = ctx.guild!!.searchTextChannels(value)
+
+                    if (channels.isEmpty())
+                        return@asyncTransaction ctx.send("Couldn't find that channel!")
+
+                    fun updateChannel(channel: TextChannel) {
+                        Guilds.update({
+                            Guilds.id.eq(ctx.guild.idLong)
+                        }) {
+                            it[welcomeChannel] = channel.idLong
                         }
 
-                        ctx.guild!!.getTextChannelsByName(value, true).isNotEmpty() -> {
-                            val channels = ctx.guild.getTextChannelsByName(value, true)
-
-                            if (channels.size > 1) {
-                                val picker = TextChannelPicker(EventListener.instance.waiter, ctx.member!!, channels, ctx.guild)
-
-                                picker.build(ctx.channel).get()
-                            } else
-                                channels[0]
-                        }
-
-                        value.toLongOrNull() != null && ctx.guild.getTextChannelById(value) != null -> ctx.guild.getTextChannelById(value)
-
-                        else -> return@asyncTransaction ctx.send("Couldn't find that channel!")
+                        ctx.send("Set `welcomeChannel` to ${channel.asMention}")
                     }
 
-                    Guilds.update({
-                        Guilds.id.eq(ctx.guild.idLong)
-                    }) {
-                        it[welcomeChannel] = channel.idLong
-                    }
-
-                    ctx.send("Set `welcomeChannel` to ${channel.asMention}")
+                    if (channels.size > 1)
+                        TextChannelPicker(
+                                EventListener.instance.waiter,
+                                ctx.member!!,
+                                channels,
+                                ctx.guild
+                        )
+                                .build(ctx.channel)
+                                .thenAccept {
+                                    updateChannel(it)
+                                }
+                    else
+                        updateChannel(channels[0])
                 }
 
                 "welcomemessage" -> {
@@ -267,9 +264,53 @@ class Set : AsyncCommand() {
                     ctx.send("Set `leaveMessage` to \"$text\"")
                 }
 
+                "levelmessages" -> {
+                    if (!yes.contains(value) && !no.contains(value))
+                        return@asyncTransaction ctx.send("Invalid value: $value")
+
+                    Guilds.update({
+                        Guilds.id.eq(ctx.guild!!.idLong)
+                    }) {
+                        it[levelMessages] = yes.contains(value)
+                    }
+
+                    ctx.send("Set `levelMessages` to `${yes.contains(value)}`")
+                }
+
+                "mutedrole" -> {
+                    val roles = ctx.guild!!.searchRoles(value)
+
+                    if (roles.isEmpty())
+                        return@asyncTransaction ctx.send("Couldn't find that role!")
+
+                    fun updateRole(role: Role) {
+                        Guilds.update({
+                            Guilds.id.eq(ctx.guild.idLong)
+                        }) {
+                            it[mutedRole] = role.idLong
+                        }
+
+                        ctx.send("Set `mutedRole` to ${role.name}")
+                    }
+
+                    if (roles.size > 1)
+                        RolePicker(
+                                EventListener.instance.waiter,
+                                ctx.member!!,
+                                roles,
+                                ctx.guild
+                        )
+                                .build(ctx.channel)
+                                .thenAccept {
+                                    updateRole(it)
+                                }
+                    else
+                        updateRole(roles[0])
+                }
+
                 else -> return@asyncTransaction ctx.send("Invalid key: $key")
             }
-        }.await()
+        }.execute()
     }
 }
 
@@ -289,11 +330,21 @@ class Config : Command() {
 
 # Modlogs
 modlogs         = ${ctx.storedGuild!!.modlogs}
-modlogChannel   = #${ctx.guild!!.getTextChannelById(ctx.storedGuild.modlogChannel).name}
+modlogChannel   = ${
+    if (ctx.storedGuild.modlogChannel != null)
+        "#${ctx.guild!!.getTextChannelById(ctx.storedGuild.modlogChannel)?.name ?: "unknown"}"
+    else
+        "null"
+    }
 
 # Starboard
 starboard       = ${ctx.storedGuild.starboard}
-starboardChannel= #${ctx.guild.getTextChannelById(ctx.storedGuild.starboardChannel).name}
+starboardChannel= ${
+    if (ctx.storedGuild.starboardChannel != null)
+        "#${ctx.guild!!.getTextChannelById(ctx.storedGuild.starboardChannel)?.name ?: "unknown"}"
+    else
+        "null"
+    }
 
 # Logs
 logs            = ${ctx.storedGuild.logs}
@@ -304,7 +355,16 @@ forceLang       = ${ctx.storedGuild.forceLang}
 
 # Welcome
 welcome         = ${ctx.storedGuild.welcome}
-welcomeChannel  = #${ctx.guild.getTextChannelById(ctx.storedGuild.welcomeChannel).name}
+welcomeChannel  = ${
+    if (ctx.storedGuild.welcomeChannel != null)
+        "#${ctx.guild!!.getTextChannelById(ctx.storedGuild.welcomeChannel)?.name ?: "unknown"}"
+    else
+        "null"
+    }
+
 welcomeMessage  = "${ctx.storedGuild.welcomeMessage}"
-leaveMessage    = "${ctx.storedGuild.leaveMessage}"```""")
+leaveMessage    = "${ctx.storedGuild.leaveMessage}"
+
+# Other
+levelMessages   = ${ctx.storedGuild.levelMessages}```""")
 }

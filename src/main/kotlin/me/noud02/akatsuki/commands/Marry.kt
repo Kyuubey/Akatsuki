@@ -47,7 +47,7 @@ class Marry : Command() {
     override fun run(ctx: Context) {
         val member = ctx.args["user"] as Member
 
-        if (ctx.storedUser.marriedUserId != 0L)
+        if (ctx.storedUser.marriedUserId != null)
             return ctx.send("You are already married to ${ctx.jda.getUserById(ctx.storedUser.marriedUserId).name}!")
 
         if (member.user.id == ctx.author.id)
@@ -56,9 +56,9 @@ class Marry : Command() {
         if (member.user.isBot)
             return ctx.send("You can't marry a bot!")
 
-        val dbUser = DatabaseWrapper.getUserSafe(member.user)
+        val dbUser = DatabaseWrapper.getUserSafe(member.user).get()
 
-        if (dbUser.marriedUserId != 0L)
+        if (dbUser.marriedUserId != null)
             return ctx.send("${member.effectiveName} is already married to ${ctx.jda.getUserById(dbUser.marriedUserId).name}!")
 
         val yesEmote = "\u2705"

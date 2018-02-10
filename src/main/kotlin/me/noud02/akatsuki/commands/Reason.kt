@@ -49,6 +49,9 @@ class Reason : Command() {
     override val guildOnly = true
 
     override fun run(ctx: Context) {
+        if (ctx.storedGuild!!.modlogChannel == null)
+            return ctx.send("Modlog channel is not defined in config!")
+
         val reasonArg = ctx.args["reason"] as String
 
         if (reasonArg.length > 512)
@@ -89,7 +92,7 @@ class Reason : Command() {
 
                 if (log != null)
                     ctx.guild!!
-                            .getTextChannelById(ctx.storedGuild!!.modlogChannel)
+                            .getTextChannelById(ctx.storedGuild.modlogChannel ?: return@asyncTransaction)
                             .getMessageById(log[Modlogs.messageId])
                             .queue ({
                                 it.editMessage(

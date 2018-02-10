@@ -38,20 +38,20 @@ class Divorce : Command() {
     override val guildOnly = true
 
     override fun run(ctx: Context) {
-        if (ctx.storedUser.marriedUserId == 0L)
+        if (ctx.storedUser.marriedUserId == null)
             return ctx.send("You aren't married!")
 
         asyncTransaction(Akatsuki.instance.pool) {
             Users.update({
                 Users.id.eq(ctx.author.idLong)
             }) {
-                it[marriedUserId] = 0
+                it[marriedUserId] = null
             }
 
             Users.update({
                 Users.id.eq(ctx.storedUser.marriedUserId)
             }) {
-                it[marriedUserId] = 0
+                it[marriedUserId] = null
             }
 
             ctx.send("${ctx.member!!.effectiveName} \uD83D\uDC94 ${ctx.jda.getUserById(ctx.storedUser.marriedUserId).name}")
