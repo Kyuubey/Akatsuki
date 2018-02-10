@@ -33,32 +33,26 @@ import me.noud02.akatsuki.entities.Command
 import me.noud02.akatsuki.entities.Context
 import net.dv8tion.jda.core.EmbedBuilder
 import net.dv8tion.jda.core.Permission
+import net.dv8tion.jda.core.entities.Role
 import org.jetbrains.exposed.sql.update
 
 @Perm(Permission.MANAGE_ROLES)
-@Argument("role", "string")
+@Argument("role", "role")
 class AddRole : Command() {
     override val desc = "Add user-assignable roles."
     override val guildOnly = true
 
     override fun run(ctx: Context) {
-        val roleName = (ctx.args["role"] as String).toLowerCase()
-
-        val roles = ctx.guild!!.getRolesByName(roleName, true)
-
-        if (roles.isEmpty())
-            return ctx.send("Couldn't find that role!")
-
-        val role = roles[0]
+        val role = ctx.args["role"] as Role
 
         asyncTransaction(Akatsuki.instance.pool) {
             Guilds.update({
-                Guilds.id.eq(ctx.guild.idLong)
+                Guilds.id.eq(ctx.guild!!.idLong)
             }) {
-                it[rolemeRoles] = ctx.storedGuild!!.rolemeRoles.plus(roleName to role.idLong)
+                it[rolemeRoles] = ctx.storedGuild!!.rolemeRoles.plus(role.name to role.idLong)
             }
 
-            ctx.send("Added role $roleName to self assignable roles!")
+            ctx.send("Added role ${role.name} to self assignable roles!")
         }.execute()
     }
 }
