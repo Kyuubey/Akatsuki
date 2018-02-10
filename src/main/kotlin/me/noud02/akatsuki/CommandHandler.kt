@@ -34,11 +34,9 @@ import me.noud02.akatsuki.db.DatabaseWrapper
 import me.noud02.akatsuki.entities.*
 import me.noud02.akatsuki.extensions.UTF8Control
 import me.noud02.akatsuki.extensions.searchMembers
+import me.noud02.akatsuki.extensions.searchRoles
 import me.noud02.akatsuki.extensions.searchTextChannels
-import me.noud02.akatsuki.utils.UserPicker
-import me.noud02.akatsuki.utils.I18n
-import me.noud02.akatsuki.utils.Logger
-import me.noud02.akatsuki.utils.TextChannelPicker
+import me.noud02.akatsuki.utils.*
 import net.dv8tion.jda.core.Permission
 import net.dv8tion.jda.core.entities.Channel
 import net.dv8tion.jda.core.entities.Member
@@ -90,8 +88,8 @@ class CommandHandler {
     }
 
     fun handleMessage(event: MessageReceivedEvent) {
-        val guild = if (event.guild != null) DatabaseWrapper.getGuildSafe(event.guild) else null
-        val user = DatabaseWrapper.getUserSafe(event.author)
+        val guild = if (event.guild != null) DatabaseWrapper.getGuildSafe(event.guild).get() else null
+        val user = DatabaseWrapper.getUserSafe(event.author).get()
 
         val locale = if (guild != null && guild.forceLang)
             Locale(guild.lang.split("_")[0], guild.lang.split("_")[1])
@@ -123,7 +121,7 @@ class CommandHandler {
                 return
 
         if (event.guild != null
-                && DatabaseWrapper.getGuildSafe(event.guild).ignoredChannels.contains(event.channel.idLong)
+                && guild!!.ignoredChannels.contains(event.channel.idLong)
                 && cmd != "unignore")
             return
 
@@ -341,42 +339,11 @@ class CommandHandler {
 
             when (arg.type) {
                 "textchannel" -> {
-                    if (event.guild != null)
-                        when {
-                            "<#\\d+>".toRegex().matches(arg2) -> try {
-                                newArgs[arg.name] = event.guild.getTextChannelById("<#(\\d+)>"
-                                                .toRegex()
-                                                .matchEntire(arg2)?.groupValues?.get(1))
-                                i++
-                                next()
-                            } catch (e: Throwable) {
-                                throw Exception("Couldn't find that channel!")
-                            }
+                    if (event.guild != null) {
+                        val channels = event.guild.searchTextChannels(arg2)
 
-                            event.guild.searchTextChannels(arg2).isNotEmpty() -> {
-                                val channels = event.guild.searchTextChannels(arg2)
-
-                                if (channels.size > 1) {
-                                    val picker = TextChannelPicker(
-                                            EventListener.instance.waiter,
-                                            event.member,
-                                            channels,
-                                            event.guild
-                                    )
-
-                                    picker.build(event.message).thenAccept {
-                                        newArgs[arg.name] = it
-                                        i++
-                                        next()
-                                    }
-                                } else {
-                                    newArgs[arg.name] = channels[0]
-                                    i++
-                                    next()
-                                }
-                            }
-
-                            else -> throw Exception(
+                        if (channels.isEmpty())
+                            throw Exception(
                                     I18n.parse(
                                             lang.getString("channel_not_found"),
                                             mapOf(
@@ -384,39 +351,34 @@ class CommandHandler {
                                             )
                                     )
                             )
+
+                        if (channels.size > 1) {
+                            val picker = TextChannelPicker(
+                                    EventListener.instance.waiter,
+                                    event.member,
+                                    channels,
+                                    event.guild
+                            )
+
+                            picker.build(event.message).thenAccept {
+                                newArgs[arg.name] = it
+                                i++
+                                next()
+                            }
+                        } else {
+                            newArgs[arg.name] = channels[0]
+                            i++
+                            next()
                         }
+                    }
                 }
 
                 "user" -> {
-                    if (event.guild != null)
-                        when {
-                            "<@!?\\d+>".toRegex().matches(arg2) -> try {
-                                newArgs[arg.name] = event.guild.getMemberById("<@!?(\\d+)>".toRegex().matchEntire(arg2)?.groupValues?.get(1))
-                                i++
-                                next()
-                            } catch (e: Throwable) {
-                                throw Exception("Couldn't find that user!")
-                            }
+                    if (event.guild != null) {
+                        val users = event.guild.searchMembers(arg2)
 
-                            event.guild.searchMembers(arg2).isNotEmpty() -> {
-                                val users = event.guild.searchMembers(arg2)
-
-                                if (users.size > 1) {
-                                    val picker = UserPicker(EventListener.instance.waiter, event.member, users, event.guild)
-
-                                    picker.build(event.message).thenAccept {
-                                        newArgs[arg.name] = it
-                                        i++
-                                        next()
-                                    }
-                                } else {
-                                    newArgs[arg.name] = users[0]
-                                    i++
-                                    next()
-                                }
-                            }
-
-                            else -> throw Exception(
+                        if (users.isEmpty())
+                            throw Exception(
                                     I18n.parse(
                                             lang.getString("user_not_found"),
                                             mapOf(
@@ -424,7 +386,51 @@ class CommandHandler {
                                             )
                                     )
                             )
+
+                        if (users.size > 1) {
+                            val picker = UserPicker(EventListener.instance.waiter, event.member, users, event.guild)
+
+                            picker.build(event.message).thenAccept {
+                                newArgs[arg.name] = it
+                                i++
+                                next()
+                            }
+                        } else {
+                            newArgs[arg.name] = users[0]
+                            i++
+                            next()
                         }
+                    }
+                }
+
+                "role" -> {
+                    if (event.guild != null) {
+                        val roles = event.guild.searchRoles(arg2)
+
+                        if (roles.isEmpty())
+                            throw Exception(
+                                    I18n.parse(
+                                            lang.getString("role_not_found"),
+                                            mapOf(
+                                                    "username" to event.author.name
+                                            )
+                                    )
+                            )
+
+                        if (roles.size > 1) {
+                            val picker = RolePicker(EventListener.instance.waiter, event.member, roles, event.guild)
+
+                            picker.build(event.message).thenAccept {
+                                newArgs[arg.name] = it
+                                i++
+                                next()
+                            }
+                        } else {
+                            newArgs[arg.name] = roles[0]
+                            i++
+                            next()
+                        }
+                    }
                 }
 
                 "number" -> {

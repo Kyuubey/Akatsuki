@@ -45,6 +45,7 @@ import org.jetbrains.exposed.sql.select
 import org.joda.time.DateTime
 import org.json.JSONArray
 import org.json.JSONObject
+import java.util.concurrent.CompletableFuture
 import java.util.concurrent.ExecutorService
 
 data class DBGuild(
@@ -54,13 +55,13 @@ data class DBGuild(
         val prefixes: List<String>,
         val forceLang: Boolean,
         val starboard: Boolean,
-        val starboardChannel: Long,
+        val starboardChannel: Long?,
         val logs: Boolean,
         val modlogs: Boolean,
-        val modlogChannel: Long,
+        val modlogChannel: Long?,
         val rolemeRoles: Map<String, Long>,
         val welcome: Boolean,
-        val welcomeChannel: Long,
+        val welcomeChannel: Long?,
         val welcomeMessage: String,
         val leaveMessage: String,
         val ignoredChannels: List<Long>,
@@ -72,7 +73,7 @@ data class DBUser(
         val username: String,
         val discriminator: String,
         val lang: String,
-        val marriedUserId: Long
+        val marriedUserId: Long?
 )
 
 data class DBStar(
@@ -96,7 +97,7 @@ object DatabaseWrapper {
 
     fun getGuild(guild: Guild) = getGuild(guild.idLong)
 
-    fun getGuild(id: Long): DBGuild = asyncTransaction(pool) {
+    fun getGuild(id: Long) = asyncTransaction(pool) {
         val guild = Guilds.select { Guilds.id.eq(id) }.firstOrNull()
 
         if (guild == null)
@@ -121,7 +122,7 @@ object DatabaseWrapper {
                     guild[Guilds.ignoredChannels].toList(),
                     guild[Guilds.levelMessages]
             )
-    }.execute().get()
+    }.execute()
 
     fun newGuild(guild: Guild) = asyncTransaction(pool) {
         val selection = Guilds.select {
@@ -136,19 +137,19 @@ object DatabaseWrapper {
                 it[prefixes] = arrayOf()
                 it[name] = guild.name
                 it[starboard] = false
-                it[starboardChannel] = guild.textChannels.first().idLong
+                it[starboardChannel] = guild.textChannels.firstOrNull { it.name.toLowerCase() == "starboard" }?.idLong
                 it[logs] = false
                 it[modlogs] = false
-                it[modlogChannel] = guild.textChannels.first().idLong
+                it[modlogChannel] = guild.textChannels.firstOrNull { it.name.toLowerCase() == "modlogs" }?.idLong
                 it[rolemeRoles] = mapOf()
                 it[welcome] = false
-                it[welcomeChannel] = guild.textChannels.first().idLong
+                it[welcomeChannel] = guild.textChannels.firstOrNull { it.name.toLowerCase() == "welcome" }?.idLong
                 it[welcomeMessage] = "Welcome %USER% to %SERVER%!"
                 it[leaveMessage] = "%USER% \uD83D\uDC4B"
                 it[ignoredChannels] = arrayOf()
                 it[levelMessages] = false
             }
-    }.execute().get()
+    }.execute()
 
     fun remGuild(guild: Guild) = remGuild(guild.idLong)
 
@@ -156,13 +157,13 @@ object DatabaseWrapper {
         Guilds.deleteWhere {
             Guilds.id.eq(id)
         }
-    }.execute().get()
+    }.execute()
 
     fun getUser(user: User) = getUser(user.idLong)
 
     fun getUser(member: Member) = getUser(member.user.idLong)
 
-    fun getUser(id: Long): DBUser = asyncTransaction(pool) {
+    fun getUser(id: Long) = asyncTransaction(pool) {
         val user = Users.select { Users.id.eq(id) }.firstOrNull()
 
         if (user == null)
@@ -175,7 +176,7 @@ object DatabaseWrapper {
                     user[Users.lang],
                     user[Users.marriedUserId]
             )
-    }.execute().get()
+    }.execute()
 
     fun newUser(member: Member) = newUser(member.user)
 
@@ -190,25 +191,56 @@ object DatabaseWrapper {
                 it[username] = user.name
                 it[discriminator] = user.discriminator
                 it[lang] = "en_US"
-                it[marriedUserId] = 0
+                it[marriedUserId] = null
             }
-    }.execute().get()
+    }.execute()
 
-    fun getGuildSafe(guild: Guild): DBGuild = try {
+    fun getGuildSafe(guild: Guild): CompletableFuture<DBGuild> {
+        val fut = CompletableFuture<DBGuild>()
+
         getGuild(guild)
-    } catch (e: Exception) {
-        newGuild(guild)
-        getGuild(guild)
+                .thenAccept { fut.complete(it) }
+                .thenApply {}
+                .exceptionally {
+                    newGuild(guild)
+                            .thenAccept {
+                                getGuild(guild)
+                                        .thenAccept {
+                                            fut.complete(it)
+                                        }
+                            }
+                }
+
+        return fut
     }
 
     fun getUserSafe(member: Member) = getUserSafe(member.user)
 
-    fun getUserSafe(user: User): DBUser = try {
+    fun getUserSafe(user: User): CompletableFuture<DBUser> {
+        val fut = CompletableFuture<DBUser>()
+
+        getUser(user)
+                .thenAccept { fut.complete(it) }
+                .thenApply {}
+                .exceptionally {
+                    newUser(user)
+                            .thenAccept {
+                                getUser(user)
+                                        .thenAccept {
+                                            fut.complete(it)
+                                        }
+                            }
+                }
+
+        return fut
+    }
+
+    /*fun getUserSafe(user: User): DBUser = try {
         getUser(user)
     } catch (e: Exception) {
         newUser(user)
         getUser(user)
-    }
+    }*/
 
     fun logEvent(event: GenericMessageEvent) = asyncTransaction(pool) {
         when (event) {

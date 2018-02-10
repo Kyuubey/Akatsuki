@@ -33,28 +33,25 @@ import me.noud02.akatsuki.entities.Command
 import net.dv8tion.jda.core.EmbedBuilder
 import net.dv8tion.jda.core.Permission
 
-
 @Load
 @Alias("guild", "serverinfo", "server")
 class GuildInfo : Command() {
     override val desc = "Get info about the guild."
     override val guildOnly = true
 
-
     override fun run(ctx: Context) {
-        val guild = DatabaseWrapper.getGuildSafe(ctx.guild!!)
         ctx.send(EmbedBuilder().apply {
-            setTitle("${ctx.guild.name} (${ctx.guild.id})")
+            setTitle("${ctx.guild!!.name} (${ctx.guild.id})")
 
             descriptionBuilder.append("**Owner:** ${ctx.guild.owner.user.name}#${ctx.guild.owner.user.discriminator}\n")
             descriptionBuilder.append("**Bots:** ${ctx.guild.members.filter { it.user.isBot }.size}\n")
             descriptionBuilder.append("**Users:** ${ctx.guild.members.filter { !it.user.isBot }.size}\n")
             descriptionBuilder.append("**Roles:** ${ctx.guild.roles.size - 1}\n")
             descriptionBuilder.append("**Region:** ${ctx.guild.region.getName()}\n")
-            descriptionBuilder.append("**Language:** ${guild.lang}\n")
+            descriptionBuilder.append("**Language:** ${ctx.storedGuild!!.lang}\n")
 
-            if (guild.prefixes.isNotEmpty())
-                descriptionBuilder.append("**Prefixes:** ${guild.prefixes.joinToString(", ")}\n")
+            if (ctx.storedGuild.prefixes.isNotEmpty())
+                descriptionBuilder.append("**Prefixes:** ${ctx.storedGuild.prefixes.joinToString(", ")}\n")
 
             if (ctx.jda.shardInfo != null)
                 descriptionBuilder.append("**EventListener:** ${(ctx.guild.idLong shr 22) % ctx.jda.shardInfo.shardTotal}\n")

@@ -38,7 +38,7 @@ import org.jetbrains.exposed.sql.update
 import java.awt.Color
 
 fun Guild.searchMembers(query: String): List<Member> = members.filter {
-    "${it.effectiveName.toLowerCase()} ${it.user.name.toLowerCase()}#${it.user.discriminator} ${it.user.id}".indexOf(query.toLowerCase()) > -1
+    "${it.asMention} ${it.effectiveName.toLowerCase()} ${it.user.name.toLowerCase()}#${it.user.discriminator} ${it.user.id}".indexOf(query.toLowerCase()) > -1
 }
 
 fun Guild.searchTextChannels(query: String): List<TextChannel> = textChannels.filter {
@@ -62,8 +62,8 @@ fun Guild.addStar(msg: Message, user: User) {
     if (msg.author.id == user.id)
         return
 
-    val guild = DatabaseWrapper.getGuildSafe(this)
-    val channel = getTextChannelById(guild.starboardChannel)
+    val guild = DatabaseWrapper.getGuildSafe(this).get()
+    val channel = getTextChannelById(guild.starboardChannel ?: return)
 
     asyncTransaction(Akatsuki.instance.pool) {
         val stars = Starboard.select {
@@ -129,8 +129,8 @@ fun Guild.addStar(msg: Message, user: User) {
 }
 
 fun Guild.removeStar(msg: Message, user: User) {
-    val guild = DatabaseWrapper.getGuildSafe(this)
-    val channel = getTextChannelById(guild.starboardChannel)
+    val guild = DatabaseWrapper.getGuildSafe(this).get()
+    val channel = getTextChannelById(guild.starboardChannel ?: return)
 
     asyncTransaction(Akatsuki.instance.pool) {
         val stars = Starboard.select {

@@ -74,7 +74,7 @@ class EventListener : ListenerAdapter() {
 
     override fun onMessageReceived(event: MessageReceivedEvent) {
         if (event.guild != null) {
-            val stored = DatabaseWrapper.getGuildSafe(event.guild)
+            val stored = DatabaseWrapper.getGuildSafe(event.guild).get()
             if (stored.logs)
                 event.message.log()
 
@@ -117,12 +117,12 @@ class EventListener : ListenerAdapter() {
     }
 
     override fun onMessageDelete(event: MessageDeleteEvent) {
-        if (event.guild != null && DatabaseWrapper.getGuildSafe(event.guild).logs)
+        if (event.guild != null && DatabaseWrapper.getGuildSafe(event.guild).get().logs)
             DatabaseWrapper.logEvent(event)
     }
 
     override fun onMessageUpdate(event: MessageUpdateEvent) {
-        if (event.guild != null && DatabaseWrapper.getGuildSafe(event.guild).logs)
+        if (event.guild != null && DatabaseWrapper.getGuildSafe(event.guild).get().logs)
             event.message.log("UPDATE")
     }
 
@@ -142,7 +142,7 @@ class EventListener : ListenerAdapter() {
 
     override fun onMessageReactionAdd(event: MessageReactionAddEvent) {
         if (event.guild != null && event.reaction.reactionEmote.name == "\u2b50") {
-            val guild = DatabaseWrapper.getGuildSafe(event.guild)
+            val guild = DatabaseWrapper.getGuildSafe(event.guild).get()
 
             if (!guild.starboard)
                 return
@@ -155,7 +155,7 @@ class EventListener : ListenerAdapter() {
 
     override fun onMessageReactionRemove(event: MessageReactionRemoveEvent) {
         if (event.guild != null && event.reaction.reactionEmote.name == "\u2b50") {
-            val guild = DatabaseWrapper.getGuildSafe(event.guild)
+            val guild = DatabaseWrapper.getGuildSafe(event.guild).get()
 
             if (!guild.starboard)
                 return
@@ -167,8 +167,8 @@ class EventListener : ListenerAdapter() {
     }
 
     override fun onGuildMemberJoin(event: GuildMemberJoinEvent) {
-        val storedGuild = DatabaseWrapper.getGuildSafe(event.guild)
-        val channel = event.guild.getTextChannelById(storedGuild.welcomeChannel) ?: return
+        val storedGuild = DatabaseWrapper.getGuildSafe(event.guild).get()
+        val channel = event.guild.getTextChannelById(storedGuild.welcomeChannel ?: return) ?: return
 
         if (storedGuild.welcome && storedGuild.welcomeMessage.isNotBlank())
             channel.sendMessage(
@@ -182,8 +182,8 @@ class EventListener : ListenerAdapter() {
     }
 
     override fun onGuildMemberLeave(event: GuildMemberLeaveEvent) {
-        val storedGuild = DatabaseWrapper.getGuildSafe(event.guild)
-        val channel = event.guild.getTextChannelById(storedGuild.welcomeChannel) ?: return
+        val storedGuild = DatabaseWrapper.getGuildSafe(event.guild).get()
+        val channel = event.guild.getTextChannelById(storedGuild.welcomeChannel ?: return) ?: return
 
         if (storedGuild.welcome && storedGuild.leaveMessage.isNotBlank())
             channel.sendMessage(
@@ -196,11 +196,11 @@ class EventListener : ListenerAdapter() {
         asyncTransaction(pool) {
             val guild = Guilds.select { Guilds.id.eq(event.guild.idLong) }.firstOrNull()
 
-            if (guild == null || !guild[Guilds.modlogs] || event.guild.getTextChannelById(guild[Guilds.modlogChannel]) == null)
+            if (guild == null || !guild[Guilds.modlogs])
                 return@asyncTransaction
 
             val modlogs = Modlogs.select { Modlogs.guildId.eq(event.guild.idLong) }
-            val modlogChannel = event.guild.getTextChannelById(guild[Guilds.modlogChannel])
+            val modlogChannel = event.guild.getTextChannelById(guild[Guilds.modlogChannel] ?: return@asyncTransaction) ?: return@asyncTransaction
             val audit = event.guild.auditLogs.type(ActionType.KICK).limit(2).firstOrNull { it.targetId == event.user.id } ?: return@asyncTransaction
             val case = modlogs.count() + 1
 
@@ -227,11 +227,11 @@ class EventListener : ListenerAdapter() {
         asyncTransaction(pool) {
             val guild = Guilds.select { Guilds.id.eq(event.guild.idLong) }.firstOrNull()
 
-            if (guild == null || !guild[Guilds.modlogs] || event.guild.getTextChannelById(guild[Guilds.modlogChannel]) == null)
+            if (guild == null || !guild[Guilds.modlogs])
                 return@asyncTransaction
 
             val modlogs = Modlogs.select { Modlogs.guildId.eq(event.guild.idLong) }
-            val modlogChannel = event.guild.getTextChannelById(guild[Guilds.modlogChannel])
+            val modlogChannel = event.guild.getTextChannelById(guild[Guilds.modlogChannel] ?: return@asyncTransaction) ?: return@asyncTransaction
             val audit = event.guild.auditLogs.type(ActionType.UNBAN).first { it.targetId == event.user.id }
             val case = modlogs.count() + 1
 
@@ -258,11 +258,11 @@ class EventListener : ListenerAdapter() {
         asyncTransaction(pool) {
             val guild = Guilds.select { Guilds.id.eq(event.guild.idLong) }.firstOrNull()
 
-            if (guild == null || !guild[Guilds.modlogs] || event.guild.getTextChannelById(guild[Guilds.modlogChannel]) == null)
+            if (guild == null || !guild[Guilds.modlogs])
                 return@asyncTransaction
 
             val modlogs = Modlogs.select { Modlogs.guildId.eq(event.guild.idLong) }
-            val modlogChannel = event.guild.getTextChannelById(guild[Guilds.modlogChannel])
+            val modlogChannel = event.guild.getTextChannelById(guild[Guilds.modlogChannel] ?: return@asyncTransaction) ?: return@asyncTransaction
             val audit = event.guild.auditLogs.type(ActionType.BAN).first { it.targetId == event.user.id }
             val case = modlogs.count() + 1
 
