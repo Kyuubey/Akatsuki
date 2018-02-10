@@ -471,7 +471,7 @@ class CommandHandler {
             flags += otherFlags.first().flags
 
         val sub = cmd.subcommands.map {
-            "\t${it.key}" + " ".repeat(20 - it.key.length) + "${it.value.desc.split("\n")[0]}\n"
+            "\t${it.key}" + " ".repeat(20 - it.key.length) + it.value.desc.split("\n")[0]
         }
         val flag = flags.map {
             "\t-${it.abbr}, --${it.flag}${" ".repeat(20 - "-${it.abbr}, --${it.flag}".length)}${it.desc}\n"
@@ -509,7 +509,7 @@ class CommandHandler {
             flags += otherFlags.first().flags
 
         val sub = cmd.subcommands.map {
-            "\t${it.key}" + " ".repeat(20 - it.key.length) + "${it.value.desc.split("\n")[0]}\n"
+            "\t${it.key}" + " ".repeat(20 - it.key.length) + it.value.desc.split("\n")[0]
         }
         val flag = flags.map {
             "\t-${it.abbr}, --${it.flag}${" ".repeat(20 - "-${it.abbr}, --${it.flag}".length)}${it.desc}\n"
@@ -520,7 +520,7 @@ class CommandHandler {
             else
                 "<${it.name}: ${it.type}>"
         }
-        val formattedSubs = if (sub.isNotEmpty()) "\nSubcommands:\n${sub.joinToString("\n")}" else ""
+        val formattedSubs = if (sub.isNotEmpty()) "\nSubcommands:\n${sub.joinToString("\n")}\n" else ""
         val formattedFlags = if (flag.isNotEmpty()) flag.joinToString("\n") else ""
 
         val name = (if (cmd.name.isEmpty()) cmd::class.simpleName!! else cmd.name).toLowerCase()
