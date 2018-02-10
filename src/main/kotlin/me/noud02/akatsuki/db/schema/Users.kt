@@ -35,4 +35,5 @@ object Users : Table() {
     val discriminator = varchar("discriminator", 4)
     val lang = varchar("lang", 5)
     val marriedUserId = long("marriedUserId")
+            .nullable()
 }
