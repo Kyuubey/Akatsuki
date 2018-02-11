@@ -91,7 +91,7 @@ class RoleMe : Command() {
 
             val role = Akatsuki.instance.shardManager.getRoleById(ctx.storedGuild.rolemeRoles[roleName]!!)
 
-            ctx.guild!!.controller.removeSingleRoleFromMember(ctx.member!!, role).queue({
+            ctx.guild!!.controller.removeSingleRoleFromMember(ctx.member!!, role).reason("[ RoleMe ]").queue({
                 ctx.send("You no longer have the $roleName role!")
             }) {
                 ctx.sendError(it)
@@ -102,7 +102,7 @@ class RoleMe : Command() {
 
             val role = Akatsuki.instance.shardManager.getRoleById(ctx.storedGuild.rolemeRoles[roleName]!!)
 
-            ctx.guild!!.controller.addSingleRoleToMember(ctx.member!!, role).queue({
+            ctx.guild!!.controller.addSingleRoleToMember(ctx.member!!, role).reason("[ RoleMe ]").queue({
                 ctx.send("You now have the $roleName role!")
             }) {
                 ctx.sendError(it)
