@@ -45,6 +45,8 @@ import net.dv8tion.jda.core.events.guild.GuildLeaveEvent
 import net.dv8tion.jda.core.events.guild.GuildUnbanEvent
 import net.dv8tion.jda.core.events.guild.member.GuildMemberJoinEvent
 import net.dv8tion.jda.core.events.guild.member.GuildMemberLeaveEvent
+import net.dv8tion.jda.core.events.guild.member.GuildMemberRoleAddEvent
+import net.dv8tion.jda.core.events.guild.member.GuildMemberRoleRemoveEvent
 import net.dv8tion.jda.core.events.message.MessageDeleteEvent
 import net.dv8tion.jda.core.events.message.MessageReceivedEvent
 import net.dv8tion.jda.core.events.message.MessageUpdateEvent
@@ -280,6 +282,72 @@ class EventListener : ListenerAdapter() {
                 it[targetId] = audit.targetIdLong
                 it[caseId] = case
                 it[type] = "BAN"
+                it[reason] = audit.reason
+            }
+        }.execute()
+    }
+
+    override fun onGuildMemberRoleAdd(event: GuildMemberRoleAddEvent) {
+        asyncTransaction(pool) {
+            val guild = Guilds.select { Guilds.id.eq(event.guild.idLong) }.firstOrNull()
+
+            if (guild == null
+                    || !guild[Guilds.modlogs]
+                    || !event.roles.contains(event.guild.getRoleById(guild[Guilds.mutedRole] ?: return@asyncTransaction) ?: return@asyncTransaction))
+                return@asyncTransaction
+
+            val modlogs = Modlogs.select { Modlogs.guildId.eq(event.guild.idLong) }
+            val modlogChannel = event.guild.getTextChannelById(guild[Guilds.modlogChannel] ?: return@asyncTransaction) ?: return@asyncTransaction
+            val audit = event.guild.auditLogs.type(ActionType.MEMBER_ROLE_UPDATE).firstOrNull { it.targetId == event.user.id } ?: return@asyncTransaction
+            val case = modlogs.count() + 1
+
+            val msg = modlogChannel.sendMessage("""
+                **Mute** | Case $case
+                **User**: ${event.user.name}#${event.user.discriminator} (${event.user.id})
+                **Reason**: ${audit.reason ?: "`Responsible moderator, please use the reason command to set this reason`"}
+                **Responsible moderator**: ${audit.user.name}#${audit.user.discriminator} (${audit.user.id})
+            """.trimIndent()).complete()
+
+            Modlogs.insert {
+                it[messageId] = msg.idLong
+                it[modId] = audit.user.idLong
+                it[guildId] = event.guild.idLong
+                it[targetId] = audit.targetIdLong
+                it[caseId] = case
+                it[type] = "MUTE"
+                it[reason] = audit.reason
+            }
+        }.execute()
+    }
+
+    override fun onGuildMemberRoleRemove(event: GuildMemberRoleRemoveEvent) {
+        asyncTransaction(pool) {
+            val guild = Guilds.select { Guilds.id.eq(event.guild.idLong) }.firstOrNull()
+
+            if (guild == null
+                    || !guild[Guilds.modlogs]
+                    || !event.roles.contains(event.guild.getRoleById(guild[Guilds.mutedRole] ?: return@asyncTransaction) ?: return@asyncTransaction))
+                return@asyncTransaction
+
+            val modlogs = Modlogs.select { Modlogs.guildId.eq(event.guild.idLong) }
+            val modlogChannel = event.guild.getTextChannelById(guild[Guilds.modlogChannel] ?: return@asyncTransaction) ?: return@asyncTransaction
+            val audit = event.guild.auditLogs.type(ActionType.MEMBER_ROLE_UPDATE).firstOrNull { it.targetId == event.user.id } ?: return@asyncTransaction
+            val case = modlogs.count() + 1
+
+            val msg = modlogChannel.sendMessage("""
+                **Unmute** | Case $case
+                **User**: ${event.user.name}#${event.user.discriminator} (${event.user.id})
+                **Reason**: ${audit.reason ?: "`Responsible moderator, please use the reason command to set this reason`"}
+                **Responsible moderator**: ${audit.user.name}#${audit.user.discriminator} (${audit.user.id})
+            """.trimIndent()).complete()
+
+            Modlogs.insert {
+                it[messageId] = msg.idLong
+                it[modId] = audit.user.idLong
+                it[guildId] = event.guild.idLong
+                it[targetId] = audit.targetIdLong
+                it[caseId] = case
+                it[type] = "UNMUTE"
                 it[reason] = audit.reason
             }
         }.execute()
