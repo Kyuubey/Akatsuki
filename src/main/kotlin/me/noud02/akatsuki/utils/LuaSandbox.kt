@@ -35,7 +35,7 @@ import org.luaj.vm2.lib.jse.JseBaseLib
 import org.luaj.vm2.lib.jse.JseMathLib
 
 object LuaSandbox {
-    fun eval(script: String, args: List<String>, ctx: Context): String {
+    fun eval(script: String, args: List<String>, ctx: Context) {
         val serverGlobals = Globals()
         serverGlobals.load(JseBaseLib())
         serverGlobals.load(PackageLib())
@@ -173,10 +173,21 @@ object LuaSandbox {
 
         contextLib["args"] = LuaValue.listOf(args.map { LuaValue.valueOf(it) }.toTypedArray())
 
+        contextLib["send"] = object : OneArgFunction() {
+            override fun call(arg: LuaValue?): LuaValue {
+                if (arg == null)
+                    throw Exception("Text argument is nil!")
+
+                ctx.event.channel.sendMessage(arg.tojstring()).queue()
+
+                return LuaValue.NIL
+            }
+        }
+
         globals["ctx"] = contextLib
         globals["discord"] = discordLib
 
-        return try {
+        try {
             val chunk = serverGlobals.load(script, "main", globals)
             val thread = LuaThread(globals, chunk)
 
@@ -188,9 +199,10 @@ object LuaSandbox {
 
             val result = thread.resume(LuaValue.NIL)
 
-            result.arg(2).tojstring()
+            if (!result.arg(2).isnil())
+                ctx.send(result.arg(2).tojstring())
         } catch (e: Exception) {
-            "```diff\n- $e```"
+            ctx.send("```diff\n- $e```")
         }
     }
 }
