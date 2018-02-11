@@ -53,11 +53,16 @@ class Ban : Command() {
         if (!ctx.selfMember!!.canInteract(user))
             return ctx.send("I can't ban that user!")
 
-        ctx.guild!!.controller.ban(user, 24).queue({ ctx.send("Banned ${user.user.name}") }, { err ->
-            if (err is PermissionException)
-                ctx.send("I couldn't ban ${user.user.name} because I'm missing the '${err.permission}' permission!")
-            else
-                ctx.send("I couldn't ban ${user.user.name} because of an unknown error: ${err.message}")
-        })
+        ctx.guild!!.controller
+                .ban(user, 24)
+                .reason("[ ${ctx.author.name}#${ctx.author.discriminator} ] ${ctx.args.getOrDefault("reason", "none")}")
+                .queue({
+                    ctx.send("Banned ${user.user.name}")
+                }) { err ->
+                    if (err is PermissionException)
+                        ctx.send("I couldn't ban ${user.user.name} because I'm missing the '${err.permission}' permission!")
+                    else
+                        ctx.send("I couldn't ban ${user.user.name} because of an unknown error: ${err.message}")
+                }
     }
 }
