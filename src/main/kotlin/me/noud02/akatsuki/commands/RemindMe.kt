@@ -64,7 +64,7 @@ class RemindMe : Command() {
             Reminders.insert {
                 it[userId] = ctx.author.idLong
                 it[channelId] = ctx.channel.idLong
-                it[timestamp] = date.time / 1000
+                it[timestamp] = date.time
                 it[reminder] = what
             }
 
