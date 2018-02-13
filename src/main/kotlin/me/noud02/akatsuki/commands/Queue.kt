@@ -46,7 +46,7 @@ class Clear : Command() {
         val manager = MusicManager.musicManagers[ctx.guild?.id] ?: return ctx.send("Not connected!")
 
         manager.scheduler.queue.clear()
-        ctx.send("Cleared the queue!")
+        ctx.send(ctx.lang.getString("queue_clear_success"))
     }
 }
 
@@ -101,7 +101,7 @@ class Queue : Command() {
         } else {
             val embed = EmbedBuilder().apply {
                 setColor(Color.CYAN)
-                setTitle("${ctx.lang.getString("queue")}:")
+                setTitle(ctx.lang.getString("queue"))
                 descriptionBuilder.append(formatted)
             }
 

@@ -81,7 +81,7 @@ class TrackScheduler(private val player: AudioPlayer, private val manager: Guild
 
             if (nextTrack != null)
                 embed.setFooter("Next: ${nextTrack.info.title}", null)
-            // TODO impl autoplay from yt
+
             if (manager.autoplay && track.info.uri.indexOf("youtube") > -1) {
                 val res = Akatsuki.instance.okhttp.newCall(Request.Builder().apply {
                     url(HttpUrl.Builder().apply {

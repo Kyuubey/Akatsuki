@@ -31,6 +31,7 @@ import me.noud02.akatsuki.annotations.Load
 import me.noud02.akatsuki.annotations.Perm
 import me.noud02.akatsuki.entities.Command
 import me.noud02.akatsuki.entities.Context
+import me.noud02.akatsuki.utils.I18n
 import net.dv8tion.jda.core.Permission
 import net.dv8tion.jda.core.entities.Member
 import net.dv8tion.jda.core.exceptions.PermissionException
@@ -46,22 +47,51 @@ class Mute : Command() {
 
     override fun run(ctx: Context) {
         if (ctx.storedGuild!!.mutedRole == null)
-            return ctx.send("You haven't set the mute role yet!")
+            return ctx.send(
+                    I18n.parse(
+                            ctx.lang.getString("no_muted_role"),
+                            mapOf(
+                                    "username" to ctx.author.name
+                            )
+                    )
+            )
 
         val user = ctx.args["user"] as Member
         val role = ctx.guild!!.getRoleById(ctx.storedGuild.mutedRole!!)
-                ?: return ctx.send("Couldn't find the mute role! Perhaps you deleted it?")
+                ?: return ctx.send(
+                        I18n.parse(
+                                ctx.lang.getString("muted_role_deleted"),
+                                mapOf(
+                                        "username" to ctx.author.name
+                                )
+                        )
+                )
 
         ctx.guild.controller
                 .addSingleRoleToMember(user, role)
                 .reason("[ ${ctx.author.name}#${ctx.author.discriminator} ] ${ctx.args.getOrDefault("reason", "none")}")
                 .queue({
-                    ctx.send("Muted ${user.user.name}#${user.user.discriminator}")
+                    ctx.send(
+                            I18n.parse(
+                                    ctx.lang.getString("muted_user"),
+                                    mapOf(
+                                            "username" to user.user.name
+                                    )
+                            )
+                    )
                 }) {
                     if (it is PermissionException)
-                        ctx.send("I couldn't mute ${user.user.name}#${user.user.discriminator} because I'm missing the `${it.permission}` permission!")
+                        ctx.send(
+                                I18n.parse(
+                                        ctx.lang.getString("perm_cant_mute"),
+                                        mapOf(
+                                                "username" to user.user.name,
+                                                "permission" to I18n.permission(ctx.lang, it.permission.name)
+                                        )
+                                )
+                        )
                     else
-                        ctx.send("I couldn't mute ${user.user.name}#${user.user.discriminator} because of an unknown error: ${it.message}")
+                        ctx.sendError(it)
                 }
     }
 }

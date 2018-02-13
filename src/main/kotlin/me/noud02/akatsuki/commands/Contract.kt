@@ -51,10 +51,23 @@ class ViewContract : Command() {
 
         asyncTransaction(Akatsuki.instance.pool) {
             val contract = Contracts.select { Contracts.userId.eq(member.user.idLong) }.firstOrNull()
-                    ?: return@asyncTransaction ctx.send("That user hasn't made a contract with me (yet)!")
+                    ?: return@asyncTransaction ctx.send(
+                            I18n.parse(
+                                    ctx.lang.getString("user_no_contract"),
+                                    mapOf(
+                                            "username" to ctx.author.name,
+                                            "user" to member.user.name
+                                    )
+                            )
+                    )
 
             ctx.send(EmbedBuilder().apply {
-                setTitle("${member.user.name}'s Contract")
+                setTitle(
+                        I18n.parse(
+                                ctx.lang.getString("contract_title"),
+                                mapOf("username" to member.user.name)
+                        )
+                )
                 descriptionBuilder.append("*${contract[Contracts.wish]}*")
 
                 val corruption = contract[Contracts.corruption]
@@ -76,6 +89,7 @@ class ViewContract : Command() {
                         itemMap[content] = 1
                 }
 
+                // TODO add translations for these
                 addField(
                         "Stats",
                         """**Rank:** ${contract[Contracts.level]}

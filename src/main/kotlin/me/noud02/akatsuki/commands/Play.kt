@@ -84,10 +84,8 @@ class Play : ThreadedCommand() {
     fun play(ctx: Context, manager: GuildMusicManager) {
         val search = ctx.rawArgs.joinToString(" ")
 
-        // TODO change translations from "download" to "add"
-
         MusicManager.playerManager.loadItemOrdered(manager, search, object : AudioLoadResultHandler {
-            override fun loadFailed(exception: FriendlyException) = ctx.send("Failed to add song to queue: ${exception.message}")
+            override fun loadFailed(exception: FriendlyException) = ctx.sendError(exception)
 
             override fun noMatches() {
                 val picker = ItemPicker(EventListener.instance.waiter, ctx.member as Member, ctx.guild as Guild, true)
@@ -135,13 +133,24 @@ class Play : ThreadedCommand() {
                 res.close()
 
                 MusicManager.playerManager.loadItemOrdered(manager, item.url, object : AudioLoadResultHandler {
-                    override fun loadFailed(exception: FriendlyException) = ctx.send("Failed to add song to queue: ${exception.message}")
+                    override fun loadFailed(exception: FriendlyException) = ctx.sendError(exception)
 
-                    override fun noMatches() = ctx.send("Woops! Couldn't find that!")
+                    override fun noMatches() = ctx.send(
+                            I18n.parse(
+                                    ctx.lang.getString("no_matching_songs"),
+                                    mapOf("username" to ctx.author.name)
+                            )
+                    )
 
                     override fun trackLoaded(track: AudioTrack) {
                         manager.scheduler.add(track)
-                        ctx.send("Added ${track.info.title} to the queue!")
+
+                        ctx.send(
+                                I18n.parse(
+                                        ctx.lang.getString("added_to_queue"),
+                                        mapOf("song" to track.info.title)
+                                )
+                        )
                     }
 
                     override fun playlistLoaded(playlist: AudioPlaylist) = trackLoaded(playlist.tracks.first())
@@ -150,7 +159,13 @@ class Play : ThreadedCommand() {
 
             override fun trackLoaded(track: AudioTrack) {
                 manager.scheduler.add(track)
-                ctx.send("Added ${track.info.title} to the queue!")
+
+                ctx.send(
+                        I18n.parse(
+                                ctx.lang.getString("added_to_queue"),
+                                mapOf("song" to track.info.title)
+                        )
+                )
             }
 
             override fun playlistLoaded(playlist: AudioPlaylist) {
@@ -167,13 +182,19 @@ class Play : ThreadedCommand() {
                 } else
                     playlist.tracks
 
-
-
                 for (track in tracks) {
                     manager.scheduler.add(track)
                 }
 
-                ctx.send("Added ${tracks.size} tracks from playlist ${playlist.name} to the queue!")
+                ctx.send(
+                        I18n.parse(
+                                ctx.lang.getString("added_to_queue_playlist"),
+                                mapOf(
+                                        "num" to tracks.size,
+                                        "playlist" to playlist.name
+                                )
+                        )
+                )
             }
         })
     }

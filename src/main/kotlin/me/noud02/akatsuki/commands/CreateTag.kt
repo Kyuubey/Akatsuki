@@ -34,6 +34,7 @@ import me.noud02.akatsuki.annotations.Load
 import me.noud02.akatsuki.db.schema.Tags
 import me.noud02.akatsuki.entities.Command
 import me.noud02.akatsuki.entities.Context
+import me.noud02.akatsuki.utils.I18n
 import org.jetbrains.exposed.sql.insert
 import org.jetbrains.exposed.sql.select
 
@@ -52,7 +53,12 @@ class CreateTag : Command() {
 
         asyncTransaction(Akatsuki.instance.pool) {
             if (Tags.select { Tags.tagName.eq(name) }.firstOrNull() != null)
-                return@asyncTransaction ctx.send("That tag already exists!")
+                return@asyncTransaction ctx.send(
+                        I18n.parse(
+                                ctx.lang.getString("tag_exists"),
+                                mapOf("username" to ctx.author.name)
+                        )
+                )
 
             Tags.insert {
                 it[tagName] = name
@@ -60,7 +66,12 @@ class CreateTag : Command() {
                 it[tagContent] = content
             }
 
-            ctx.send("Tag with name '$name' created!")
+            ctx.send(
+                    I18n.parse(
+                            ctx.lang.getString("tag_created"),
+                            mapOf("name" to name)
+                    )
+            )
         }.execute()
     }
 }

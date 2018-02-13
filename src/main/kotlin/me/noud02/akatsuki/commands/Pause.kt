@@ -31,6 +31,7 @@ import me.noud02.akatsuki.entities.Context
 import me.noud02.akatsuki.annotations.Load
 import me.noud02.akatsuki.annotations.Perm
 import me.noud02.akatsuki.music.MusicManager
+import me.noud02.akatsuki.utils.I18n
 import net.dv8tion.jda.core.Permission
 
 @Load
@@ -41,7 +42,13 @@ class Pause : Command() {
     override val guildOnly = true
 
     override fun run(ctx: Context) {
-        val manager = MusicManager.musicManagers[ctx.guild?.id] ?: return ctx.send("Not connected!")
+        val manager = MusicManager.musicManagers[ctx.guild?.id]
+                ?: return ctx.send(
+                I18n.parse(
+                        ctx.lang.getString("not_connected"),
+                        mapOf("username" to ctx.author.name)
+                )
+        )
         val state = manager.player.isPaused
 
         manager.player.isPaused = !state
@@ -49,6 +56,6 @@ class Pause : Command() {
         if (!state)
             ctx.send(ctx.lang.getString("paused"))
         else
-            ctx.send("Resumed the music!") // TODO add translations for "resumed"
+            ctx.send(ctx.lang.getString("resumed"))
     }
 }

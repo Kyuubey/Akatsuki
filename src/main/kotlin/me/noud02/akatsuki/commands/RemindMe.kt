@@ -34,6 +34,7 @@ import me.noud02.akatsuki.annotations.Load
 import me.noud02.akatsuki.db.schema.Reminders
 import me.noud02.akatsuki.entities.Command
 import me.noud02.akatsuki.entities.Context
+import me.noud02.akatsuki.utils.I18n
 import org.jetbrains.exposed.sql.insert
 
 @Load
@@ -42,9 +43,22 @@ import org.jetbrains.exposed.sql.insert
 class RemindMe : Command() {
     override fun run(ctx: Context) {
         val parser = Parser()
-        val parsed = parser.parse(ctx.args["reminder"] as String).getOrNull(0) ?: return ctx.send("I didn't get that, mind saying that again?")
+        val parsed = parser.parse(ctx.args["reminder"] as String).getOrNull(0)
+                ?: return ctx.send(
+                        I18n.parse(
+                                ctx.lang.getString("reminder_err"),
+                                mapOf("username" to ctx.author.name)
+                        )
+                )
+
         val what = parsed.fullText.replace(parsed.text, "").trim()
-        val date = parsed.dates.getOrNull(0) ?: return ctx.send("Please specify a date!")
+        val date = parsed.dates.getOrNull(0)
+                ?: return ctx.send(
+                        I18n.parse(
+                                ctx.lang.getString("reminder_specify_date"),
+                                mapOf("username" to ctx.author.name)
+                        )
+                )
 
         asyncTransaction(Akatsuki.instance.pool) {
             Reminders.insert {
@@ -54,7 +68,15 @@ class RemindMe : Command() {
                 it[reminder] = what
             }
 
-            ctx.send("OK! I'll remind you $what at $date")
+            ctx.send(
+                    I18n.parse(
+                            ctx.lang.getString("reminder_set"),
+                            mapOf(
+                                    "what" to what,
+                                    "date" to date
+                            )
+                    )
+            )
         }.execute()
     }
 }

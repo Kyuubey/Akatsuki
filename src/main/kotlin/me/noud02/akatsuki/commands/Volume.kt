@@ -42,7 +42,13 @@ class Volume : Command() {
     override val guildOnly = true
 
     override fun run(ctx: Context) {
-        val manager = MusicManager.musicManagers[ctx.guild!!.id] ?: return ctx.send("Not connected!")
+        val manager = MusicManager.musicManagers[ctx.guild!!.id]
+                ?: return ctx.send(
+                I18n.parse(
+                        ctx.lang.getString("not_connected"),
+                        mapOf("username" to ctx.author.name)
+                )
+        )
 
         if (ctx.args["volume"] != null) {
             val vol = ctx.args["volume"] as Int

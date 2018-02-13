@@ -34,6 +34,7 @@ import me.noud02.akatsuki.annotations.Perm
 import me.noud02.akatsuki.db.schema.Modlogs
 import me.noud02.akatsuki.entities.Command
 import me.noud02.akatsuki.entities.Context
+import me.noud02.akatsuki.utils.I18n
 import net.dv8tion.jda.core.Permission
 import org.jetbrains.exposed.sql.and
 import org.jetbrains.exposed.sql.select
@@ -50,12 +51,22 @@ class Reason : Command() {
 
     override fun run(ctx: Context) {
         if (ctx.storedGuild!!.modlogChannel == null)
-            return ctx.send("Modlog channel is not defined in config!")
+            return ctx.send(
+                    I18n.parse(
+                            ctx.lang.getString("no_modlog_channel"),
+                            mapOf("username" to ctx.author.name)
+                    )
+            )
 
         val reasonArg = ctx.args["reason"] as String
 
         if (reasonArg.length > 512)
-            return ctx.send("Reason is longer than 512 characters")
+            return ctx.send(
+                    I18n.parse(
+                            ctx.lang.getString("reason_too_long"),
+                            mapOf("username" to ctx.author.name)
+                    )
+            )
 
         val caseArg = (ctx.args["case"] as String).toLowerCase()
 
@@ -72,7 +83,12 @@ class Reason : Command() {
                         val second = caseArg.split("..")[1].toInt()
 
                         if (first > second)
-                            return@asyncTransaction ctx.send("First number ($first) is larger than second number ($second)")
+                            return@asyncTransaction ctx.send(
+                                    I18n.parse(
+                                            ctx.lang.getString("case_num_err"),
+                                            mapOf("username" to ctx.author.name)
+                                    )
+                            )
 
                         var list = listOf<Int>()
 

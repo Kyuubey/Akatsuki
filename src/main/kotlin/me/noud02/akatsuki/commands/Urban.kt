@@ -55,7 +55,7 @@ class Urban : ThreadedCommand() {
         val json = JSONObject(res.body()!!.string())
 
         if (json.getString("result_type") == "no_results")
-            return ctx.send("No results found!")
+            return ctx.send(ctx.lang.getString("no_results"))
 
         val item = json.getJSONArray("list").getJSONObject(0)
 

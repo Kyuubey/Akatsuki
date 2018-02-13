@@ -38,7 +38,12 @@ import net.dv8tion.jda.core.Permission
 class Stop : Command() {
     override fun run(ctx: Context) {
         if (MusicManager.musicManagers[ctx.guild!!.id] == null)
-            return ctx.send("Not connected!")
+            return ctx.send(
+                    I18n.parse(
+                            ctx.lang.getString("not_connected"),
+                            mapOf("username" to ctx.author.name)
+                    )
+            )
 
         MusicManager.leave(ctx.guild.id)
 

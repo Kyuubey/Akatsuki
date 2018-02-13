@@ -32,6 +32,7 @@ import me.noud02.akatsuki.annotations.Load
 import me.noud02.akatsuki.db.schema.Guilds
 import me.noud02.akatsuki.entities.Command
 import me.noud02.akatsuki.entities.Context
+import me.noud02.akatsuki.utils.I18n
 import net.dv8tion.jda.core.entities.TextChannel
 import org.jetbrains.exposed.sql.update
 
@@ -42,26 +43,24 @@ class Unignore : Command() {
     override val desc = "Have me unignore channels."
 
     override fun run(ctx: Context) {
+        val channel = ctx.args.getOrDefault("channel", ctx.channel) as TextChannel
+
+        if (!ctx.storedGuild!!.ignoredChannels.contains(channel.idLong))
+            return ctx.send(ctx.lang.getString("channel_not_ignored"))
+
         asyncTransaction(Akatsuki.instance.pool) {
-            if (ctx.args.containsKey("channel")) {
-                val channel = ctx.args["channel"] as TextChannel
-
-                Guilds.update({
-                    Guilds.id.eq(ctx.guild!!.idLong)
-                }) {
-                    it[ignoredChannels] = ctx.storedGuild!!.ignoredChannels.dropWhile { it == channel.idLong }.toTypedArray()
-                }
-
-                ctx.send("Unignoring ${channel.asMention}.")
-            } else {
-                Guilds.update({
-                    Guilds.id.eq(ctx.guild!!.idLong)
-                }) {
-                    it[ignoredChannels] = ctx.storedGuild!!.ignoredChannels.dropWhile { it == ctx.channel.idLong }.toTypedArray()
-                }
-
-                ctx.send("Unignoring this channel.")
+            Guilds.update({
+                Guilds.id.eq(ctx.guild!!.idLong)
+            }) {
+                it[ignoredChannels] = ctx.storedGuild!!.ignoredChannels.dropWhile { it == channel.idLong }.toTypedArray()
             }
+
+            ctx.send(
+                    I18n.parse(
+                            ctx.lang.getString("unignored_channel"),
+                            mapOf("channel" to channel.asMention)
+                    )
+            )
         }.execute()
     }
 }

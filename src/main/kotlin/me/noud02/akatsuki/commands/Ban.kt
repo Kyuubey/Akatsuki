@@ -30,6 +30,7 @@ import me.noud02.akatsuki.annotations.Arguments
 import me.noud02.akatsuki.annotations.Load
 import me.noud02.akatsuki.annotations.Perm
 import me.noud02.akatsuki.entities.*
+import me.noud02.akatsuki.utils.I18n
 import net.dv8tion.jda.core.Permission
 import net.dv8tion.jda.core.entities.Member
 import net.dv8tion.jda.core.exceptions.PermissionException
@@ -48,21 +49,44 @@ class Ban : Command() {
         val user = ctx.args["user"] as Member
 
         if (!ctx.member!!.canInteract(user))
-            return ctx.send("You can't ban that user!")
+            return ctx.send(
+                    I18n.parse(
+                            ctx.lang.getString("user_cant_ban"),
+                            mapOf("username" to ctx.author.name)
+                    )
+            )
 
         if (!ctx.selfMember!!.canInteract(user))
-            return ctx.send("I can't ban that user!")
+            return ctx.send(
+                    I18n.parse(
+                            ctx.lang.getString("bot_cant_ban"),
+                            mapOf("username" to ctx.author.name)
+                    )
+            )
 
         ctx.guild!!.controller
                 .ban(user, 24)
                 .reason("[ ${ctx.author.name}#${ctx.author.discriminator} ] ${ctx.args.getOrDefault("reason", "none")}")
                 .queue({
-                    ctx.send("Banned ${user.user.name}")
+                    ctx.send(
+                            I18n.parse(
+                                    ctx.lang.getString("banned_user"),
+                                    mapOf("username" to user.user.name)
+                            )
+                    )
                 }) { err ->
                     if (err is PermissionException)
-                        ctx.send("I couldn't ban ${user.user.name} because I'm missing the '${err.permission}' permission!")
+                        ctx.send(
+                                I18n.parse(
+                                        ctx.lang.getString("perm_cant_ban"),
+                                        mapOf(
+                                                "username" to user.user.name,
+                                                "permission" to I18n.permission(ctx.lang, err.permission.name)
+                                        )
+                                )
+                        )
                     else
-                        ctx.send("I couldn't ban ${user.user.name} because of an unknown error: ${err.message}")
+                        ctx.sendError(err)
                 }
     }
 }

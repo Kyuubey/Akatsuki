@@ -31,6 +31,7 @@ import me.noud02.akatsuki.annotations.Load
 import me.noud02.akatsuki.db.schema.Users
 import me.noud02.akatsuki.entities.Command
 import me.noud02.akatsuki.entities.Context
+import me.noud02.akatsuki.utils.I18n
 import org.jetbrains.exposed.sql.update
 
 @Load
@@ -39,7 +40,12 @@ class Divorce : Command() {
 
     override fun run(ctx: Context) {
         if (ctx.storedUser.marriedUserId == null)
-            return ctx.send("You aren't married!")
+            return ctx.send(
+                    I18n.parse(
+                            ctx.lang.getString("not_married"),
+                            mapOf("username" to ctx.author.name)
+                    )
+            )
 
         asyncTransaction(Akatsuki.instance.pool) {
             Users.update({

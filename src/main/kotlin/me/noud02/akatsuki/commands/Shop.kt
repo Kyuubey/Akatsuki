@@ -60,7 +60,7 @@ class AddItem : Command() {
 
         asyncTransaction(Akatsuki.instance.pool) {
             if (Items.select { Items.id.eq(itemId) }.firstOrNull() != null)
-                return@asyncTransaction ctx.send("Item with that ID already exists!")
+                return@asyncTransaction ctx.send("Item with that ID already exists!") // TODO add translation
 
             Items.insert {
                 it[id] = itemId
@@ -70,7 +70,7 @@ class AddItem : Command() {
                 it[description] = itemDesc
             }
 
-            ctx.send("Added item **$itemContent (#$itemId)**")
+            ctx.send("Added item **$itemContent (#$itemId)**") // TODO add translation
         }.execute()
     }
 }
@@ -88,14 +88,14 @@ class BuyItem : Command() {
 
         asyncTransaction(Akatsuki.instance.pool) {
             val contract = Contracts.select { Contracts.userId.eq(ctx.author.idLong) }.firstOrNull()
-                    ?: return@asyncTransaction ctx.send("You haven't made a contract with me yet!")
+                    ?: return@asyncTransaction ctx.send("You haven't made a contract with me yet!") // TODO add translation
             val item = Items.select { Items.id.eq(id) }.firstOrNull()
-                    ?: return@asyncTransaction ctx.send("Couldn't find that item!")
+                    ?: return@asyncTransaction ctx.send("Couldn't find that item!") // TODO add translation
 
             val toPay = item[Items.price] * amount
 
             if (contract[Contracts.balance] < toPay)
-                return@asyncTransaction ctx.send("Insufficient balance!")
+                return@asyncTransaction ctx.send("Insufficient balance!") // TODO add translation
 
             val inv = contract[Contracts.inventory].toMutableList()
 
@@ -110,7 +110,7 @@ class BuyItem : Command() {
                 it[inventory] = inv.toTypedArray()
             }
 
-            ctx.send("You bought **${amount}x ${item[Items.content]}** for **$toPay$**!")
+            ctx.send("You bought **${amount}x ${item[Items.content]}** for **$toPay$**!") // TODO add translation
         }.execute()
     }
 }
@@ -126,12 +126,12 @@ class SearchItem : Command() {
             val matches = Items.selectAll().filter { it[Items.id].indexOf(search) > -1 }
 
             if (matches.isEmpty())
-                return@asyncTransaction ctx.send("Couldn't find any items matching your query!")
+                return@asyncTransaction ctx.send("Couldn't find any items matching your query!") // TODO add translation
 
             val items = matches.subList(0, min(matches.size, 50))
 
             ctx.send(EmbedBuilder().apply {
-                setTitle("Items \uD83D\uDD0D")
+                setTitle("Items \uD83D\uDD0D") // TODO add translation
                 descriptionBuilder.append(items.joinToString(", ") { "${it[Items.content]} (#${it[Items.id]})" })
             }.build())
         }.execute()
@@ -147,5 +147,6 @@ class Shop : Command() {
     }
 
     override fun run(ctx: Context) {
+        // TODO add something here
     }
 }

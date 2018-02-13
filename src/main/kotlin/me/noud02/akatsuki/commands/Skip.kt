@@ -40,19 +40,23 @@ class Skip : Command() {
     override val desc = "Skips the current song"
     override val guildOnly = true
 
-    // TODO add thing so you cant skip while there's nothing in the queue
-
     override fun run(ctx: Context) {
         if (!ctx.member!!.voiceState.inVoiceChannel())
             return ctx.send(
                     I18n.parse(
                             ctx.lang.getString("join_voice_channel_fail"),
                             mapOf(
-                                    "username" to ctx.author.name // TODO rename translation
+                                    "username" to ctx.author.name
                             )
                     )
             )
-        val manager = MusicManager.musicManagers[ctx.guild!!.id] ?: return ctx.send("Not connected!")
+        val manager = MusicManager.musicManagers[ctx.guild!!.id]
+                ?: return ctx.send(
+                        I18n.parse(
+                                ctx.lang.getString("not_connected"),
+                                mapOf("username" to ctx.author.name)
+                        )
+                )
 
         if (manager.scheduler.queue.isEmpty())
             return ctx.send("There's nothing in the queue!")

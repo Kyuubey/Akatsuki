@@ -30,6 +30,7 @@ import me.noud02.akatsuki.annotations.Perm
 import me.noud02.akatsuki.entities.Command
 import me.noud02.akatsuki.entities.Context
 import me.noud02.akatsuki.music.MusicManager
+import me.noud02.akatsuki.utils.I18n
 import net.dv8tion.jda.core.Permission
 
 @Load
@@ -38,7 +39,13 @@ class Shuffle : Command() {
     override val desc = "Shuffles the queue!"
 
     override fun run(ctx: Context) {
-        val manager = MusicManager.musicManagers[ctx.guild!!.id] ?: return ctx.send("Not connected!")
+        val manager = MusicManager.musicManagers[ctx.guild!!.id]
+                ?: return ctx.send(
+                        I18n.parse(
+                                ctx.lang.getString("not_connected"),
+                                mapOf("username" to ctx.author.name)
+                        )
+                )
 
         manager.scheduler.shuffle()
 

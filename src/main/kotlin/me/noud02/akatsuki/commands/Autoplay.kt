@@ -29,6 +29,7 @@ import me.noud02.akatsuki.annotations.Load
 import me.noud02.akatsuki.entities.Command
 import me.noud02.akatsuki.entities.Context
 import me.noud02.akatsuki.music.MusicManager
+import me.noud02.akatsuki.utils.I18n
 
 @Load
 class Autoplay : Command() {
@@ -36,10 +37,16 @@ class Autoplay : Command() {
     override val guildOnly = true
 
     override fun run(ctx: Context) {
-        val manager = MusicManager.musicManagers[ctx.guild?.id] ?: return ctx.send("Not connected!")
+        val manager = MusicManager.musicManagers[ctx.guild?.id]
+                ?: return ctx.send(
+                I18n.parse(
+                        ctx.lang.getString("not_connected"),
+                        mapOf("username" to ctx.author.name)
+                )
+        )
 
         manager.autoplay = !manager.autoplay
 
-        ctx.send("Autoplay is now turned ${if (manager.autoplay) "on" else "off"}!")
+        ctx.send(ctx.lang.getString("autoplay_${if (manager.autoplay) "on" else "off"}"))
     }
 }

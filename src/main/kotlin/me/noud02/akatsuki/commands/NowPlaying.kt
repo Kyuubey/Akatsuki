@@ -32,6 +32,7 @@ import me.noud02.akatsuki.entities.Context
 import me.noud02.akatsuki.annotations.Load
 import me.noud02.akatsuki.entities.ThreadedCommand
 import me.noud02.akatsuki.music.MusicManager
+import me.noud02.akatsuki.utils.I18n
 import net.dv8tion.jda.core.EmbedBuilder
 import okhttp3.HttpUrl
 import okhttp3.Request
@@ -46,7 +47,13 @@ class NowPlaying : ThreadedCommand() {
     override val guildOnly = true
 
     override fun threadedRun(ctx: Context) {
-        val manager = MusicManager.musicManagers[ctx.guild?.id] ?: return ctx.send("Not connected!") // TODO add translations for "not connected"
+        val manager = MusicManager.musicManagers[ctx.guild?.id]
+                ?: return ctx.send(
+                I18n.parse(
+                        ctx.lang.getString("not_connected"),
+                        mapOf("username" to ctx.author.name)
+                )
+        )
         val embed = EmbedBuilder().apply {
             setAuthor(ctx.lang.getString("now_playing"), null, null)
             setTitle(manager.player.playingTrack.info.title)
@@ -67,7 +74,13 @@ class NowPlaying : ThreadedCommand() {
         }
 
         if (manager.scheduler.queue.isNotEmpty())
-            embed.setFooter("Next: ${manager.scheduler.queue.peek().info.title}", null) // TODO add translations for "next"
+            embed.setFooter(
+                    I18n.parse(
+                            ctx.lang.getString("next"),
+                            mapOf("song" to manager.scheduler.queue.peek().info.title)
+                    ),
+                    null
+            )
         else if (manager.autoplay && manager.player.playingTrack.info.uri.indexOf("youtube") > -1) {
             val res = Akatsuki.instance.okhttp.newCall(Request.Builder().apply {
                 url(HttpUrl.Builder().apply {
