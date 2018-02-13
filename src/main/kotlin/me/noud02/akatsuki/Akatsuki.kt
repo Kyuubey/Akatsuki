@@ -30,9 +30,12 @@ import io.sentry.SentryClientFactory
 import kotlinx.coroutines.experimental.async
 import kotlinx.coroutines.experimental.delay
 import me.aurieh.ares.exposed.async.asyncTransaction
+import me.noud02.akatsuki.db.DatabaseWrapper
 import me.noud02.akatsuki.db.schema.*
 import me.noud02.akatsuki.entities.Config
 import me.noud02.akatsuki.entities.CoroutineDispatcher
+import me.noud02.akatsuki.extensions.UTF8Control
+import me.noud02.akatsuki.utils.I18n
 import me.noud02.akatsuki.utils.Wolk
 import net.dv8tion.jda.bot.sharding.DefaultShardManagerBuilder
 import net.dv8tion.jda.bot.sharding.ShardManager
@@ -94,11 +97,21 @@ class Akatsuki(val config: Config) {
                     val results = Reminders.select { Reminders.timestamp.less(now).or(Reminders.timestamp.eq(now)) }
 
                     results.forEach {
+                        val user = DatabaseWrapper.getUser(it[Reminders.userId]).get()
+                        val locale = Locale(user.lang.split("_")[0], user.lang.split("_")[1])
+                        val bundle = ResourceBundle.getBundle("i18n.Kyubey", locale, UTF8Control())
+
                         (if (jda != null)
                             jda!!.getTextChannelById(it[Reminders.channelId])
                         else
                             shardManager.getTextChannelById(it[Reminders.channelId]))?.sendMessage(
-                                "Hello <@${it[Reminders.userId]}>! You wanted me to remind you ${it[Reminders.reminder]}"
+                                I18n.parse(
+                                        bundle.getString("reminder"),
+                                        mapOf(
+                                                "user" to "<@${it[Reminders.userId]}>",
+                                                "reminder" to it[Reminders.reminder]
+                                        )
+                                )
                         )?.queue()
 
                         Reminders.deleteWhere {
