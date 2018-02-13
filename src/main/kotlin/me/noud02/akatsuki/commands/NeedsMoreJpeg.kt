@@ -43,25 +43,43 @@ class NeedsMoreJpeg : ThreadedCommand() {
     override fun threadedRun(ctx: Context) {
         val temp = File.createTempFile("image", "png")
         temp.deleteOnExit()
-        val imgRes = Akatsuki.instance.okhttp
-                .newCall(Request.Builder().url(ctx.args["image"] as String).build())
-                .execute()
-
         val out = FileOutputStream(temp)
-        IOUtils.copy(
-                ctx.msg.attachments.getOrNull(0)?.inputStream
-                        ?: if (ctx.args.containsKey("image"))
-                            imgRes.body()!!.byteStream()
-                        else
-                            ctx.getLastImage() ?: return ctx.send(
+
+        when {
+            ctx.msg.attachments.isNotEmpty() -> {
+                IOUtils.copy(ctx.msg.attachments[0].inputStream, out)
+                command(ctx, temp)
+            }
+
+            ctx.args.containsKey("image") -> {
+                val imgRes = Akatsuki.instance.okhttp
+                        .newCall(Request.Builder().url(ctx.args["image"] as String).build())
+                        .execute()
+
+                val bytes = imgRes.body()!!.bytes()
+                temp.writeBytes(bytes)
+                command(ctx, temp)
+                imgRes.close()
+            }
+
+
+            else -> ctx.getLastImage()
+                    .thenAccept {
+                        if (it == null)
+                            return@thenAccept ctx.send(
                                     I18n.parse(
                                             ctx.lang.getString("no_images_channel"),
                                             mapOf("username" to ctx.author.name)
                                     )
-                            ),
-                out
-        )
+                            )
 
+                        IOUtils.copy(it, out)
+                        command(ctx, temp)
+                    }
+        }
+    }
+
+    fun command(ctx: Context, temp: File) {
         val res = Akatsuki.instance.okhttp.newCall(Request.Builder().apply {
             url(HttpUrl.Builder().apply {
                 scheme(if (Akatsuki.instance.config.backend.ssl) "https" else "http")
@@ -82,7 +100,6 @@ class NeedsMoreJpeg : ThreadedCommand() {
 
         ctx.channel.sendFile(res.body()!!.byteStream(), "needsmorejpeg.jpg", null).queue {
             res.close()
-            imgRes.close()
         }
     }
 }

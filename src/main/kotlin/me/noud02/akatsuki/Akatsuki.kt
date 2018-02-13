@@ -85,7 +85,7 @@ class Akatsuki(val config: Config) {
         }.execute()
     }
 
-    private fun startReminderChecker(checkDelay: Long = 60) {
+    private fun startReminderChecker(checkDelay: Long = 1) {
         async(coroutineDispatcher) {
             while (isActive) {
                 delay(checkDelay, TimeUnit.SECONDS)

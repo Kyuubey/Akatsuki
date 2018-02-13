@@ -70,17 +70,17 @@ class Anime : ThreadedCommand() {
             return ctx.send(
                     I18n.parse(
                             ctx.lang.getString("anime_not_found"),
-                            mapOf("username"  to ctx.author.name)
+                            mapOf("username" to ctx.author.name)
                     )
             )
 
         val json = obj.getJSONObject("anime")
 
-        if (!obj.has("entry"))
+        if (!json.has("entry"))
             return ctx.send(
                     I18n.parse(
                             ctx.lang.getString("anime_not_found"),
-                            mapOf("username"  to ctx.author.name)
+                            mapOf("username" to ctx.author.name)
                     )
             )
 

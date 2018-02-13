@@ -44,5 +44,6 @@ class Kiss : Command() {
         setTitle("${(ctx.args["user"] as Member).effectiveName}, you got a kiss from ${ctx.member!!.effectiveName}")
         setImage(Wolk.getByType(WolkType.KISS).url)
         setColor(Color.CYAN)
+        setFooter("Powered by weeb.sh", null)
     }.build())
 }

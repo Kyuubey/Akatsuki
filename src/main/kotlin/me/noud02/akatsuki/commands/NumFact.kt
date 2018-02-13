@@ -26,6 +26,7 @@
 package me.noud02.akatsuki.commands
 
 import me.noud02.akatsuki.Akatsuki
+import me.noud02.akatsuki.annotations.Argument
 import me.noud02.akatsuki.entities.Command
 import me.noud02.akatsuki.entities.Context
 import me.noud02.akatsuki.annotations.Load
@@ -33,13 +34,19 @@ import me.noud02.akatsuki.entities.ThreadedCommand
 import okhttp3.Request
 
 @Load
+@Argument("number", "number", true)
 class NumFact : ThreadedCommand() {
     override val desc = "Get a random fact about a number!"
 
     override fun threadedRun(ctx: Context) {
-        val res = Akatsuki.instance.okhttp.newCall(Request.Builder().url("https://numbersapi.com/random").build()).execute()
+        val res = Akatsuki.instance.okhttp.newCall(
+                Request.Builder()
+                        .url("http://numbersapi.com/${if (ctx.args.containsKey("number")) ctx.args["number"].toString() else "random"}")
+                        .build()
+        ).execute()
 
-        ctx.send(res.body()!!.string())
-        res.close()
+        ctx.channel.sendMessage(res.body()!!.string()).queue {
+            res.close()
+        }
     }
 }

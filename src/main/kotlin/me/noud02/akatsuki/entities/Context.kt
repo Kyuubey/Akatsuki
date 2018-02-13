@@ -34,6 +34,7 @@ import net.dv8tion.jda.core.entities.*
 import net.dv8tion.jda.core.events.message.MessageReceivedEvent
 import java.io.InputStream
 import java.util.*
+import java.util.concurrent.CompletableFuture
 
 class Context(
         val event: MessageReceivedEvent,
@@ -61,12 +62,20 @@ class Context(
 
     fun sendError(e: Throwable) = event.channel.sendMessage("```diff\n- ${e.stackTrace}```").queue()
 
-    fun getLastImage(): InputStream? {
-        for (message in channel.history.retrievePast(25).complete()) {
-            if (message.attachments.getOrNull(0) != null)
-                return message.attachments[0].inputStream
-        }
+    fun getLastImage(): CompletableFuture<InputStream?> {
+        val fut = CompletableFuture<InputStream?>()
 
-        return null
+        channel.history.retrievePast(25).queue({
+            val history = it.filter { it.attachments.isNotEmpty() && it.attachments[0].isImage }
+
+            if (history.isEmpty())
+                fut.complete(null)
+            else
+                for (message in history) {
+                    fut.complete(message.attachments[0].inputStream)
+                }
+        })
+
+        return fut
     }
 }

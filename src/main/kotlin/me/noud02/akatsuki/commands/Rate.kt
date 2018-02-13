@@ -34,6 +34,8 @@ import me.noud02.akatsuki.utils.I18n
 @Load
 @Argument("something", "string", true)
 class Rate : Command() {
+    override val desc = "Get my rating on something!"
+
     override fun run(ctx: Context) = ctx.send(
             I18n.parse(
                     ctx.lang.getString("give_rating"),
