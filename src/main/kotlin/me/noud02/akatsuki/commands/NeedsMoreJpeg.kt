@@ -31,6 +31,7 @@ import me.noud02.akatsuki.annotations.Load
 import me.noud02.akatsuki.entities.Command
 import me.noud02.akatsuki.entities.Context
 import me.noud02.akatsuki.entities.ThreadedCommand
+import me.noud02.akatsuki.utils.I18n
 import okhttp3.*
 import org.apache.commons.io.IOUtils
 import java.io.File
@@ -52,7 +53,12 @@ class NeedsMoreJpeg : ThreadedCommand() {
                         ?: if (ctx.args.containsKey("image"))
                             imgRes.body()!!.byteStream()
                         else
-                            ctx.getLastImage() ?: return ctx.send("No images found!"),
+                            ctx.getLastImage() ?: return ctx.send(
+                                    I18n.parse(
+                                            ctx.lang.getString("no_images_channel"),
+                                            mapOf("username" to ctx.author.name)
+                                    )
+                            ),
                 out
         )
 

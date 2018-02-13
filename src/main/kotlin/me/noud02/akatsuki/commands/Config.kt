@@ -41,6 +41,8 @@ import net.dv8tion.jda.core.entities.Role
 import net.dv8tion.jda.core.entities.TextChannel
 import org.jetbrains.exposed.sql.update
 
+// TODO add many translations
+
 @Arguments(
         Argument("option", "string"),
         Argument("value", "any")

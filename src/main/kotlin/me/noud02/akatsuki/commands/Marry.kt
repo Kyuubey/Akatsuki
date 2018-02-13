@@ -34,6 +34,7 @@ import me.noud02.akatsuki.db.DatabaseWrapper
 import me.noud02.akatsuki.db.schema.Users
 import me.noud02.akatsuki.entities.Command
 import me.noud02.akatsuki.entities.Context
+import me.noud02.akatsuki.utils.I18n
 import net.dv8tion.jda.core.entities.Member
 import net.dv8tion.jda.core.events.message.react.MessageReactionAddEvent
 import org.jetbrains.exposed.sql.update
@@ -48,27 +49,60 @@ class Marry : Command() {
         val member = ctx.args["user"] as Member
 
         if (ctx.storedUser.marriedUserId != null)
-            return ctx.send("You are already married to ${ctx.jda.getUserById(ctx.storedUser.marriedUserId).name}!")
+            return ctx.send(
+                    I18n.parse(
+                            ctx.lang.getString("already_married"),
+                            mapOf(
+                                    "username" to ctx.author.name,
+                                    "user" to (ctx.jda.getUserById(ctx.storedUser.marriedUserId)?.name ?: "an unknown person")
+                            )
+                    )
+            )
 
         if (member.user.id == ctx.author.id)
-            return ctx.send("You can't marry yourself!")
+            return ctx.send(
+                    I18n.parse(
+                            ctx.lang.getString("cant_marry_self"),
+                            mapOf("username" to ctx.author.name)
+                    )
+            )
 
         if (member.user.isBot)
-            return ctx.send("You can't marry a bot!")
+            return ctx.send(
+                    I18n.parse(
+                            ctx.lang.getString("cant_marry_bot"),
+                            mapOf("username" to ctx.author.name)
+                    )
+            )
 
         val dbUser = DatabaseWrapper.getUserSafe(member.user).get()
 
         if (dbUser.marriedUserId != null)
-            return ctx.send("${member.effectiveName} is already married to ${ctx.jda.getUserById(dbUser.marriedUserId).name}!")
+            return ctx.send(
+                    I18n.parse(
+                            ctx.lang.getString("user_already_married"),
+                            mapOf(
+                                    "username" to ctx.author.name,
+                                    "user" to member.user.name,
+                                    "user2" to (ctx.jda.getUserById(dbUser.marriedUserId)?.name ?: "an unknown person")
+                            )
+                    )
+            )
 
         val yesEmote = "\u2705"
         val noEmote = "\u274E"
 
-        ctx.channel.sendMessage("${member.user.asMention}, ${ctx.member!!.effectiveName} wants to marry you! What's your answer?").queue({
-            it.addReaction(yesEmote).queue()
-            it.addReaction(noEmote).queue()
-
-            val msg = it
+        ctx.channel.sendMessage(
+                I18n.parse(
+                        ctx.lang.getString("propose_marriage"),
+                        mapOf(
+                                "user" to member.asMention,
+                                "username" to ctx.author.name
+                        )
+                )
+        ).queue({ msg ->
+            msg.addReaction(yesEmote).queue()
+            msg.addReaction(noEmote).queue()
 
             EventListener.instance.waiter.await<MessageReactionAddEvent>(1, 60000L) {
                 if (it.user.id == member.user.id && it.messageId == msg.id) {
@@ -87,12 +121,25 @@ class Marry : Command() {
                                     it[marriedUserId] = ctx.author.idLong
                                 }
 
-                                ctx.send("${ctx.member.effectiveName} is now married to ${member.effectiveName}! \uD83D\uDC96")
+                                ctx.send(
+                                        I18n.parse(
+                                                ctx.lang.getString("marriage_accepted"),
+                                                mapOf(
+                                                        "username" to ctx.author.name,
+                                                        "user" to member.user.name
+                                                )
+                                        )
+                                )
                             }.execute()
                         }
 
                         noEmote ->
-                            ctx.send("${member.effectiveName} declined! \uD83D\uDC94")
+                            ctx.send(
+                                    I18n.parse(
+                                            ctx.lang.getString("marriage_declined"),
+                                            mapOf("username" to member.user.name)
+                                    )
+                            )
 
                         else -> return@await false
                     }

@@ -32,6 +32,7 @@ import me.noud02.akatsuki.annotations.Alias
 import me.noud02.akatsuki.db.schema.Scripts
 import me.noud02.akatsuki.entities.Command
 import me.noud02.akatsuki.entities.Context
+import me.noud02.akatsuki.utils.I18n
 import me.noud02.akatsuki.utils.LuaSandbox
 import net.dv8tion.jda.core.Permission
 import org.jetbrains.exposed.sql.*
@@ -56,7 +57,7 @@ class TestCommand : Command() {
 )
 @Flag("owner", 'o', "Make the custom command server owner only.")
 class AddCommand : Command() {
-    override val name = "Add custom commands"
+    override val name = "Add custom scripts"
     override val guildOnly = true
 
     override fun run(ctx: Context) {
@@ -67,7 +68,12 @@ class AddCommand : Command() {
             val scriptsMatch = Scripts.select { Scripts.guildId.eq(ctx.guild!!.idLong).and(Scripts.scriptName.eq(name)) }
 
             if (!scriptsMatch.empty())
-                return@asyncTransaction ctx.send("Command with that name already exists!")
+                return@asyncTransaction ctx.send(
+                        I18n.parse(
+                                ctx.lang.getString("script_exists"),
+                                mapOf("username" to ctx.author.name)
+                        )
+                )
 
             Scripts.insert {
                 it[script] = content
@@ -77,7 +83,12 @@ class AddCommand : Command() {
                 it[guildId] = ctx.guild!!.idLong
             }
 
-            ctx.send("Added custom command **$name**!")
+            ctx.send(
+                    I18n.parse(
+                            ctx.lang.getString("added_script"),
+                            mapOf("name" to name)
+                    )
+            )
         }.execute()
     }
 }
@@ -89,24 +100,39 @@ class AddCommand : Command() {
 @Argument("name", "string")
 class RemoveCommand : Command() {
     override val guildOnly = true
-    override val desc = "Remove custom commands."
+    override val desc = "Remove custom scripts."
 
     override fun run(ctx: Context) {
-        val name = ctx.args["name"]
+        val name = ctx.args["name"] as String
         val hasPerm = ctx.perms["ADMINISTRATOR"] as Boolean
 
         asyncTransaction(Akatsuki.instance.pool) {
             val match = Scripts.select { Scripts.guildId.eq(ctx.guild!!.idLong).and(Scripts.scriptName.eq(name)) }.firstOrNull()
-                    ?: return@asyncTransaction ctx.send("Couldn't find that command!")
+                    ?: return@asyncTransaction ctx.send(
+                            I18n.parse(
+                                    ctx.lang.getString("script_not_found"),
+                                    mapOf("username" to ctx.author.name)
+                            )
+                    )
 
             if (!hasPerm && match[Scripts.ownerId] != ctx.author.idLong)
-                return@asyncTransaction ctx.send("You can't delete that command!")
+                return@asyncTransaction ctx.send(
+                        I18n.parse(
+                                ctx.lang.getString("cant_delete_script"),
+                                mapOf("username" to ctx.author.name)
+                        )
+                )
 
             Scripts.deleteWhere {
                 Scripts.scriptName.eq(name).and(Scripts.guildId.eq(ctx.guild!!.idLong))
             }
 
-            ctx.send("Deleted command **${match[Scripts.scriptName]}**!")
+            ctx.send(
+                    I18n.parse(
+                            ctx.lang.getString("deleted_script"),
+                            mapOf("name" to name)
+                    )
+            )
         }.execute()
     }
 }
@@ -120,19 +146,29 @@ class RemoveCommand : Command() {
         Argument("script", "string")
 )
 class EditCommand : Command() {
-    override val desc = "Edit custom commands."
+    override val desc = "Edit custom scripts."
     override val guildOnly = true
 
     override fun run(ctx: Context) {
-        val name = ctx.args["name"]
+        val name = ctx.args["name"] as String
         val hasPerm = ctx.perms["ADMINISTRATOR"] as Boolean
 
         asyncTransaction(Akatsuki.instance.pool) {
             val match = Scripts.select { Scripts.guildId.eq(ctx.guild!!.idLong).and(Scripts.scriptName.eq(name)) }.firstOrNull()
-                    ?: return@asyncTransaction ctx.send("Couldn't find that command!")
+                    ?: return@asyncTransaction ctx.send(
+                            I18n.parse(
+                                    ctx.lang.getString("script_not_found"),
+                                    mapOf("username" to ctx.author.name)
+                            )
+                    )
 
             if (!hasPerm && match[Scripts.ownerId] != ctx.author.idLong)
-                return@asyncTransaction ctx.send("You can't edit that command!")
+                return@asyncTransaction ctx.send(
+                        I18n.parse(
+                                ctx.lang.getString("cant_edit_script"),
+                                mapOf("username" to ctx.author.name)
+                        )
+                )
 
             Scripts.update({
                 Scripts.scriptName.eq(name).and(Scripts.guildId.eq(ctx.guild!!.idLong))
@@ -140,7 +176,12 @@ class EditCommand : Command() {
                 it[script] = ctx.args["script"] as String
             }
 
-            ctx.send("Edited command **${match[Scripts.scriptName]}**!")
+            ctx.send(
+                    I18n.parse(
+                            ctx.lang.getString("deleted_script"),
+                            mapOf("name" to name)
+                    )
+            )
         }.execute()
     }
 }
@@ -150,16 +191,17 @@ class EditCommand : Command() {
         Argument("command", "string"),
         Argument("arguments", "string", true)
 )
-@Alias("cmd", "script", "c", "s")
+@Alias("cmd", "customcommand", "c", "s")
 @Perm(Permission.ADMINISTRATOR, true)
-class CustomCommand : Command() {
-    override val desc = "Execute custom commands."
+class Script : Command() {
+    override val desc = "Execute custom scripts."
     override val guildOnly = true
 
     init {
         addSubcommand(TestCommand(), "test")
         addSubcommand(AddCommand(), "add")
         addSubcommand(RemoveCommand(), "remove")
+        addSubcommand(EditCommand(), "edit")
     }
 
     override fun run(ctx: Context) {
@@ -168,10 +210,20 @@ class CustomCommand : Command() {
 
         asyncTransaction(Akatsuki.instance.pool) {
             val command = Scripts.select { Scripts.guildId.eq(ctx.guild!!.idLong).and(Scripts.scriptName.eq(cmd)) }.firstOrNull()
-                    ?: return@asyncTransaction ctx.send("Couldn't find that command!")
+                    ?: return@asyncTransaction ctx.send(
+                            I18n.parse(
+                                    ctx.lang.getString("script_not_found"),
+                                    mapOf("username" to ctx.author.name)
+                            )
+                    )
 
             if (command[Scripts.ownerOnly] && !hasPerm)
-                return@asyncTransaction ctx.send("This command is owner-only!")
+                return@asyncTransaction ctx.send(
+                        I18n.parse(
+                                ctx.lang.getString("script_owner_only"),
+                                mapOf("username" to ctx.author.name)
+                        )
+                )
 
             LuaSandbox.eval(command[Scripts.script], ctx.rawArgs.slice(1 until ctx.rawArgs.size), ctx)
         }.execute()

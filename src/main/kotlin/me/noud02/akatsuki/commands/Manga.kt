@@ -33,6 +33,7 @@ import me.noud02.akatsuki.annotations.Load
 import me.noud02.akatsuki.entities.Command
 import me.noud02.akatsuki.entities.Context
 import me.noud02.akatsuki.entities.ThreadedCommand
+import me.noud02.akatsuki.utils.I18n
 import net.dv8tion.jda.core.EmbedBuilder
 import okhttp3.Credentials
 import okhttp3.HttpUrl
@@ -64,11 +65,35 @@ class Manga : ThreadedCommand() {
 
         }.build()).execute()
 
-        val json = XML
+        val obj = XML
                 .toJSONObject(res.body()!!.string())
-                .getJSONObject("manga")
 
-        val entry = json.getJSONObject("entry") ?: json.getJSONArray("entry").getJSONObject(0)
+        if (!obj.has("manga"))
+            return ctx.send(
+                    I18n.parse(
+                            ctx.lang.getString("manga_not_found"),
+                            mapOf("username"  to ctx.author.name)
+                    )
+            )
+
+        val json = obj.getJSONObject("manga")
+
+        if (!obj.has("entry"))
+            return ctx.send(
+                    I18n.parse(
+                            ctx.lang.getString("manga_not_found"),
+                            mapOf("username"  to ctx.author.name)
+                    )
+            )
+
+        val entry = json.optJSONObject("entry")
+                ?: json.getJSONArray("entry").optJSONObject(0)
+                ?: return ctx.send(
+                        I18n.parse(
+                                ctx.lang.getString("manga_not_found"),
+                                mapOf("username"  to ctx.author.name)
+                        )
+                )
 
         val embed = EmbedBuilder().apply {
             setTitle(entry.getString("title"))

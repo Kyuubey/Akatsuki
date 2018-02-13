@@ -154,10 +154,20 @@ class CommandHandler {
             return
 
         if (command.guildOnly && event.guild == null)
-            return event.channel.sendMessage("This command can only be used in a server!").queue() // TODO add translations for this
+            return event.channel.sendMessage(
+                    I18n.parse(
+                            lang.getString("server_only_command"),
+                            mapOf("username" to event.author.name)
+                    )
+            ).queue()
 
         if (command.nsfw && !event.textChannel.isNSFW)
-            return event.channel.sendMessage("This command can only be used in a NSFW channel!").queue() // TODO add translations for this
+            return event.channel.sendMessage(
+                    I18n.parse(
+                            lang.getString("nsfw_only_command"),
+                            mapOf("username" to event.author.name)
+                    )
+            ).queue()
 
         if (args.isNotEmpty() && commands[cmd]?.subcommands?.get(args[0]) is Command) {
             val subcmd = args[0]
@@ -435,7 +445,16 @@ class CommandHandler {
 
                 "number" -> {
                     newArgs[arg.name] = arg2.toIntOrNull()
-                            ?: throw Exception("Argument at pos ${i + 1} needs type 'number' but type 'string' was given")
+                            ?: throw Exception(
+                            I18n.parse(
+                                    lang.getString("invalid_argument_type"),
+                                    mapOf(
+                                            "username" to event.author.name,
+                                            "type" to "number",
+                                            "given_type" to "string"
+                                    )
+                            )
+                    )
                     i++
                     next()
                 }

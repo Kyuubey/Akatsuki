@@ -33,6 +33,7 @@ import me.noud02.akatsuki.annotations.Load
 import me.noud02.akatsuki.db.schema.Tags
 import me.noud02.akatsuki.entities.Command
 import me.noud02.akatsuki.entities.Context
+import me.noud02.akatsuki.utils.I18n
 import org.jetbrains.exposed.sql.select
 
 @Load
@@ -46,7 +47,12 @@ class Tag : Command() {
 
         asyncTransaction(Akatsuki.instance.pool) {
             val tag = Tags.select { Tags.tagName.eq(name) }.firstOrNull()
-                    ?: return@asyncTransaction ctx.send("That tag doesn't exist!")
+                    ?: return@asyncTransaction ctx.send(
+                            I18n.parse(
+                                    ctx.lang.getString("tag_not_found"),
+                                    mapOf("username" to ctx.author.name)
+                            )
+                    )
 
             ctx.send(tag[Tags.tagContent])
         }.execute()

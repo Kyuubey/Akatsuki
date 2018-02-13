@@ -29,14 +29,18 @@ import me.noud02.akatsuki.annotations.Argument
 import me.noud02.akatsuki.annotations.Load
 import me.noud02.akatsuki.entities.Command
 import me.noud02.akatsuki.entities.Context
+import me.noud02.akatsuki.utils.I18n
 
 @Load
 @Argument("something", "string", true)
 class Rate : Command() {
-    override fun run(ctx: Context) {
-        val toRate = ctx.args.getOrDefault("something", "you") as String
-        val rating = Math.round(Math.random() * 10.0).toInt()
-
-        ctx.send("I'd rate $toRate $rating/10!")
-    }
+    override fun run(ctx: Context) = ctx.send(
+            I18n.parse(
+                    ctx.lang.getString("give_rating"),
+                    mapOf(
+                            "thing" to ctx.args.getOrDefault("something", "you") as String,
+                            "num" to Math.round(Math.random() * 10).toInt()
+                    )
+            )
+    )
 }

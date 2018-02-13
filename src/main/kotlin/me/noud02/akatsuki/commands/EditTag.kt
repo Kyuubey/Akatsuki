@@ -34,6 +34,7 @@ import me.noud02.akatsuki.annotations.Load
 import me.noud02.akatsuki.db.schema.Tags
 import me.noud02.akatsuki.entities.Command
 import me.noud02.akatsuki.entities.Context
+import me.noud02.akatsuki.utils.I18n
 import org.jetbrains.exposed.sql.insert
 import org.jetbrains.exposed.sql.select
 import org.jetbrains.exposed.sql.update
@@ -53,10 +54,20 @@ class EditTag : Command() {
 
         asyncTransaction(Akatsuki.instance.pool) {
             val tag = Tags.select { Tags.tagName.eq(name) }.firstOrNull()
-                    ?: return@asyncTransaction ctx.send("That tag doesn't exist!")
+                    ?: return@asyncTransaction ctx.send(
+                            I18n.parse(
+                                    ctx.lang.getString("tag_not_found"),
+                                    mapOf("username" to ctx.author.name)
+                            )
+                    )
 
             if (tag[Tags.ownerId] != ctx.author.idLong)
-                return@asyncTransaction ctx.send("You don't own this tag!")
+                return@asyncTransaction ctx.send(
+                        I18n.parse(
+                                ctx.lang.getString("tag_not_owner"),
+                                mapOf("username" to ctx.author.name)
+                        )
+                )
 
             Tags.update({
                 Tags.tagName.eq(name)
@@ -64,7 +75,12 @@ class EditTag : Command() {
                 it[tagContent] = content
             }
 
-            ctx.send("Edited tag '$name'")
+            ctx.send(
+                    I18n.parse(
+                            ctx.lang.getString("tag_edited"),
+                            mapOf("name" to name)
+                    )
+            )
         }.execute()
     }
 }

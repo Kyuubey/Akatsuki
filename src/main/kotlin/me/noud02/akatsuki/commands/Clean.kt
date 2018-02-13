@@ -31,6 +31,7 @@ import me.noud02.akatsuki.entities.AsyncCommand
 import me.noud02.akatsuki.entities.Context
 import me.noud02.akatsuki.annotations.Load
 import me.noud02.akatsuki.extensions.await
+import me.noud02.akatsuki.utils.I18n
 import kotlin.math.min
 
 @Load
@@ -51,6 +52,11 @@ class Clean : AsyncCommand() {
         botmsgs
                 .forEach { it.delete().await() }
 
-        ctx.send("Cleaned ${botmsgs.size} messages!")
+        ctx.send(
+                I18n.parse(
+                        ctx.lang.getString("cleaned_messages"),
+                        mapOf("num" to botmsgs.size)
+                )
+        )
     }
 }

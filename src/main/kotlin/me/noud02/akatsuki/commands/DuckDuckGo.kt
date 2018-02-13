@@ -36,7 +36,8 @@ import okhttp3.HttpUrl
 import okhttp3.Request
 import org.json.JSONObject
 
-@Load
+// TODO finish this command
+// @Load
 @Argument("query", "string")
 class DuckDuckGo : ThreadedCommand() {
     override fun threadedRun(ctx: Context) {

@@ -50,7 +50,7 @@ class EightBall : Command() {
                 "*facepalm*",
                 "Maybe?",
                 "(╯°□°）╯︵ ┻━┻",
-                "404 Answer not be found",
+                "404 Answer not found",
                 "Never",
                 "Sure",
                 "Do you honestly think I am gonna answer to that?",

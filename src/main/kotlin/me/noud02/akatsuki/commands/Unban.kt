@@ -30,6 +30,7 @@ import me.noud02.akatsuki.annotations.Arguments
 import me.noud02.akatsuki.annotations.Load
 import me.noud02.akatsuki.annotations.Perm
 import me.noud02.akatsuki.entities.*
+import me.noud02.akatsuki.utils.I18n
 import net.dv8tion.jda.core.Permission
 import net.dv8tion.jda.core.exceptions.PermissionException
 
@@ -50,12 +51,25 @@ class Unban : Command() {
                 .unban(user)
                 .reason("[ ${ctx.author.name}#${ctx.author.discriminator} ] ${ctx.args.getOrDefault("reason", "none")}")
                 .queue({
-                    ctx.send("Unbanned <@$user>")
+                    ctx.send(
+                            I18n.parse(
+                                    ctx.lang.getString("unbanned_user"),
+                                    mapOf("user" to "<@$user>")
+                            )
+                    )
                 }) { err ->
                     if (err is PermissionException)
-                        ctx.send("I couldn't unban <@$user> because I'm missing the '${err.permission}' permission!")
+                        ctx.send(
+                                I18n.parse(
+                                        ctx.lang.getString("perm_cant_unban"),
+                                        mapOf(
+                                                "user" to "<@$user>",
+                                                "permission" to I18n.permission(ctx.lang, err.permission.name)
+                                        )
+                                )
+                        )
                     else
-                        ctx.send("I couldn't ban <@$user> because of an unknown error: ${err.message}")
+                        ctx.sendError(err)
                 }
     }
 }

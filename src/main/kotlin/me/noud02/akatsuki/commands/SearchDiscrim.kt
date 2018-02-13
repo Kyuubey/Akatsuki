@@ -29,6 +29,7 @@ import me.noud02.akatsuki.annotations.Alias
 import me.noud02.akatsuki.annotations.Argument
 import me.noud02.akatsuki.annotations.Load
 import me.noud02.akatsuki.entities.*
+import me.noud02.akatsuki.utils.I18n
 
 @Load
 @Alias("discrim")
@@ -40,10 +41,15 @@ class SearchDiscrim : Command() {
         val discrim = ctx.args["discrim"] as? String ?: ctx.author.discriminator
         val users = ctx.jda.users.filter { it.discriminator == discrim }
         
-        ctx.send("Users with discriminator $discrim:\n${
-            users
-                .subList(0, Math.min(5, users.size))
-                .joinToString("\n") { "\t${it.name} (${it.id})" }}"
+        ctx.send(
+                I18n.parse(
+                        ctx.lang.getString("users_with_discrim"),
+                        mapOf("discriminator" to discrim)
+                )
+                        + "\n"
+                        + users
+                        .subList(0, Math.min(5, users.size))
+                        .joinToString("\n") { "\t${it.name} (${it.id})" }
         )
     }
 }

@@ -43,6 +43,7 @@ class GuildInfo : Command() {
         ctx.send(EmbedBuilder().apply {
             setTitle("${ctx.guild!!.name} (${ctx.guild.id})")
 
+            // TODO add translations for these
             descriptionBuilder.append("**Owner:** ${ctx.guild.owner.user.name}#${ctx.guild.owner.user.discriminator}\n")
             descriptionBuilder.append("**Bots:** ${ctx.guild.members.filter { it.user.isBot }.size}\n")
             descriptionBuilder.append("**Users:** ${ctx.guild.members.filter { !it.user.isBot }.size}\n")

@@ -32,6 +32,7 @@ import me.noud02.akatsuki.annotations.Load
 import me.noud02.akatsuki.entities.Command
 import me.noud02.akatsuki.entities.Context
 import me.noud02.akatsuki.entities.ThreadedCommand
+import me.noud02.akatsuki.utils.I18n
 import net.dv8tion.jda.core.entities.Member
 import okhttp3.*
 import java.io.File
@@ -100,7 +101,12 @@ class Ship : ThreadedCommand() {
         }.build()).execute()
 
         ctx.channel
-                .sendMessage("Happy shipping!\nYour shipname: $ship")
+                .sendMessage(
+                        I18n.parse(
+                                ctx.lang.getString("happy_shipping"),
+                                mapOf("shipname" to ship)
+                        )
+                )
                 .addFile(res.body()!!.bytes(), "ship.png")
                 .queue {
                     res.close()

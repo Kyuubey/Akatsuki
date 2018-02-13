@@ -31,6 +31,7 @@ import me.noud02.akatsuki.annotations.*
 import me.noud02.akatsuki.db.schema.Guilds
 import me.noud02.akatsuki.entities.Command
 import me.noud02.akatsuki.entities.Context
+import me.noud02.akatsuki.utils.I18n
 import net.dv8tion.jda.core.EmbedBuilder
 import net.dv8tion.jda.core.Permission
 import net.dv8tion.jda.core.entities.Role
@@ -49,10 +50,41 @@ class AddRole : Command() {
             Guilds.update({
                 Guilds.id.eq(ctx.guild!!.idLong)
             }) {
-                it[rolemeRoles] = ctx.storedGuild!!.rolemeRoles.plus(role.name to role.idLong)
+                it[rolemeRoles] = ctx.storedGuild!!.rolemeRoles.plus(role.name.toLowerCase() to role.idLong)
             }
 
-            ctx.send("Added role ${role.name} to self assignable roles!")
+            ctx.send(
+                    I18n.parse(
+                            ctx.lang.getString("roleme_added_role"),
+                            mapOf("role" to role.name)
+                    )
+            )
+        }.execute()
+    }
+}
+
+@Perm(Permission.MANAGE_ROLES)
+@Argument("role", "role")
+class RemRole : Command() {
+    override val desc = "Remove roles."
+    override val guildOnly = true
+
+    override fun run(ctx: Context) {
+        val role = ctx.args["role"] as Role
+
+        asyncTransaction(Akatsuki.instance.pool) {
+            Guilds.update({
+                Guilds.id.eq(ctx.guild!!.idLong)
+            }) {
+                it[rolemeRoles] = ctx.storedGuild!!.rolemeRoles.minus(role.name.toLowerCase())
+            }
+
+            ctx.send(
+                    I18n.parse(
+                            ctx.lang.getString("roleme_removed_role"),
+                            mapOf("role" to role.name)
+                    )
+            )
         }.execute()
     }
 }
@@ -62,7 +94,7 @@ class ListRoles : Command() {
     override val guildOnly = true
 
     override fun run(ctx: Context) = ctx.send(EmbedBuilder().apply {
-        setTitle("Roles")
+        setTitle(ctx.lang.getString("roles"))
         ctx.storedGuild!!.rolemeRoles.forEach { descriptionBuilder.append("<@&${it.value}>\n") }
     }.build())
 }
@@ -83,16 +115,31 @@ class RoleMe : Command() {
         val roleName = (ctx.args["role"] as String).toLowerCase()
 
         if (!ctx.selfMember!!.canInteract(ctx.member))
-            return ctx.send("Sorry but I can't assign roles to you since your role is higher than mine.")
+            return ctx.send(
+                    I18n.parse(
+                            ctx.lang.getString("roleme_perm_cant_assign"),
+                            mapOf("username" to ctx.author.name)
+                    )
+            )
 
         if (ctx.flags.argMap.containsKey("remove") || ctx.flags.argMap.containsKey("r")) {
             if (!ctx.storedGuild!!.rolemeRoles.containsKey(roleName))
-                return ctx.send("You can't remove that role from yourself!")
+                return ctx.send(
+                        I18n.parse(
+                                ctx.lang.getString("roleme_cant_remove"),
+                                mapOf("username" to ctx.author.name)
+                        )
+                )
 
             val role = Akatsuki.instance.shardManager.getRoleById(ctx.storedGuild.rolemeRoles[roleName]!!)
 
             ctx.guild!!.controller.removeSingleRoleFromMember(ctx.member!!, role).reason("[ RoleMe ]").queue({
-                ctx.send("You no longer have the $roleName role!")
+                ctx.send(
+                        I18n.parse(
+                                ctx.lang.getString("roleme_removed"),
+                                mapOf("role" to role.name)
+                        )
+                )
             }) {
                 ctx.sendError(it)
             }
@@ -103,7 +150,12 @@ class RoleMe : Command() {
             val role = Akatsuki.instance.shardManager.getRoleById(ctx.storedGuild.rolemeRoles[roleName]!!)
 
             ctx.guild!!.controller.addSingleRoleToMember(ctx.member!!, role).reason("[ RoleMe ]").queue({
-                ctx.send("You now have the $roleName role!")
+                ctx.send(
+                        I18n.parse(
+                                ctx.lang.getString("roleme_assigned"),
+                                mapOf("role" to role.name)
+                        )
+                )
             }) {
                 ctx.sendError(it)
             }

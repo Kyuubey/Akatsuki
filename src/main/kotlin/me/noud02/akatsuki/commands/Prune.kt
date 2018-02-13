@@ -25,19 +25,19 @@
 
 package me.noud02.akatsuki.commands
 
-import me.noud02.akatsuki.annotations.Argument
-import me.noud02.akatsuki.annotations.Flag
-import me.noud02.akatsuki.annotations.Flags
-import me.noud02.akatsuki.annotations.Load
+import me.noud02.akatsuki.annotations.*
 import me.noud02.akatsuki.entities.AsyncCommand
 import me.noud02.akatsuki.entities.Context
 import me.noud02.akatsuki.extensions.await
+import me.noud02.akatsuki.utils.I18n
+import net.dv8tion.jda.core.Permission
 
 @Load
 @Argument("messages", "number")
 @Flags(
         Flag("bots", 'b', "Only clean messages sent by a bot")
 )
+@Perm(Permission.MESSAGE_MANAGE)
 class Prune : AsyncCommand() {
     override val desc = "Prune messages."
 
@@ -55,6 +55,11 @@ class Prune : AsyncCommand() {
                     messages++
                 }
 
-        ctx.send("Pruned $messages messages!")
+        ctx.send(
+                I18n.parse(
+                        ctx.lang.getString("pruned_messages"),
+                        mapOf("num" to ctx.args["messages"] as Int)
+                )
+        )
     }
 }

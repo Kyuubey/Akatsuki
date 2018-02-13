@@ -32,6 +32,7 @@ import me.noud02.akatsuki.annotations.Load
 import me.noud02.akatsuki.db.schema.Logs
 import me.noud02.akatsuki.entities.Command
 import me.noud02.akatsuki.entities.Context
+import me.noud02.akatsuki.utils.I18n
 import net.dv8tion.jda.core.EmbedBuilder
 import org.jetbrains.exposed.sql.and
 import org.jetbrains.exposed.sql.select
@@ -43,7 +44,12 @@ class Snipe : Command() {
 
     override fun run(ctx: Context) {
         if (!ctx.storedGuild!!.logs)
-            return ctx.send("Logs aren't enabled!")
+            return ctx.send(
+                    I18n.parse(
+                            ctx.lang.getString("logs_not_enabled"),
+                            mapOf("username" to ctx.author.name)
+                    )
+            )
 
         asyncTransaction(Akatsuki.instance.pool) {
             val snipe = EventListener.instance.snipes.remove(ctx.channel.idLong)
@@ -56,12 +62,18 @@ class Snipe : Command() {
                 val embed = EmbedBuilder().apply {
                     setAuthor("${log[Logs.authorName]}#${log[Logs.authorDiscrim]}", null, log[Logs.authorAvatar])
                     descriptionBuilder.append(log[Logs.content])
-                    setFooter("Sniped by ${ctx.author.name}#${ctx.author.discriminator}", null)
+                    setFooter(
+                            I18n.parse(
+                                    ctx.lang.getString("sniped_by"),
+                                    mapOf("user" to "${ctx.author.name}#${ctx.author.discriminator}")
+                            ),
+                            null
+                    )
                 }
 
                 ctx.send(embed.build())
             } else
-                ctx.send("No snipes found!")
+                ctx.send(ctx.lang.getString("no_snipes"))
         }.execute()
     }
 }

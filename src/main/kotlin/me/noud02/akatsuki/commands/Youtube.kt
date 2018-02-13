@@ -31,6 +31,7 @@ import me.noud02.akatsuki.annotations.Alias
 import me.noud02.akatsuki.annotations.Argument
 import me.noud02.akatsuki.annotations.Load
 import me.noud02.akatsuki.entities.*
+import me.noud02.akatsuki.utils.I18n
 import me.noud02.akatsuki.utils.ItemPicker
 import net.dv8tion.jda.core.entities.Guild
 import net.dv8tion.jda.core.entities.Member
@@ -48,6 +49,7 @@ class Youtube : ThreadedCommand() {
 
     override fun threadedRun(ctx: Context) {
         val picker = ItemPicker(EventListener.instance.waiter, ctx.member as Member, ctx.guild as Guild)
+        val search = ctx.args["query"] as String
 
         val res = Akatsuki.instance.okhttp.newCall(Request.Builder().apply {
             url(HttpUrl.Builder().apply {
@@ -60,12 +62,37 @@ class Youtube : ThreadedCommand() {
                 addQueryParameter("part", "snippet")
                 addQueryParameter("maxResults", "10")
                 addQueryParameter("type", "video")
-                addQueryParameter("q", ctx.args["query"] as String)
+                addQueryParameter("q", search)
             }.build())
         }.build()).execute()
 
         val body = res.body()!!.string()
-        val items = JSONObject(body).getJSONArray("items")
+
+        val obj = JSONObject(body)
+
+        if (!obj.has("items"))
+            return ctx.send(
+                    I18n.parse(
+                            ctx.lang.getString("video_search_fail"),
+                            mapOf(
+                                    "user" to ctx.author.name,
+                                    "search" to search
+                            )
+                    )
+            )
+
+        val items = obj.getJSONArray("items")
+
+        if (items.length() == 0)
+            return ctx.send(
+                    I18n.parse(
+                            ctx.lang.getString("video_search_fail"),
+                            mapOf(
+                                    "user" to ctx.author.name,
+                                    "search" to search
+                            )
+                    )
+            )
 
         for (i in 0 until items.length()) {
             val item = items.getJSONObject(i)

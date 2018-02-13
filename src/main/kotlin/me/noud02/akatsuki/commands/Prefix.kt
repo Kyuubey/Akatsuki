@@ -32,6 +32,7 @@ import me.noud02.akatsuki.annotations.Load
 import me.noud02.akatsuki.annotations.Perm
 import me.noud02.akatsuki.entities.*
 import me.noud02.akatsuki.db.schema.Guilds
+import me.noud02.akatsuki.utils.I18n
 import net.dv8tion.jda.core.Permission
 import org.jetbrains.exposed.sql.select
 import org.jetbrains.exposed.sql.update
@@ -43,6 +44,8 @@ class AddPrefix : Command() {
     override val desc = "Add a prefix"
 
     override fun run(ctx: Context) {
+        val prefix = ctx.args["prefix"] as String
+
         asyncTransaction(Akatsuki.instance.pool) {
             val guild = Guilds.select {
                 Guilds.id.eq(ctx.guild!!.idLong)
@@ -52,11 +55,16 @@ class AddPrefix : Command() {
                 Guilds.update({
                     Guilds.id.eq(ctx.guild!!.idLong)
                 }) {
-                    it[prefixes] = guild[Guilds.prefixes] + ctx.args["prefix"].toString()
+                    it[prefixes] = guild[Guilds.prefixes] + prefix
                 }
-                ctx.send("Added prefix `${ctx.args["prefix"]}`")
+                ctx.send(
+                        I18n.parse(
+                                ctx.lang.getString("prefix_added"),
+                                mapOf("prefix" to prefix)
+                        )
+                )
             } catch (e: Throwable) {
-                ctx.send("Error while trying to update prefixes: ${e.message}")
+                ctx.sendError(e)
             }
         }.execute()
     }
@@ -69,25 +77,28 @@ class RemPrefix : Command() {
     override val desc = "Remove a prefix"
 
     override fun run(ctx: Context) {
-        asyncTransaction(Akatsuki.instance.pool) {
-            val guild = Guilds.select { // TODO add guild from db to Context class
-                Guilds.id.eq(ctx.guild!!.idLong)
-            }.first()
+        val prefix = ctx.args["prefix"] as String
 
-            if (guild[Guilds.prefixes].isEmpty())
-                return@asyncTransaction ctx.send("No prefixes to remove!") // TODO add translations for this
+        asyncTransaction(Akatsuki.instance.pool) {
+            if (ctx.storedGuild!!.prefixes.isEmpty())
+                return@asyncTransaction ctx.send(ctx.lang.getString("remove_no_prefix"))
 
             try {
                 Guilds.update({
                     Guilds.id.eq(ctx.guild!!.idLong)
                 }) {
-                    val list = guild[Guilds.prefixes].toMutableList()
-                    list.remove(ctx.args["prefix"])
+                    val list = ctx.storedGuild.prefixes.toMutableList()
+                    list.remove(prefix)
                     it[prefixes] = list.toTypedArray()
                 }
-                ctx.send("Removed prefix `${ctx.args["prefix"]}`")
+                ctx.send(
+                        I18n.parse(
+                                ctx.lang.getString("prefix_removed"),
+                                mapOf("prefix" to prefix)
+                        )
+                )
             } catch (e: Throwable) {
-                ctx.send("Error while trying to update prefixes: ${e.message}")
+                ctx.sendError(e)
             }
         }.execute()
     }
@@ -104,9 +115,10 @@ class Prefix : Command() {
     }
 
     override fun run(ctx: Context)
-            = ctx.send("Current prefixes: ${
-    if (ctx.storedGuild!!.prefixes.isEmpty())
-        "none"
-    else
-        ctx.storedGuild.prefixes.joinToString(", ")}") // TODO add translations
+            = ctx.send(
+            I18n.parse(
+                    ctx.lang.getString("current_prefixes"),
+                    mapOf("prefixes" to if (ctx.storedGuild!!.prefixes.isEmpty()) "none" else ctx.storedGuild.prefixes.joinToString(", "))
+            )
+    )
 }
