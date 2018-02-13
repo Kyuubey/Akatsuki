@@ -68,13 +68,14 @@ class Context(
         channel.history.retrievePast(25).queue({
             val history = it.filter { it.attachments.isNotEmpty() && it.attachments[0].isImage }
 
-            if (history.isEmpty())
+            if (history.isEmpty()) {
                 fut.complete(null)
-            else
-                for (message in history) {
-                    fut.complete(message.attachments[0].inputStream)
-                }
-        })
+                println("aaaa")
+            } else
+                fut.complete(history[0].attachments[0].inputStream)
+        }) {
+            fut.complete(null)
+        }
 
         return fut
     }
