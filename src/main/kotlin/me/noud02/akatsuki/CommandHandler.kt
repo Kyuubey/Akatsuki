@@ -39,13 +39,13 @@ import me.noud02.akatsuki.extensions.searchTextChannels
 import me.noud02.akatsuki.utils.*
 import net.dv8tion.jda.core.Permission
 import net.dv8tion.jda.core.entities.Channel
-import net.dv8tion.jda.core.entities.Member
-import net.dv8tion.jda.core.entities.TextChannel
 import net.dv8tion.jda.core.events.message.MessageReceivedEvent
 import org.apache.commons.validator.routines.UrlValidator
 import org.reflections.Reflections
 import org.reflections.util.ClasspathHelper
 import org.reflections.util.ConfigurationBuilder
+import java.time.OffsetDateTime
+import java.time.temporal.ChronoUnit
 import java.util.*
 import java.util.concurrent.CompletableFuture
 import kotlin.reflect.jvm.jvmName
@@ -53,6 +53,7 @@ import kotlin.reflect.jvm.jvmName
 class CommandHandler {
     private val logger = Logger(this::class.jvmName)
     private val aliases = mutableMapOf<String, String>()
+    private val cooldowns = mutableMapOf<Long, OffsetDateTime>()
 
     val commands = mutableMapOf<String, Command>()
 
@@ -168,6 +169,15 @@ class CommandHandler {
                             mapOf("username" to event.author.name)
                     )
             ).queue()
+
+        if (!Akatsuki.instance.config.owners.contains(event.author.id)) {
+            val lastMsg = cooldowns[event.author.idLong]
+
+            if (lastMsg != null && lastMsg.until(event.message.creationTime, ChronoUnit.SECONDS) < command.cooldown)
+                return
+
+            cooldowns[event.author.idLong] = event.message.creationTime
+        }
 
         if (args.isNotEmpty() && commands[cmd]?.subcommands?.get(args[0]) is Command) {
             val subcmd = args[0]
@@ -441,6 +451,26 @@ class CommandHandler {
                             next()
                         }
                     }
+                }
+
+                "url" -> {
+                    val validator = UrlValidator()
+
+                    if (!validator.isValid(arg2))
+                        throw Exception(
+                                I18n.parse(
+                                        lang.getString("invalid_argument_type"),
+                                        mapOf(
+                                                "username" to event.author.name,
+                                                "type" to "url",
+                                                "given_type" to "string"
+                                        )
+                                )
+                        )
+
+                    newArgs[arg.name] = arg2
+                    i++
+                    next()
                 }
 
                 "number" -> {

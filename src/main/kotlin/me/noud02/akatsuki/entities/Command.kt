@@ -33,6 +33,7 @@ abstract class Command {
     open val noHelp = false
     open val guildOnly = false
     open val nsfw = false
+    open val cooldown = 5
 
     abstract fun run(ctx: Context)
 
