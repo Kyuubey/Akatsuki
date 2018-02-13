@@ -46,4 +46,14 @@ object I18n {
             perm.split("_")[0].toLowerCase()
                     + perm.split("_").getOrElse(1, { "" }).toLowerCase().capitalize()
     )
+
+    fun langToCode(lang: String): String = when (lang.toLowerCase()) {
+        "dutch" -> "nl_NL"
+        "english" -> "en_US"
+        "japanese" -> "ja_JP"
+        "french" -> "fr_FR"
+        "spanish" -> "es_ES"
+        "german" -> "de_DE"
+        else -> "en_US"
+    }
 }

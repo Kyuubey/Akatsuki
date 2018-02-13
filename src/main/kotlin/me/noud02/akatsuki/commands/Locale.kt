@@ -43,13 +43,22 @@ class SetLocale : AsyncCommand() {
 
     override suspend fun asyncRun(ctx: Context) {
         asyncTransaction(Akatsuki.instance.pool) {
+            val language = I18n.langToCode(ctx.args["lang"] as String)
+
             Users.update({
                 Users.id.eq(ctx.author.idLong)
             }) {
-                it[lang] = ctx.args["lang"] as String
+                it[lang] = language
             }
 
-            ctx.send(I18n.parse(ctx.lang.getString("language_set"), mapOf("language" to ctx.args["lang"] as String)))
+            ctx.send(
+                    I18n.parse(
+                            ctx.lang.getString("language_set"),
+                            mapOf(
+                                    "language" to java.util.Locale(language.split("_")[0], language.split("_")[1]).displayLanguage
+                            )
+                    )
+            )
         }.await()
     }
 }
@@ -62,5 +71,5 @@ class Locale : Command() {
         addSubcommand(SetLocale())
     }
 
-    override fun run(ctx: Context) = ctx.send(I18n.parse(ctx.lang.getString("language_check"), mapOf("language" to ctx.lang.locale)))
+    override fun run(ctx: Context) = ctx.send(I18n.parse(ctx.lang.getString("language_check"), mapOf("language" to ctx.lang.locale.displayLanguage)))
 }

@@ -29,15 +29,18 @@ import me.aurieh.ares.exposed.async.asyncTransaction
 import me.noud02.akatsuki.Akatsuki
 import me.noud02.akatsuki.annotations.Argument
 import me.noud02.akatsuki.annotations.Load
+import me.noud02.akatsuki.annotations.Perm
 import me.noud02.akatsuki.db.schema.Guilds
 import me.noud02.akatsuki.entities.Command
 import me.noud02.akatsuki.entities.Context
 import me.noud02.akatsuki.utils.I18n
+import net.dv8tion.jda.core.Permission
 import net.dv8tion.jda.core.entities.TextChannel
 import org.jetbrains.exposed.sql.update
 
 @Load
 @Argument("channel", "textchannel", true)
+@Perm(Permission.MANAGE_SERVER)
 class Ignore : Command() {
     override val guildOnly = true
     override val desc = "Have the bot ignore channels"
