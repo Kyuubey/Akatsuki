@@ -101,9 +101,9 @@ class CommandHandler {
         val lang = ResourceBundle.getBundle("i18n.Kyubey", locale, UTF8Control())
 
         val usedPrefix = Akatsuki.instance.config.prefixes.lastOrNull {
-            event.message.contentRaw.startsWith(it)
+            event.message.contentRaw.startsWith(it.toLowerCase())
         } ?: guildPrefixes.lastOrNull {
-            event.message.contentRaw.startsWith(it)
+            event.message.contentRaw.startsWith(it.toLowerCase())
         } ?: return
 
         var cmd = event.message.contentRaw.substring(usedPrefix.length).split(" ")[0]

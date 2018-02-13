@@ -47,7 +47,7 @@ class ViewContract : Command() {
     override val desc = "View someone's contract!"
 
     override fun run(ctx: Context) {
-        val member = ctx.args.getOrDefault("member", ctx.member!!) as Member
+        val member = ctx.args.getOrDefault("user", ctx.member!!) as Member
 
         asyncTransaction(Akatsuki.instance.pool) {
             val contract = Contracts.select { Contracts.userId.eq(member.user.idLong) }.firstOrNull()

@@ -36,6 +36,8 @@ import net.dv8tion.jda.core.Permission
 @Load
 @Perm(Permission.MANAGE_SERVER)
 class Stop : Command() {
+    override val desc = "Stop the music!"
+
     override fun run(ctx: Context) {
         if (MusicManager.musicManagers[ctx.guild!!.id] == null)
             return ctx.send(

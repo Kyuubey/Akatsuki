@@ -78,7 +78,7 @@ class Manga : ThreadedCommand() {
 
         val json = obj.getJSONObject("manga")
 
-        if (!obj.has("entry"))
+        if (!json.has("entry"))
             return ctx.send(
                     I18n.parse(
                             ctx.lang.getString("manga_not_found"),

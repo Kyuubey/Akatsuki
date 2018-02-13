@@ -52,7 +52,7 @@ class Unignore : Command() {
             Guilds.update({
                 Guilds.id.eq(ctx.guild!!.idLong)
             }) {
-                it[ignoredChannels] = ctx.storedGuild!!.ignoredChannels.dropWhile { it == channel.idLong }.toTypedArray()
+                it[ignoredChannels] = ctx.storedGuild.ignoredChannels.dropWhile { it == channel.idLong }.toTypedArray()
             }
 
             ctx.send(

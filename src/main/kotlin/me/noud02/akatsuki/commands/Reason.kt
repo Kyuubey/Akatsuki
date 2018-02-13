@@ -48,6 +48,7 @@ import org.jetbrains.exposed.sql.update
 )
 class Reason : Command() {
     override val guildOnly = true
+    override val desc = "Give a reason for a case in modlogs."
 
     override fun run(ctx: Context) {
         if (ctx.storedGuild!!.modlogChannel == null)

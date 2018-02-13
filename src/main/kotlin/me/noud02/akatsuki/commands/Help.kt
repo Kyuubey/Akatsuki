@@ -40,7 +40,15 @@ class Help : Command() {
 
     override fun run(ctx: Context) {
         if (ctx.args.contains("command"))
-            return ctx.send(EventListener.instance.cmdHandler.help(ctx.args["command"] as String))
+            if (!EventListener.instance.cmdHandler.commands.containsKey(ctx.args["command"] as String))
+                ctx.send(
+                        I18n.parse(
+                                ctx.lang.getString("command_not_found"),
+                                mapOf("username" to ctx.author.name)
+                        )
+                )
+            else
+                ctx.send(EventListener.instance.cmdHandler.help(ctx.args["command"] as String))
         else {
             val commands = EventListener.instance.cmdHandler.commands
                     .toSortedMap()

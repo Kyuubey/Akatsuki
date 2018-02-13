@@ -134,7 +134,7 @@ class ItemPicker(
 
     private fun buildInput(channel: MessageChannel): CompletableFuture<PickerItem> {
         val fut = CompletableFuture<PickerItem>()
-        val msg = channel.sendMessage(
+        channel.sendMessage(
                 "Please choose an item from the list by sending its number:\n```\n${items.mapIndexed {
                     i, item -> " ${i + 1}. ${item.title}"
                 }.joinToString("\n")}```").queue({ msg ->
