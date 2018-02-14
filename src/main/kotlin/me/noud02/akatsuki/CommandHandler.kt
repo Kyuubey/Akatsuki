@@ -287,7 +287,12 @@ class CommandHandler {
     }
 
     private fun checkPermissions(event: MessageReceivedEvent, cmd: Command, lang: ResourceBundle): MutableMap<String, Boolean> {
-        val perms: List<Perm> = cmd::class.annotations.filterIsInstance(Perm::class.java)
+        val perms = cmd::class.annotations.filterIsInstance(Perm::class.java).toMutableList()
+        val otherPerms = cmd::class.annotations.filterIsInstance(Perms::class.java)
+
+        if (otherPerms.isNotEmpty())
+            perms.addAll(otherPerms.first().perms)
+
         val newPerms = mutableMapOf<String, Boolean>()
 
         for (perm in perms) {

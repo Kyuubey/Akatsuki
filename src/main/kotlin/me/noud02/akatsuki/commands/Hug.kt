@@ -38,7 +38,7 @@ import java.awt.Color
 @Load
 @Argument("user", "user")
 class Hug : Command() {
-    override val desc = "*hugs*"
+    override val desc = "Hug people!"
     override val guildOnly = true
 
     override fun run(ctx: Context) {

@@ -40,6 +40,8 @@ import java.io.FileOutputStream
 @Load
 @Argument("image", "url", true)
 class Invert : ThreadedCommand() {
+    override val desc = "Invert images"
+
     override fun threadedRun(ctx: Context) {
         val temp = File.createTempFile("image", "png")
         temp.deleteOnExit()

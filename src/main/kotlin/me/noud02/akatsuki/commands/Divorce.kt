@@ -37,6 +37,7 @@ import org.jetbrains.exposed.sql.update
 @Load
 class Divorce : Command() {
     override val guildOnly = true
+    override val desc = "\uD83D\uDC94"
 
     override fun run(ctx: Context) {
         if (ctx.storedUser.marriedUserId == null)

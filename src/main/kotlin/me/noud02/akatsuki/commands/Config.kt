@@ -320,6 +320,7 @@ class Set : Command() {
 @Alias("cfg", "conf", "settings")
 class Config : Command() {
     override val guildOnly = true
+    override val desc = "Change settings in the config!"
 
     init {
         addSubcommand(Set(), "set")

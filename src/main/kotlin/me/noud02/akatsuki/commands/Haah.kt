@@ -40,6 +40,8 @@ import java.io.FileOutputStream
 @Load
 @Argument("image", "url", true)
 class Haah : ThreadedCommand() {
+    override val desc = "Haah images."
+
     override fun threadedRun(ctx: Context) {
         val temp = File.createTempFile("image", "png")
         temp.deleteOnExit()

@@ -41,6 +41,8 @@ import org.jetbrains.exposed.sql.insert
 @Argument("reminder", "string")
 @Alias("remind")
 class RemindMe : Command() {
+    override val desc = "Set reminders!"
+
     override fun run(ctx: Context) {
         val parser = Parser()
         val parsed = parser.parse(ctx.args["reminder"] as String).getOrNull(0)

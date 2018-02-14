@@ -45,6 +45,8 @@ import java.awt.Color
         Flag("update", 'u', "Sets event type to UPDATE.")
 )
 class Logs : Command() {
+    override val desc = "Get message logs of the channel."
+
     override fun run(ctx: Context) {
         val num = ctx.args.getOrDefault("logs", 100)
         val url = URIBuilder().apply {

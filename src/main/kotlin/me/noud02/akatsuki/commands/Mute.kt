@@ -44,6 +44,7 @@ import net.dv8tion.jda.core.exceptions.PermissionException
 )
 class Mute : Command() {
     override val guildOnly = true
+    override val desc = "Mute people."
 
     override fun run(ctx: Context) {
         if (ctx.storedGuild!!.mutedRole == null)

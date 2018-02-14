@@ -132,7 +132,7 @@ class SearchItem : Command() {
 
             ctx.send(EmbedBuilder().apply {
                 setTitle("Items \uD83D\uDD0D") // TODO add translation
-                descriptionBuilder.append(items.joinToString(", ") { "${it[Items.content]} (#${it[Items.id]})" })
+                descriptionBuilder.append(items.joinToString(", ") { "${it[Items.content]} [${it[Items.price]}$] (#${it[Items.id]})" })
             }.build())
         }.execute()
     }
@@ -140,6 +140,8 @@ class SearchItem : Command() {
 
 @Load
 class Shop : Command() {
+    override val desc = "Buy things from the shop!"
+
     init {
         addSubcommand(AddItem(), "add")
         addSubcommand(BuyItem(), "buy")
@@ -147,6 +149,21 @@ class Shop : Command() {
     }
 
     override fun run(ctx: Context) {
-        // TODO add something here
+        asyncTransaction(Akatsuki.instance.pool) {
+            val items = Items.selectAll().limit(15)
+
+            val embed = EmbedBuilder().apply {
+                setTitle("Shop")
+                descriptionBuilder.append("Buy items here!")
+
+                addField(
+                        "New items",
+                        items.joinToString(", ") { "${it[Items.content]} [${it[Items.price]}$] (#${it[Items.id]})" },
+                        false
+                )
+            }
+
+            ctx.send(embed.build())
+        }.execute()
     }
 }
