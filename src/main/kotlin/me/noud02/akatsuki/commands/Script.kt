@@ -57,7 +57,7 @@ class TestCommand : Command() {
 )
 @Flag("owner", 'o', "Make the custom command server owner only.")
 class AddCommand : Command() {
-    override val name = "Add custom scripts"
+    override val desc = "Add custom scripts"
     override val guildOnly = true
 
     override fun run(ctx: Context) {
@@ -178,7 +178,7 @@ class EditCommand : Command() {
 
             ctx.send(
                     I18n.parse(
-                            ctx.lang.getString("deleted_script"),
+                            ctx.lang.getString("edited_script"),
                             mapOf("name" to name)
                     )
             )

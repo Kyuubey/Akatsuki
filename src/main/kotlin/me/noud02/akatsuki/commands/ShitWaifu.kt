@@ -39,6 +39,8 @@ import org.json.JSONObject
 @Load
 @Argument("user", "user")
 class ShitWaifu : ThreadedCommand() {
+    override val desc = "Your waifu is shit lol"
+
     override fun threadedRun(ctx: Context) {
         val member = ctx.args["user"] as Member
 

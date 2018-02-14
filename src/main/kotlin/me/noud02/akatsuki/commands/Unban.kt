@@ -41,7 +41,7 @@ import net.dv8tion.jda.core.exceptions.PermissionException
         Argument("reason", "string", true)
 )
 class Unban : Command() {
-    override val desc = "Unban members from the guild"
+    override val desc = "Unban members from the guild."
     override val guildOnly = true
 
     override fun run(ctx: Context) {

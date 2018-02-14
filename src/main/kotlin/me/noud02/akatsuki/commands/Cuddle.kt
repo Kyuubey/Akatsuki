@@ -25,6 +25,7 @@
 
 package me.noud02.akatsuki.commands
 
+import me.noud02.akatsuki.annotations.Argument
 import me.noud02.akatsuki.annotations.Load
 import me.noud02.akatsuki.entities.Command
 import me.noud02.akatsuki.entities.Context
@@ -35,8 +36,10 @@ import net.dv8tion.jda.core.entities.Member
 import java.awt.Color
 
 @Load
+@Argument("user", "user")
 class Cuddle : Command() {
     override val guildOnly = true
+    override val desc = "Cuddle someone."
 
     override fun run(ctx: Context) = ctx.send(EmbedBuilder().apply {
         setTitle("${(ctx.args["user"] as Member).effectiveName}, you got a cuddle from ${ctx.member!!.effectiveName}")

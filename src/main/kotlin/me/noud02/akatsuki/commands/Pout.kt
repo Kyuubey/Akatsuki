@@ -31,5 +31,7 @@ import me.noud02.akatsuki.utils.WolkType
 
 @Load
 class Pout : WolkCommand() {
+    override val desc = "Get a random image of an anime girl pouting"
+
     override val type = WolkType.POUT
 }

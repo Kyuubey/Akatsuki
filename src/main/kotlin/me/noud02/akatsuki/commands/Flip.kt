@@ -40,6 +40,8 @@ import java.io.FileOutputStream
 @Load
 @Argument("image", "url", true)
 class Flip : ThreadedCommand() {
+    override val desc = "Flip images."
+
     override fun threadedRun(ctx: Context) {
         val temp = File.createTempFile("image", "png")
         temp.deleteOnExit()

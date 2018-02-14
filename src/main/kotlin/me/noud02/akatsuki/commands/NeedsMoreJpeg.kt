@@ -40,6 +40,8 @@ import java.io.FileOutputStream
 @Load
 @Argument("image", "url", true)
 class NeedsMoreJpeg : ThreadedCommand() {
+    override val desc = "JPEG-ify images"
+
     override fun threadedRun(ctx: Context) {
         val temp = File.createTempFile("image", "png")
         temp.deleteOnExit()

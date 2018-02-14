@@ -38,6 +38,7 @@ import java.awt.Color
 @Load
 @Argument("user", "user")
 class Kiss : Command() {
+    override val desc = "Kiss someone."
     override val guildOnly = true
 
     override fun run(ctx: Context) = ctx.send(EmbedBuilder().apply {
