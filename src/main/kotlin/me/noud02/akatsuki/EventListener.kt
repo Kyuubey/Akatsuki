@@ -34,6 +34,7 @@ import me.noud02.akatsuki.db.schema.Modlogs
 import me.noud02.akatsuki.extensions.addStar
 import me.noud02.akatsuki.extensions.log
 import me.noud02.akatsuki.extensions.removeStar
+import me.noud02.akatsuki.music.MusicManager
 import me.noud02.akatsuki.utils.Logger
 import net.dv8tion.jda.core.EmbedBuilder
 import net.dv8tion.jda.core.audit.ActionType
@@ -47,6 +48,7 @@ import net.dv8tion.jda.core.events.guild.member.GuildMemberJoinEvent
 import net.dv8tion.jda.core.events.guild.member.GuildMemberLeaveEvent
 import net.dv8tion.jda.core.events.guild.member.GuildMemberRoleAddEvent
 import net.dv8tion.jda.core.events.guild.member.GuildMemberRoleRemoveEvent
+import net.dv8tion.jda.core.events.guild.voice.GuildVoiceLeaveEvent
 import net.dv8tion.jda.core.events.message.MessageDeleteEvent
 import net.dv8tion.jda.core.events.message.MessageReceivedEvent
 import net.dv8tion.jda.core.events.message.MessageUpdateEvent
@@ -166,6 +168,15 @@ class EventListener : ListenerAdapter() {
 
             event.guild.removeStar(msg, event.user)
         }
+    }
+
+    override fun onGuildVoiceLeave(event: GuildVoiceLeaveEvent) {
+        if (event.member.user.id == event.jda.selfUser.id
+                || !event.channelLeft.members.any { it.user.id == event.jda.selfUser.id }
+                || event.channelLeft.members.size > 1)
+            return
+
+        MusicManager.leave(event.guild.id)
     }
 
     override fun onGuildMemberJoin(event: GuildMemberJoinEvent) {
