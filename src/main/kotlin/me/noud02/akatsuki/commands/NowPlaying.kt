@@ -103,7 +103,13 @@ class NowPlaying : ThreadedCommand() {
                     .getJSONObject("snippet")
                     .getString("title")
 
-            embed.setFooter("Next: $title (autoplay)", null)
+            embed.setFooter(
+                    I18n.parse(
+                            ctx.lang.getString("next"),
+                            mapOf("song" to "$title (autoplay)")
+                    ),
+                    null
+            )
             res.close()
         }
 
