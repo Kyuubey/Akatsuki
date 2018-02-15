@@ -10,4 +10,4 @@ cache:
 
 notifications:
   webhooks:
-    - https://kyubey-ci.herokuapp.com/hooks/travisci
+    - https://circledisc-kyubey.herokuapp.com/webhook/travis
