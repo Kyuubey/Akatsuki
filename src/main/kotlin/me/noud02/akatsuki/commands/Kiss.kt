@@ -27,8 +27,8 @@ package me.noud02.akatsuki.commands
 
 import me.noud02.akatsuki.annotations.Argument
 import me.noud02.akatsuki.annotations.Load
-import me.noud02.akatsuki.entities.Command
 import me.noud02.akatsuki.entities.Context
+import me.noud02.akatsuki.entities.ThreadedCommand
 import me.noud02.akatsuki.utils.Wolk
 import me.noud02.akatsuki.utils.WolkType
 import net.dv8tion.jda.core.EmbedBuilder
@@ -37,11 +37,11 @@ import java.awt.Color
 
 @Load
 @Argument("user", "user")
-class Kiss : Command() {
+class Kiss : ThreadedCommand() {
     override val desc = "Kiss someone."
     override val guildOnly = true
 
-    override fun run(ctx: Context) = ctx.send(EmbedBuilder().apply {
+    override fun threadedRun(ctx: Context) = ctx.send(EmbedBuilder().apply {
         setTitle("${(ctx.args["user"] as Member).effectiveName}, you got a kiss from ${ctx.member!!.effectiveName}")
         setImage(Wolk.getByType(WolkType.KISS).url)
         setColor(Color.CYAN)

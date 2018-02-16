@@ -29,6 +29,7 @@ import me.noud02.akatsuki.annotations.Argument
 import me.noud02.akatsuki.entities.Command
 import me.noud02.akatsuki.entities.Context
 import me.noud02.akatsuki.annotations.Load
+import me.noud02.akatsuki.entities.ThreadedCommand
 import me.noud02.akatsuki.utils.Wolk
 import me.noud02.akatsuki.utils.WolkType
 import net.dv8tion.jda.core.EmbedBuilder
@@ -37,11 +38,11 @@ import java.awt.Color
 
 @Load
 @Argument("user", "user")
-class Hug : Command() {
+class Hug : ThreadedCommand() {
     override val desc = "Hug people!"
     override val guildOnly = true
 
-    override fun run(ctx: Context) {
+    override fun threadedRun(ctx: Context) {
         val user = ctx.args["user"] as Member
         val embed = EmbedBuilder().apply {
             setTitle("${user.effectiveName}, you got a hug from ${ctx.member!!.effectiveName}!")
