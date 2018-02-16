@@ -30,10 +30,10 @@ import me.noud02.akatsuki.utils.WolkType
 import net.dv8tion.jda.core.EmbedBuilder
 import java.awt.Color
 
-abstract class WolkCommand : Command() {
+abstract class WolkCommand : ThreadedCommand() {
     abstract val type: WolkType
 
-    override fun run(ctx: Context) {
+    override fun threadedRun(ctx: Context) {
         ctx.send(EmbedBuilder().apply {
             setImage(Wolk.getByType(type).url)
             setColor(Color.CYAN)
