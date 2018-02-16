@@ -13,7 +13,7 @@ buildscript {
     }
     dependencies {
         classpath "org.jetbrains.kotlin:kotlin-gradle-plugin:$kotlin_version"
-        classpath 'com.github.jengelman.gradle.plugins:shadow:2.0.1'
+        classpath 'com.github.jengelman.gradle.plugins:shadow:2.0.2'
     }
 }
 
@@ -40,17 +40,17 @@ repositories {
 dependencies {
     compile "org.jetbrains.kotlin:kotlin-stdlib-jdk8:$kotlin_version"
     compile "org.jetbrains.kotlin:kotlin-reflect:$kotlin_version"
-    compile 'org.jetbrains.kotlinx:kotlinx-coroutines-core:0.21.1'
-    compile 'org.jetbrains.kotlinx:kotlinx-coroutines-jdk8:0.21.1'
-    compile 'org.slf4j:slf4j-api:1.8.0-alpha2'
-    compile 'org.slf4j:slf4j-simple:1.8.0-alpha2'
-    compile 'org.jruby:jruby-complete:9.1.13.0'
+    compile 'org.jetbrains.kotlinx:kotlinx-coroutines-core:0.22.2'
+    compile 'org.jetbrains.kotlinx:kotlinx-coroutines-jdk8:0.22.2'
+    compile 'org.slf4j:slf4j-api:1.8.0-beta1'
+    compile 'org.slf4j:slf4j-simple:1.8.0-beta1'
+    compile 'org.jruby:jruby-complete:9.1.15.0'
     compile 'commons-validator:commons-validator:1.6'
     compile 'org.apache.commons:commons-lang3:3.7'
-    compile 'net.dv8tion:JDA:3.5.0_338'
-    compile 'com.sedmelluq:lavaplayer:1.2.49'
+    compile 'net.dv8tion:JDA:3.5.1_339'
+    compile 'com.sedmelluq:lavaplayer:1.2.51'
     compile 'org.jetbrains.exposed:exposed:0.9.1'
-    compile 'org.postgresql:postgresql:42.1.4'
+    compile 'org.postgresql:postgresql:42.2.1'
     compile 'org.reflections:reflections:0.9.11'
     compile 'org.python:jython:2.7.1b3'
     compile 'com.fasterxml.jackson.core:jackson-databind:2.9.0'
