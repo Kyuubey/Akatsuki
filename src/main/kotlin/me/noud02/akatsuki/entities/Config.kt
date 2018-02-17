@@ -31,7 +31,8 @@ data class APIConfig(
         val discordbots: String,
         val discordbotsorg: String,
         val myanimelist: String,
-        val sentry: String
+        val sentry: String,
+        val osu: String
 )
 
 data class DatabaseConfig(

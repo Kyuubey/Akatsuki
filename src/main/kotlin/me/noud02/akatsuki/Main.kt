@@ -68,7 +68,8 @@ fun main (args: Array<String>) {
                         System.getenv("DISCORDBOTS_API_KEY"),
                         System.getenv("DISCORDBOTSORG_API_KEY"),
                         "${System.getenv("MAL_USERNAME")}:${System.getenv("MAL_PASSWORD")}",
-                        System.getenv("SENTRY_DSN")
+                        System.getenv("SENTRY_DSN"),
+                        System.getenv("OSU_API_KEY")
                 ),
                 SiteConfig(
                         System.getenv("SITE_HOST"),
@@ -90,7 +91,6 @@ fun main (args: Array<String>) {
         )
     else
         config = mapper.readValue(File("./config.yml"))
-
 
     val bot = Akatsuki(config)
 
