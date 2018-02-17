@@ -26,6 +26,7 @@
 package me.noud02.akatsuki.commands
 
 import me.noud02.akatsuki.Akatsuki
+import me.noud02.akatsuki.annotations.Alias
 import me.noud02.akatsuki.annotations.Argument
 import me.noud02.akatsuki.annotations.Load
 import me.noud02.akatsuki.entities.Command
@@ -35,10 +36,12 @@ import net.dv8tion.jda.core.EmbedBuilder
 import okhttp3.HttpUrl
 import okhttp3.Request
 import org.json.JSONObject
+import java.awt.Color
+import kotlin.math.min
 
-// TODO finish this command
-// @Load
+@Load
 @Argument("query", "string")
+@Alias("ddg")
 class DuckDuckGo : ThreadedCommand() {
     override fun threadedRun(ctx: Context) {
         val res = Akatsuki.instance.okhttp.newCall(Request.Builder().apply {
@@ -50,27 +53,63 @@ class DuckDuckGo : ThreadedCommand() {
             }.build())
         }.build()).execute()
 
-        val json = JSONObject(res.body()!!.string())
+        val body = res.body()!!.string()
+        val json = JSONObject(body)
 
         val embed = EmbedBuilder().apply {
-            if (!json.getString("Heading").isNullOrBlank())
-                setTitle("${
-                json.getString("Heading")
-                }${
-                if (!json.getString("Entity").isNullOrBlank())
-                    " (${json.getString("Entity")})"
-                else
-                    ""
-                }")
+            setColor(Color(222, 88, 51))
 
-            if (!json.getString("AbstractText").isNullOrBlank())
-                descriptionBuilder.append(json.getString("AbstractText"))
+            if (json.optJSONObject("Infobox") != null) {
+                val info = json.getJSONObject("Infobox")
+                val meta = info.getJSONArray("meta")
+                val content = info.getJSONArray("content")
+                (0 until content.length())
+                        .asSequence()
+                        .map { content.getJSONObject(it) }
+                        .filter { it.getString("data_type") == "string" }
+                        .forEach { descriptionBuilder.append("**${it.getString("label")}:** ${it.getString("value")}\n") }
+            }
+
+            if (!json.optString("Entity").isNullOrBlank())
+                setAuthor(json.getString("Entity"))
+
+            if (!json.optString("Heading").isNullOrBlank())
+                setTitle(json.getString("Heading"), json.optString("AbstractURL"))
+
+            if (!json.optString("AbstractText").isNullOrBlank())
+                descriptionBuilder.append("\n${json.getString("AbstractText")}\n")
+            else if (!json.optString("Abstract").isNullOrBlank())
+                descriptionBuilder.append("\n${json.getString("Abstract")}\n")
 
             if (!json.getString("Image").isNullOrBlank())
                 setThumbnail(json.getString("Image"))
+
+            if (json.optJSONArray("RelatedTopics") != null) {
+                val topics = json.getJSONArray("RelatedTopics")
+
+                if (topics.length() != 0)
+                    descriptionBuilder.append("\n**Related Topics:**")
+
+                (0 until min(3, topics.length()))
+                        .asSequence()
+                        .map { topics.getJSONObject(it) }
+                        .forEach {
+                            addField(
+                                    if (it.getString("Text").length > 256) it.getString("Text").substring(0, 253) + "..." else it.getString("Text"),
+                                    it.getString("FirstURL"),
+                                    true
+                            )
+                        }
+            }
         }
 
-        ctx.send(embed.build())
-        res.close()
+        if (embed.isEmpty)
+            return ctx.channel.sendMessage(ctx.lang.getString("no_results")).queue {
+                res.close()
+            }
+
+        ctx.channel.sendMessage(embed.build()).queue {
+            res.close()
+        }
     }
 }
