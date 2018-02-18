@@ -25,6 +25,7 @@
 
 package me.noud02.akatsuki.commands
 
+import kotlinx.coroutines.experimental.async
 import me.aurieh.ares.exposed.async.asyncTransaction
 import me.noud02.akatsuki.Akatsuki
 import me.noud02.akatsuki.EventListener
@@ -133,13 +134,15 @@ class Set : Command() {
                         return@asyncTransaction ctx.send("Couldn't find that channel!")
 
                     fun updateChannel(channel: TextChannel) {
-                        Guilds.update({
-                            Guilds.id.eq(ctx.guild.idLong)
-                        }) {
-                            it[starboardChannel] = channel.idLong
-                        }
+                        asyncTransaction(Akatsuki.instance.pool) {
+                            Guilds.update({
+                                Guilds.id.eq(ctx.guild.idLong)
+                            }) {
+                                it[starboardChannel] = channel.idLong
+                            }
 
-                        ctx.send("Set `starboardChannel` to ${channel.asMention}")
+                            ctx.send("Set `starboardChannel` to ${channel.asMention}")
+                        }.execute()
                     }
 
                     if (channels.size > 1)
@@ -177,13 +180,15 @@ class Set : Command() {
                         return@asyncTransaction ctx.send("Couldn't find that channel!")
 
                     fun updateChannel(channel: TextChannel) {
-                        Guilds.update({
-                            Guilds.id.eq(ctx.guild.idLong)
-                        }) {
-                            it[modlogChannel] = channel.idLong
-                        }
+                        asyncTransaction(Akatsuki.instance.pool) {
+                            Guilds.update({
+                                Guilds.id.eq(ctx.guild.idLong)
+                            }) {
+                                it[modlogChannel] = channel.idLong
+                            }
 
-                        ctx.send("Set `modlogChannel` to ${channel.asMention}")
+                            ctx.send("Set `modlogChannel` to ${channel.asMention}")
+                        }.execute()
                     }
 
                     if (channels.size > 1)
@@ -221,13 +226,15 @@ class Set : Command() {
                         return@asyncTransaction ctx.send("Couldn't find that channel!")
 
                     fun updateChannel(channel: TextChannel) {
-                        Guilds.update({
-                            Guilds.id.eq(ctx.guild.idLong)
-                        }) {
-                            it[welcomeChannel] = channel.idLong
-                        }
+                        asyncTransaction(Akatsuki.instance.pool) {
+                            Guilds.update({
+                                Guilds.id.eq(ctx.guild.idLong)
+                            }) {
+                                it[welcomeChannel] = channel.idLong
+                            }
 
-                        ctx.send("Set `welcomeChannel` to ${channel.asMention}")
+                            ctx.send("Set `welcomeChannel` to ${channel.asMention}")
+                        }.execute()
                     }
 
                     if (channels.size > 1)
@@ -289,13 +296,15 @@ class Set : Command() {
                         return@asyncTransaction ctx.send("Couldn't find that role!")
 
                     fun updateRole(role: Role) {
-                        Guilds.update({
-                            Guilds.id.eq(ctx.guild.idLong)
-                        }) {
-                            it[mutedRole] = role.idLong
-                        }
+                        asyncTransaction(Akatsuki.instance.pool) {
+                            Guilds.update({
+                                Guilds.id.eq(ctx.guild.idLong)
+                            }) {
+                                it[mutedRole] = role.idLong
+                            }
 
-                        ctx.send("Set `mutedRole` to ${role.name}")
+                            ctx.send("Set `mutedRole` to ${role.name}")
+                        }.execute()
                     }
 
                     if (roles.size > 1)
@@ -341,15 +350,15 @@ class Add : Command() {
         val key = (ctx.args["key"] as String).toLowerCase()
         val value = ctx.args["value"] as String
 
-        asyncTransaction(Akatsuki.instance.pool) {
-            when (key) {
-                "antiinvitebypassroles" -> {
-                    val roles = ctx.guild!!.searchRoles(value)
+        when (key) {
+            "antiinvitebypassroles" -> {
+                val roles = ctx.guild!!.searchRoles(value)
 
-                    if (roles.isEmpty())
-                        return@asyncTransaction ctx.send("Couldn't find that role!")
+                if (roles.isEmpty())
+                    return ctx.send("Couldn't find that role!")
 
-                    fun updateRole(role: Role) {
+                fun updateRole(role: Role) {
+                    asyncTransaction(Akatsuki.instance.pool) {
                         Guilds.update({
                             Guilds.id.eq(ctx.guild.idLong)
                         }) {
@@ -357,30 +366,32 @@ class Add : Command() {
                         }
 
                         ctx.send("Added ${role.name} to `antiInviteBypassRoles`")
-                    }
-
-                    if (roles.size > 1)
-                        RolePicker(
-                                EventListener.instance.waiter,
-                                ctx.member!!,
-                                roles,
-                                ctx.guild
-                        )
-                                .build(ctx.channel)
-                                .thenAccept {
-                                    updateRole(it)
-                                }
-                    else
-                        updateRole(roles[0])
+                    }.execute()
                 }
 
-                "antiinvitebypassusers" -> {
-                    val members = ctx.guild!!.searchMembers(value)
+                if (roles.size > 1)
+                    RolePicker(
+                            EventListener.instance.waiter,
+                            ctx.member!!,
+                            roles,
+                            ctx.guild
+                    )
+                            .build(ctx.channel)
+                            .thenAccept {
+                                updateRole(it)
+                            }
+                else
+                    updateRole(roles[0])
+            }
 
-                    if (members.isEmpty())
-                        return@asyncTransaction ctx.send("Couldn't find that user!")
+            "antiinvitebypassusers" -> {
+                val members = ctx.guild!!.searchMembers(value)
 
-                    fun updateMember(member: Member) {
+                if (members.isEmpty())
+                    return ctx.send("Couldn't find that user!")
+
+                fun updateMember(member: Member) {
+                    asyncTransaction(Akatsuki.instance.pool) {
                         Guilds.update({
                             Guilds.id.eq(ctx.guild.idLong)
                         }) {
@@ -388,26 +399,26 @@ class Add : Command() {
                         }
 
                         ctx.send("Added ${member.user.name}#${member.user.discriminator} to `antiInviteBypassUsers`")
-                    }
-
-                    if (members.size > 1)
-                        UserPicker(
-                                EventListener.instance.waiter,
-                                ctx.member!!,
-                                members,
-                                ctx.guild
-                        )
-                                .build(ctx.channel)
-                                .thenAccept {
-                                    updateMember(it)
-                                }
-                    else
-                        updateMember(members[0])
+                    }.execute()
                 }
 
-                else -> ctx.send("Invalid key: $key")
+                if (members.size > 1)
+                    UserPicker(
+                            EventListener.instance.waiter,
+                            ctx.member!!,
+                            members,
+                            ctx.guild
+                    )
+                            .build(ctx.channel)
+                            .thenAccept {
+                                updateMember(it)
+                            }
+                else
+                    updateMember(members[0])
             }
-        }.execute()
+
+            else -> ctx.send("Invalid key: $key")
+        }
     }
 }
 
