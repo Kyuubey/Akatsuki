@@ -29,7 +29,6 @@ import me.noud02.akatsuki.Akatsuki
 import me.noud02.akatsuki.annotations.Alias
 import me.noud02.akatsuki.annotations.Argument
 import me.noud02.akatsuki.annotations.Load
-import me.noud02.akatsuki.entities.Command
 import me.noud02.akatsuki.entities.Context
 import me.noud02.akatsuki.entities.ThreadedCommand
 import net.dv8tion.jda.core.EmbedBuilder
@@ -61,7 +60,6 @@ class DuckDuckGo : ThreadedCommand() {
 
             if (json.optJSONObject("Infobox") != null) {
                 val info = json.getJSONObject("Infobox")
-                val meta = info.getJSONArray("meta")
                 val content = info.getJSONArray("content")
                 (0 until content.length())
                         .asSequence()

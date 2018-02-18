@@ -42,6 +42,9 @@ dependencies {
     compile "org.jetbrains.kotlin:kotlin-reflect:$kotlin_version"
     compile 'org.jetbrains.kotlinx:kotlinx-coroutines-core:0.22.2'
     compile 'org.jetbrains.kotlinx:kotlinx-coroutines-jdk8:0.22.2'
+    compile 'org.jetbrains.kotlin:kotlin-script-runtime'
+    compile 'org.jetbrains.kotlin:kotlin-script-util'
+    compile 'org.jetbrains.kotlin:kotlin-compiler-embeddable'
     compile 'org.slf4j:slf4j-api:1.8.0-beta1'
     compile 'org.slf4j:slf4j-simple:1.8.0-beta1'
     compile 'org.jruby:jruby-complete:9.1.15.0'
