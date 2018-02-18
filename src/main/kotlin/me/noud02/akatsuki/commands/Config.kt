@@ -32,11 +32,14 @@ import me.noud02.akatsuki.annotations.*
 import me.noud02.akatsuki.db.schema.Guilds
 import me.noud02.akatsuki.entities.Command
 import me.noud02.akatsuki.entities.Context
+import me.noud02.akatsuki.extensions.searchMembers
 import me.noud02.akatsuki.extensions.searchRoles
 import me.noud02.akatsuki.extensions.searchTextChannels
 import me.noud02.akatsuki.utils.RolePicker
 import me.noud02.akatsuki.utils.TextChannelPicker
+import me.noud02.akatsuki.utils.UserPicker
 import net.dv8tion.jda.core.Permission
+import net.dv8tion.jda.core.entities.Member
 import net.dv8tion.jda.core.entities.Role
 import net.dv8tion.jda.core.entities.TextChannel
 import org.jetbrains.exposed.sql.update
@@ -310,7 +313,99 @@ class Set : Command() {
                         updateRole(roles[0])
                 }
 
-                else -> return@asyncTransaction ctx.send("Invalid key: $key")
+                "antiinvite" -> {
+                    if (!yes.contains(value) && !no.contains(value))
+                        return@asyncTransaction ctx.send("Invalid value: $value")
+
+                    Guilds.update({
+                        Guilds.id.eq(ctx.guild!!.idLong)
+                    }) {
+                        it[antiInvite] = yes.contains(value)
+                    }
+
+                    ctx.send("Set `antiInvite` to ${yes.contains(value)}")
+                }
+
+                else -> ctx.send("Invalid key: $key")
+            }
+        }.execute()
+    }
+}
+
+@Arguments(
+        Argument("key", "string"),
+        Argument("value", "string")
+)
+class Add : Command() {
+    override fun run(ctx: Context) {
+        val key = (ctx.args["key"] as String).toLowerCase()
+        val value = ctx.args["value"] as String
+
+        asyncTransaction(Akatsuki.instance.pool) {
+            when (key) {
+                "antiinvitebypassroles" -> {
+                    val roles = ctx.guild!!.searchRoles(value)
+
+                    if (roles.isEmpty())
+                        return@asyncTransaction ctx.send("Couldn't find that role!")
+
+                    fun updateRole(role: Role) {
+                        Guilds.update({
+                            Guilds.id.eq(ctx.guild.idLong)
+                        }) {
+                            it[antiInviteBypassRoles] = ctx.storedGuild!!.antiInviteBypassRoles.plus(role.idLong).toTypedArray()
+                        }
+
+                        ctx.send("Added ${role.name} to `antiInviteBypassRoles`")
+                    }
+
+                    if (roles.size > 1)
+                        RolePicker(
+                                EventListener.instance.waiter,
+                                ctx.member!!,
+                                roles,
+                                ctx.guild
+                        )
+                                .build(ctx.channel)
+                                .thenAccept {
+                                    updateRole(it)
+                                }
+                    else
+                        updateRole(roles[0])
+                }
+
+                "antiinvitebypassusers" -> {
+                    val members = ctx.guild!!.searchMembers(value)
+
+                    if (members.isEmpty())
+                        return@asyncTransaction ctx.send("Couldn't find that user!")
+
+                    fun updateMember(member: Member) {
+                        Guilds.update({
+                            Guilds.id.eq(ctx.guild.idLong)
+                        }) {
+                            it[antiInviteBypassUsers] = ctx.storedGuild!!.antiInviteBypassUsers.plus(member.user.idLong).toTypedArray()
+                        }
+
+                        ctx.send("Added ${member.user.name}#${member.user.discriminator} to `antiInviteBypassUsers`")
+                    }
+
+                    if (members.size > 1)
+                        UserPicker(
+                                EventListener.instance.waiter,
+                                ctx.member!!,
+                                members,
+                                ctx.guild
+                        )
+                                .build(ctx.channel)
+                                .thenAccept {
+                                    updateMember(it)
+                                }
+                    else
+                        updateMember(members[0])
+                }
+
+                else -> ctx.send("Invalid key: $key")
             }
         }.execute()
     }
@@ -324,16 +419,23 @@ class Config : Command() {
 
     init {
         addSubcommand(Set(), "set")
+        addSubcommand(Add(), "add")
     }
 
     override fun run(ctx: Context) = ctx.send("""```ini
 [Guild Config]
-# To set something in the config use: 'config set <option> <value>'
-# Example: 'config set logs true'
+
+# ----------------------------------------------------------------- #
+# To set something in the config use: 'config set <option> <value>' #
+# Example: 'config set logs true'                                   #
+#                                                                   #
+# To add something use: 'config add <option> <value to add>'        #
+# Example: 'config add antiInviteBypassUsers noud02'                #
+# ----------------------------------------------------------------- #
 
 # Modlogs
-modlogs         = ${ctx.storedGuild!!.modlogs}
-modlogChannel   = ${
+modlogs                 = ${ctx.storedGuild!!.modlogs}
+modlogChannel           = ${
     if (ctx.storedGuild.modlogChannel != null)
         "#${ctx.guild!!.getTextChannelById(ctx.storedGuild.modlogChannel)?.name ?: "unknown"}"
     else
@@ -341,8 +443,8 @@ modlogChannel   = ${
     }
 
 # Starboard
-starboard       = ${ctx.storedGuild.starboard}
-starboardChannel= ${
+starboard               = ${ctx.storedGuild.starboard}
+starboardChannel        = ${
     if (ctx.storedGuild.starboardChannel != null)
         "#${ctx.guild!!.getTextChannelById(ctx.storedGuild.starboardChannel)?.name ?: "unknown"}"
     else
@@ -350,24 +452,31 @@ starboardChannel= ${
     }
 
 # Logs
-logs            = ${ctx.storedGuild.logs}
+logs                    = ${ctx.storedGuild.logs}
 
 # Locale
-lang            = ${ctx.storedGuild.lang}
-forceLang       = ${ctx.storedGuild.forceLang}
+lang                    = ${ctx.storedGuild.lang}
+forceLang               = ${ctx.storedGuild.forceLang}
 
 # Welcome
-welcome         = ${ctx.storedGuild.welcome}
-welcomeChannel  = ${
+welcome                 = ${ctx.storedGuild.welcome}
+welcomeChannel          = ${
     if (ctx.storedGuild.welcomeChannel != null)
         "#${ctx.guild!!.getTextChannelById(ctx.storedGuild.welcomeChannel)?.name ?: "unknown"}"
     else
         "null"
     }
+welcomeMessage          = "${ctx.storedGuild.welcomeMessage}"
+leaveMessage            = "${ctx.storedGuild.leaveMessage}"
 
-welcomeMessage  = "${ctx.storedGuild.welcomeMessage}"
-leaveMessage    = "${ctx.storedGuild.leaveMessage}"
+# Anti Invite
+antiInvite              = ${ctx.storedGuild.antiInvite}
+antiInviteBypassRoles   = [${ctx.storedGuild.antiInviteBypassRoles.joinToString { ctx.guild!!.getRoleById(it).name }}]
+antiInviteBypassUsers   = [${ctx.storedGuild.antiInviteBypassUsers.joinToString {
+        val mem = ctx.guild!!.getMemberById(it)
+        "${mem.user.name}#${mem.user.discriminator}"
+    }}]
 
 # Other
-levelMessages   = ${ctx.storedGuild.levelMessages}```""")
+levelMessages           = ${ctx.storedGuild.levelMessages}```""")
 }

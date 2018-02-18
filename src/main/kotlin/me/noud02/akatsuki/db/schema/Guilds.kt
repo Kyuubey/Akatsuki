@@ -54,4 +54,7 @@ object Guilds : Table() {
     val levelMessages = bool("levelMessages")
     val mutedRole = long("mutedRole")
             .nullable()
+    val antiInvite = bool("antiInvite")
+    val antiInviteBypassRoles = pgArray<Long>("antiInviteBypassRoles", "BIGINT")
+    val antiInviteBypassUsers = pgArray<Long>("antiInviteBypassUsers", "BIGINT")
 }

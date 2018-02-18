@@ -61,7 +61,8 @@ class Snipe : Command() {
 
                 val embed = EmbedBuilder().apply {
                     setAuthor("${log[Logs.authorName]}#${log[Logs.authorDiscrim]}", null, log[Logs.authorAvatar])
-                    descriptionBuilder.append(log[Logs.content])
+                    val regex = "(https?)?:?(//)?discord(app)?.?(gg|io|me|com)?/(\\w+:?\\w*@)?(\\S+)(:[0-9]+)?(/|/([\\w#!:.?+=&%@!-/]))?".toRegex()
+                    descriptionBuilder.append(log[Logs.content].replace(regex, "[INVITE REDACTED]"))
                     setFooter(
                             I18n.parse(
                                     ctx.lang.getString("sniped_by"),
