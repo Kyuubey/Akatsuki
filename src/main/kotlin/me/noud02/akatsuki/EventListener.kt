@@ -93,7 +93,9 @@ class EventListener : ListenerAdapter() {
             if (stored.antiInvite) {
                 val regex = "(https?)?:?(//)?discord(app)?.?(gg|io|me|com)?/(\\w+:?\\w*@)?(\\S+)(:[0-9]+)?(/|/([\\w#!:.?+=&%@!-/]))?".toRegex()
 
-                if (regex.containsMatchIn(event.message.contentRaw))
+                if (!stored.antiInviteBypassRoles.any { id -> event.member.roles.any { it.idLong == id } }
+                        && !stored.antiInviteBypassUsers.any { id -> id == event.author.idLong }
+                        && regex.containsMatchIn(event.message.contentRaw))
                     event.message.delete().queue({
                         event.channel.sendMessage(
                                 I18n.parse(
