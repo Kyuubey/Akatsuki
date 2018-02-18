@@ -66,7 +66,10 @@ data class DBGuild(
         val leaveMessage: String,
         val ignoredChannels: List<Long>,
         val levelMessages: Boolean,
-        val mutedRole: Long?
+        val mutedRole: Long?,
+        val antiInvite: Boolean,
+        val antiInviteBypassRoles: List<Long>,
+        val antiInviteBypassUsers: List<Long>
 )
 
 data class DBUser(
@@ -122,7 +125,10 @@ object DatabaseWrapper {
                     guild[Guilds.leaveMessage],
                     guild[Guilds.ignoredChannels].toList(),
                     guild[Guilds.levelMessages],
-                    guild[Guilds.mutedRole]
+                    guild[Guilds.mutedRole],
+                    guild[Guilds.antiInvite],
+                    guild[Guilds.antiInviteBypassRoles].toList(),
+                    guild[Guilds.antiInviteBypassUsers].toList()
             )
     }.execute()
 
@@ -151,6 +157,9 @@ object DatabaseWrapper {
                 it[ignoredChannels] = arrayOf()
                 it[levelMessages] = false
                 it[mutedRole] = guild.roles.firstOrNull { it.name.toLowerCase() == "muted" }?.idLong
+                it[antiInvite] = false
+                it[antiInviteBypassRoles] = arrayOf()
+                it[antiInviteBypassUsers] = arrayOf()
             }
     }.execute()
 

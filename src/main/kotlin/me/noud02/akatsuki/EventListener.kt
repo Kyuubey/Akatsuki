@@ -31,10 +31,12 @@ import me.noud02.akatsuki.db.DatabaseWrapper
 import me.noud02.akatsuki.db.schema.Contracts
 import me.noud02.akatsuki.db.schema.Guilds
 import me.noud02.akatsuki.db.schema.Modlogs
+import me.noud02.akatsuki.extensions.UTF8Control
 import me.noud02.akatsuki.extensions.addStar
 import me.noud02.akatsuki.extensions.log
 import me.noud02.akatsuki.extensions.removeStar
 import me.noud02.akatsuki.music.MusicManager
+import me.noud02.akatsuki.utils.I18n
 import me.noud02.akatsuki.utils.Logger
 import net.dv8tion.jda.core.EmbedBuilder
 import net.dv8tion.jda.core.audit.ActionType
@@ -55,10 +57,12 @@ import net.dv8tion.jda.core.events.message.MessageUpdateEvent
 import net.dv8tion.jda.core.events.message.react.MessageReactionAddEvent
 import net.dv8tion.jda.core.events.message.react.MessageReactionRemoveEvent
 import net.dv8tion.jda.core.hooks.ListenerAdapter
+import org.jetbrains.exposed.sql.Database
 import org.jetbrains.exposed.sql.insert
 import org.jetbrains.exposed.sql.select
 import org.jetbrains.exposed.sql.update
 import java.awt.Color
+import java.util.*
 import kotlin.math.exp
 import kotlin.reflect.jvm.jvmName
 
@@ -79,8 +83,33 @@ class EventListener : ListenerAdapter() {
     override fun onMessageReceived(event: MessageReceivedEvent) {
         if (event.guild != null) {
             val stored = DatabaseWrapper.getGuildSafe(event.guild).get()
+            val user = DatabaseWrapper.getUserSafe(event.member).get()
+            val locale = Locale(user.lang.split("_")[0], user.lang.split("_")[1])
+            val bundle = ResourceBundle.getBundle("i18n.Kyubey", locale, UTF8Control())
+
             if (stored.logs)
                 event.message.log()
+
+            if (stored.antiInvite) {
+                val regex = "(https?)?:?(//)?discord(app)?.?(gg|io|me|com)?/(\\w+:?\\w*@)?(\\S+)(:[0-9]+)?(/|/([\\w#!:.?+=&%@!-/]))?".toRegex()
+
+                if (regex.containsMatchIn(event.message.contentRaw))
+                    event.message.delete().queue({
+                        event.channel.sendMessage(
+                                I18n.parse(
+                                        bundle.getString("no_ads"),
+                                        mapOf("user" to event.author.asMention)
+                                )
+                        ).queue()
+                    }) {
+                        event.channel.sendMessage(
+                                I18n.parse(
+                                        bundle.getString("error"),
+                                        mapOf("error" to it)
+                                )
+                        ).queue()
+                    }
+            }
 
             asyncTransaction(Akatsuki.instance.pool) {
                 val contract = Contracts.select { Contracts.userId.eq(event.author.idLong) }.firstOrNull() ?: return@asyncTransaction
