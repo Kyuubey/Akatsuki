@@ -26,27 +26,28 @@
 package me.noud02.akatsuki.commands
 
 import me.noud02.akatsuki.annotations.Argument
+import me.noud02.akatsuki.annotations.Load
 import me.noud02.akatsuki.entities.Command
 import me.noud02.akatsuki.entities.Context
-import me.noud02.akatsuki.annotations.Load
-import javax.script.ScriptEngineManager
+import org.jetbrains.kotlin.script.jsr223.KotlinJsr223JvmLocalScriptEngineFactory
 
 @Load
 @Argument("code", "string")
-class JS : Command() {
-    override val desc = "Evaluate (js) code"
+class Eval : Command() {
     override val ownerOnly = true
+    override val desc = "Evaluate code (KotlinScript)"
 
     override fun run(ctx: Context) {
-        val engine = ScriptEngineManager().getEngineByName("nashorn")
+        val engine = KotlinJsr223JvmLocalScriptEngineFactory().scriptEngine
 
         engine.put("ctx", ctx)
 
         try {
-            val res = engine.eval(ctx.rawArgs.joinToString(" "))
-            ctx.sendCode("js", res ?: "null")
+            val res = engine.eval("val ctx = (bindings[\"ctx\"] as me.noud02.akatsuki.entities.Context)\n${ctx.rawArgs.joinToString(" ")}")
+            ctx.sendCode("kotlin", res ?: "null")
         } catch (e: Throwable) {
             ctx.sendCode("diff", "- $e")
         }
+
     }
 }
