@@ -4,6 +4,7 @@ FROM openjdk:alpine
 MAINTAINER Noud Kerver <me@noud02.me>
 MAINTAINER Ayane Satomi <enra@headbow.stream>
 
+
 RUN addgroup -g 1000 java \
 && adduser -u 1000 -G java -s /bin/sh -D java;
 
@@ -16,6 +17,8 @@ RUN apk update && \
     find /home/java -type d -exec chmod g+x {} +
 
 COPY Akatsuki.jar /opt/app/
+
+EXPOSE 5050 1991
 
 USER 1000
 
