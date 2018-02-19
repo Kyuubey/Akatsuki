@@ -15,7 +15,7 @@ RUN apk update && \
     chgrp root /opt && \
     find /home/java -type d -exec chmod g+x {} +
 
-ADD "$TRAVIS_BUILD_DIR/build/libs/Akatsuki.jar" /opt/app/
+COPY Akatsuki.jar /opt/app/
 
 USER 1000
 
