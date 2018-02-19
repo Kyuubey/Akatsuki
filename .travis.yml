@@ -28,7 +28,6 @@ before_script:
       fi
 script:
     - ./gradlew build
-    - ls
     - cp build/libs/Akatsuki.jar ./
     - docker build -f Dockerfile -t "$image" .
     - official-images/test/run.sh "$image"
