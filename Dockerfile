@@ -9,7 +9,7 @@ RUN addgroup -g 1000 java \
 
 RUN apk update && \
     apk upgrade && \
-    mkdir /opt/app && \
+    mkdir -p /opt/app && \
     chown -R java:root /opt/app && \
     chown -R java:root /opt/app/* && \
     chmod g+rw /opt && \
