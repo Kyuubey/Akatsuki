@@ -28,7 +28,7 @@ before_script:
       fi
 script:
     - ./gradlew build
-    - docker build -t "$image" .
+    - docker build -f Dockerfile -t "$image" .
     - official-images/test/run.sh "$image"
 
 after_script:
