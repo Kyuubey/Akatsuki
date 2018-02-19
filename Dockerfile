@@ -1,9 +1,21 @@
+# Akatsuki Dockerfile
+# Copyright 2018 (c) Noud Kerver
 FROM openjdk:alpine
-WORKDIR /usr/src/build
-COPY . /usr/src/build
-RUN ./gradlew build
-WORKDIR /usr/src/bot
-RUN cp -v /usr/src/build/build/libs/Akatsuki.jar . && \
-    # cp -v /usr/src/build/{config,games}.yml . && \
-    rm -vrf /usr/src/build
-CMD ["java", "-jar", "./Akatsuki.jar"]
+MAINTAINER Noud Kerver <me@noud02.me>
+MAINTAINER Ayane Satomi <enra@headbow.stream>
+
+RUN addgroup -g 1000 java \
+&& adduser -u 1000 -G java -s /bin/sh -D java \
+
+RUN apk update && \
+    apk upgrade && \
+    mkdir /opt/app && \
+    chown 
+
+ADD build/build/libs/Akatsuki.jar /opt/app
+
+USER 1000
+
+WORKDIR /opt/app
+
+CMD ["/bin/sh", "-c", "java", "-jar", "./Akatsuki.jar"]
