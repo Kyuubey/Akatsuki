@@ -1,5 +1,33 @@
 language: java
 
+addons:
+  apt:
+    packages:
+      - docker-ce
+
+install:
+    - git clone https://github.com/docker-library/official-images.git official-images
+
+# Assist with ci test debugging:
+#   - DEBUG=1
+before_script:
+    - image="noud02/akatsuki"
+    - if [ -n "$TRAVIS_TAG" ]; then
+      image="$image:$TRAVIS_TAG";
+      fi
+script:
+    - docker build -t "$image" .
+    - official-images/test/run.sh "$image"
+
+after_script:
+- docker inspect "$image"   
+    
+after_success:
+  - if [ "$TRAVIS_BRANCH" = "master" -a "$TRAVIS_PULL_REQUEST" = "false" -o -n "$TRAVIS_TAG" ]; then 
+    docker login -u="$DOCKER_USERNAME" -p="$DOCKER_PASSWORD";
+    docker push "$image";
+fi
+
 before_cache:
   - rm -f  $HOME/.gradle/caches/modules-2/modules-2.lock
   - rm -fr $HOME/.gradle/caches/*/plugin-resolution/
