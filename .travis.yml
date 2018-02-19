@@ -29,13 +29,13 @@ script:
     - official-images/test/run.sh "$image"
 
 after_script:
-- docker inspect "$image"   
+    - docker inspect "$image"   
     
 after_success:
   - if [ "$TRAVIS_BRANCH" = "master" -a "$TRAVIS_PULL_REQUEST" = "false" -o -n "$TRAVIS_TAG" ]; then 
     docker login -u="$DOCKER_USERNAME" -p="$DOCKER_PASSWORD";
     docker push "$image";
-fi
+    fi
 
 notifications:
   webhooks:
