@@ -11,7 +11,6 @@ RUN apk update && \
     apk upgrade && \
     mkdir -p /opt/app && \
     chown -R java:root /opt/app && \
-    chown -R java:root /opt/app/* && \
     chmod g+rw /opt && \
     chgrp root /opt && \
     find /home/java -type d -exec chmod g+x {} +
