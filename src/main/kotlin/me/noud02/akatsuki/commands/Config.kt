@@ -25,400 +25,210 @@
 
 package me.noud02.akatsuki.commands
 
-import kotlinx.coroutines.experimental.async
 import me.aurieh.ares.exposed.async.asyncTransaction
 import me.noud02.akatsuki.Akatsuki
-import me.noud02.akatsuki.EventListener
 import me.noud02.akatsuki.annotations.*
 import me.noud02.akatsuki.db.schema.Guilds
 import me.noud02.akatsuki.entities.Command
 import me.noud02.akatsuki.entities.Context
-import me.noud02.akatsuki.extensions.searchMembers
-import me.noud02.akatsuki.extensions.searchRoles
-import me.noud02.akatsuki.extensions.searchTextChannels
-import me.noud02.akatsuki.utils.RolePicker
-import me.noud02.akatsuki.utils.TextChannelPicker
-import me.noud02.akatsuki.utils.UserPicker
-import net.dv8tion.jda.core.Permission
-import net.dv8tion.jda.core.entities.Member
+import net.dv8tion.jda.core.EmbedBuilder
 import net.dv8tion.jda.core.entities.Role
 import net.dv8tion.jda.core.entities.TextChannel
+import org.jetbrains.exposed.sql.Column
 import org.jetbrains.exposed.sql.update
 
-// TODO add many translations
-
-@Arguments(
-        Argument("option", "string"),
-        Argument("value", "any")
-)
-@Perm(Permission.MANAGE_SERVER)
-class Set : Command() {
-    private val yes = listOf(
-            "y",
-            "yes",
-            "true",
-            "enable",
-            "enabled"
-    )
-
-    private val no = listOf(
-            "n",
-            "no",
-            "false",
-            "disable",
-            "disabled"
-    )
-
-    override val desc = "Set something in the config"
+@Argument("option", "string")
+class EnableOption : Command() {
+    override val desc = "Enable a setting."
     override val guildOnly = true
 
+    private val options = listOf(
+            "forceLang",
+            "starboard",
+            "logs",
+            "modlogs",
+            "welcome",
+            "levelMessages",
+            "antiInvite"
+    )
+
     override fun run(ctx: Context) {
-        val key = (ctx.args["option"] as String).toLowerCase()
-        val value = (ctx.args["value"] as String).toLowerCase()
+        val opt = (ctx.args["option"] as String).toLowerCase()
+
+        val humanOptions = mutableMapOf<String, String>()
+
+        for (option in options) {
+            val regex = "([A-Z])".toRegex()
+            val letter = regex.find(option)?.groupValues?.get(0)
+
+            if (letter != null)
+                humanOptions[option.replace(regex, " ${letter.toLowerCase()}")] = option
+
+            humanOptions[option.toLowerCase()] = option
+        }
+
+        if (opt !in humanOptions)
+            return ctx.send("Option not found!") // TODO translation
 
         asyncTransaction(Akatsuki.instance.pool) {
-            when (key) {
-                "forcelang" -> {
-                    if (!yes.contains(value) && !no.contains(value))
-                        return@asyncTransaction ctx.send("Invalid value: $value")
+            Guilds.update({
+                Guilds.id.eq(ctx.guild!!.idLong)
+            }) {
+                val col = columns.first { it.name == humanOptions[opt] } as Column<Boolean>
 
-                    Guilds.update({
-                        Guilds.id.eq(ctx.guild!!.idLong)
-                    }) {
-                        it[forceLang] = yes.contains(value)
-                    }
-
-                    ctx.send("Set `forceLang` to `${yes.contains(value)}`")
-                }
-
-                "lang" -> {
-                    Guilds.update({
-                        Guilds.id.eq(ctx.guild!!.idLong)
-                    }) {
-                        it[lang] = ctx.args["value"] as String
-                    }
-
-                    ctx.send("Set `lang` to `${ctx.args["value"]}`")
-                }
-
-                "logs" -> {
-                    if (!yes.contains(value) && !no.contains(value))
-                        return@asyncTransaction ctx.send("Invalid value: $value")
-
-                    Guilds.update({
-                        Guilds.id.eq(ctx.guild!!.idLong)
-                    }) {
-                        it[logs] = yes.contains(value)
-                    }
-
-                    ctx.send("Set `logs` to `${yes.contains(value)}`")
-                }
-
-                "starboard" -> {
-                    if (!yes.contains(value) && !no.contains(value))
-                        return@asyncTransaction ctx.send("Invalid value: $value")
-
-                    Guilds.update({
-                        Guilds.id.eq(ctx.guild!!.idLong)
-                    }) {
-                        it[starboard] = yes.contains(value)
-                    }
-
-                    ctx.send("Set `starboard` to `${yes.contains(value)}`")
-                }
-
-                "starboardchannel" -> {
-                    val channels = ctx.guild!!.searchTextChannels(value)
-
-                    if (channels.isEmpty())
-                        return@asyncTransaction ctx.send("Couldn't find that channel!")
-
-                    fun updateChannel(channel: TextChannel) {
-                        asyncTransaction(Akatsuki.instance.pool) {
-                            Guilds.update({
-                                Guilds.id.eq(ctx.guild.idLong)
-                            }) {
-                                it[starboardChannel] = channel.idLong
-                            }
-
-                            ctx.send("Set `starboardChannel` to ${channel.asMention}")
-                        }.execute()
-                    }
-
-                    if (channels.size > 1)
-                        TextChannelPicker(
-                                EventListener.instance.waiter,
-                                ctx.member!!,
-                                channels,
-                                ctx.guild
-                        )
-                                .build(ctx.channel)
-                                .thenAccept {
-                                    updateChannel(it)
-                                }
-                    else
-                        updateChannel(channels[0])
-                }
-
-                "modlogs" -> {
-                    if (!yes.contains(value) && !no.contains(value))
-                        return@asyncTransaction ctx.send("Invalid value: $value")
-
-                    Guilds.update({
-                        Guilds.id.eq(ctx.guild!!.idLong)
-                    }) {
-                        it[modlogs] = yes.contains(value)
-                    }
-
-                    ctx.send("Set `modlogs` to `${yes.contains(value)}`")
-                }
-
-                "modlogchannel" -> {
-                    val channels = ctx.guild!!.searchTextChannels(value)
-
-                    if (channels.isEmpty())
-                        return@asyncTransaction ctx.send("Couldn't find that channel!")
-
-                    fun updateChannel(channel: TextChannel) {
-                        asyncTransaction(Akatsuki.instance.pool) {
-                            Guilds.update({
-                                Guilds.id.eq(ctx.guild.idLong)
-                            }) {
-                                it[modlogChannel] = channel.idLong
-                            }
-
-                            ctx.send("Set `modlogChannel` to ${channel.asMention}")
-                        }.execute()
-                    }
-
-                    if (channels.size > 1)
-                        TextChannelPicker(
-                                EventListener.instance.waiter,
-                                ctx.member!!,
-                                channels,
-                                ctx.guild
-                        )
-                                .build(ctx.channel)
-                                .thenAccept {
-                                    updateChannel(it)
-                                }
-                    else
-                        updateChannel(channels[0])
-                }
-
-                "welcome" -> {
-                    if (!yes.contains(value) && !no.contains(value))
-                        return@asyncTransaction ctx.send("Invalid value: $value")
-
-                    Guilds.update({
-                        Guilds.id.eq(ctx.guild!!.idLong)
-                    }) {
-                        it[welcome] = yes.contains(value)
-                    }
-
-                    ctx.send("Set `welcome` to `${yes.contains(value)}`")
-                }
-
-                "welcomechannel" -> {
-                    val channels = ctx.guild!!.searchTextChannels(value)
-
-                    if (channels.isEmpty())
-                        return@asyncTransaction ctx.send("Couldn't find that channel!")
-
-                    fun updateChannel(channel: TextChannel) {
-                        asyncTransaction(Akatsuki.instance.pool) {
-                            Guilds.update({
-                                Guilds.id.eq(ctx.guild.idLong)
-                            }) {
-                                it[welcomeChannel] = channel.idLong
-                            }
-
-                            ctx.send("Set `welcomeChannel` to ${channel.asMention}")
-                        }.execute()
-                    }
-
-                    if (channels.size > 1)
-                        TextChannelPicker(
-                                EventListener.instance.waiter,
-                                ctx.member!!,
-                                channels,
-                                ctx.guild
-                        )
-                                .build(ctx.channel)
-                                .thenAccept {
-                                    updateChannel(it)
-                                }
-                    else
-                        updateChannel(channels[0])
-                }
-
-                "welcomemessage" -> {
-                    val text = ctx.args["value"] as String
-
-                    Guilds.update({
-                        Guilds.id.eq(ctx.guild!!.idLong)
-                    }) {
-                        it[welcomeMessage] = text
-                    }
-
-                    ctx.send("Set `welcomeMessage` to \"$text\"")
-                }
-
-                "leavemessage" -> {
-                    val text = ctx.args["value"] as String
-
-                    Guilds.update({
-                        Guilds.id.eq(ctx.guild!!.idLong)
-                    }) {
-                        it[leaveMessage] = text
-                    }
-
-                    ctx.send("Set `leaveMessage` to \"$text\"")
-                }
-
-                "levelmessages" -> {
-                    if (!yes.contains(value) && !no.contains(value))
-                        return@asyncTransaction ctx.send("Invalid value: $value")
-
-                    Guilds.update({
-                        Guilds.id.eq(ctx.guild!!.idLong)
-                    }) {
-                        it[levelMessages] = yes.contains(value)
-                    }
-
-                    ctx.send("Set `levelMessages` to `${yes.contains(value)}`")
-                }
-
-                "mutedrole" -> {
-                    val roles = ctx.guild!!.searchRoles(value)
-
-                    if (roles.isEmpty())
-                        return@asyncTransaction ctx.send("Couldn't find that role!")
-
-                    fun updateRole(role: Role) {
-                        asyncTransaction(Akatsuki.instance.pool) {
-                            Guilds.update({
-                                Guilds.id.eq(ctx.guild.idLong)
-                            }) {
-                                it[mutedRole] = role.idLong
-                            }
-
-                            ctx.send("Set `mutedRole` to ${role.name}")
-                        }.execute()
-                    }
-
-                    if (roles.size > 1)
-                        RolePicker(
-                                EventListener.instance.waiter,
-                                ctx.member!!,
-                                roles,
-                                ctx.guild
-                        )
-                                .build(ctx.channel)
-                                .thenAccept {
-                                    updateRole(it)
-                                }
-                    else
-                        updateRole(roles[0])
-                }
-
-                "antiinvite" -> {
-                    if (!yes.contains(value) && !no.contains(value))
-                        return@asyncTransaction ctx.send("Invalid value: $value")
-
-                    Guilds.update({
-                        Guilds.id.eq(ctx.guild!!.idLong)
-                    }) {
-                        it[antiInvite] = yes.contains(value)
-                    }
-
-                    ctx.send("Set `antiInvite` to ${yes.contains(value)}")
-                }
-
-                else -> ctx.send("Invalid key: $key")
+                it[col] = true
             }
         }.execute()
+
+        ctx.send("Enabled $opt!") // TODO translation
+    }
+}
+
+@Argument("option", "string")
+class DisableOption : Command() {
+    override val desc = "Disable a setting."
+    override val guildOnly = true
+
+    private val options = listOf(
+            "forceLang",
+            "starboard",
+            "logs",
+            "modlogs",
+            "welcome",
+            "levelMessages",
+            "antiInvite"
+    )
+
+    override fun run(ctx: Context) {
+        val opt = (ctx.args["option"] as String).toLowerCase()
+
+        val humanOptions = mutableMapOf<String, String>()
+
+        for (option in options) {
+            val regex = "([A-Z])".toRegex()
+            val letter = regex.find(option)?.groupValues?.get(0)
+
+            if (letter != null)
+                humanOptions[option.replace(regex, " ${letter.toLowerCase()}")] = option
+
+            humanOptions[option.toLowerCase()] = option
+        }
+
+        if (opt !in humanOptions)
+            return ctx.send("Option not found!") // TODO translation
+
+        asyncTransaction(Akatsuki.instance.pool) {
+            Guilds.update({
+                Guilds.id.eq(ctx.guild!!.idLong)
+            }) {
+                val col = columns.first { it.name == humanOptions[opt] }as Column<Boolean>
+
+                it[col] = false
+            }
+        }.execute()
+
+        ctx.send("Disabled $opt!") // TODO translation
     }
 }
 
 @Arguments(
-        Argument("key", "string"),
-        Argument("value", "string")
+        Argument("option", "string"),
+        Argument("channel", "textchannel")
 )
-class Add : Command() {
+class SetChannelOption : Command() {
+    override val desc = "Set an option's channel."
+    override val guildOnly = true
+
+    private val options = listOf(
+            "starboardChannel",
+            "modlogChannel",
+            "welcomeChannel"
+    )
+
     override fun run(ctx: Context) {
-        val key = (ctx.args["key"] as String).toLowerCase()
-        val value = ctx.args["value"] as String
+        val opt = (ctx.args["option"] as String).toLowerCase()
+        val channel = ctx.args["channel"] as TextChannel
 
-        when (key) {
-            "antiinvitebypassroles" -> {
-                val roles = ctx.guild!!.searchRoles(value)
+        if (opt !in options.map(String::toLowerCase))
+            return ctx.send("Option not found!") // TODO translation
 
-                if (roles.isEmpty())
-                    return ctx.send("Couldn't find that role!")
+        asyncTransaction(Akatsuki.instance.pool) {
+            Guilds.update({
+                Guilds.id.eq(ctx.guild!!.idLong)
+            }) {
+                val col = columns.first { it.name.toLowerCase() == opt } as Column<Long>
 
-                fun updateRole(role: Role) {
-                    asyncTransaction(Akatsuki.instance.pool) {
-                        Guilds.update({
-                            Guilds.id.eq(ctx.guild.idLong)
-                        }) {
-                            it[antiInviteBypassRoles] = ctx.storedGuild!!.antiInviteBypassRoles.plus(role.idLong).toTypedArray()
-                        }
-
-                        ctx.send("Added ${role.name} to `antiInviteBypassRoles`")
-                    }.execute()
-                }
-
-                if (roles.size > 1)
-                    RolePicker(
-                            EventListener.instance.waiter,
-                            ctx.member!!,
-                            roles,
-                            ctx.guild
-                    )
-                            .build(ctx.channel)
-                            .thenAccept {
-                                updateRole(it)
-                            }
-                else
-                    updateRole(roles[0])
+                it[col] = channel.idLong
             }
+        }.execute()
 
-            "antiinvitebypassusers" -> {
-                val members = ctx.guild!!.searchMembers(value)
+        ctx.send("Channel for $opt is now ${channel.asMention}!") // TODO translation
+    }
+}
 
-                if (members.isEmpty())
-                    return ctx.send("Couldn't find that user!")
+@Arguments(
+        Argument("option", "string"),
+        Argument("role", "role")
+)
+class SetRoleOption : Command() {
+    override val desc = "Set an option's role."
+    override val guildOnly = true
 
-                fun updateMember(member: Member) {
-                    asyncTransaction(Akatsuki.instance.pool) {
-                        Guilds.update({
-                            Guilds.id.eq(ctx.guild.idLong)
-                        }) {
-                            it[antiInviteBypassUsers] = ctx.storedGuild!!.antiInviteBypassUsers.plus(member.user.idLong).toTypedArray()
-                        }
+    private val options = listOf(
+            "mutedRole"
+    )
 
-                        ctx.send("Added ${member.user.name}#${member.user.discriminator} to `antiInviteBypassUsers`")
-                    }.execute()
-                }
+    override fun run(ctx: Context) {
+        val opt = (ctx.args["option"] as String).toLowerCase()
+        val role = ctx.args["role"] as Role
 
-                if (members.size > 1)
-                    UserPicker(
-                            EventListener.instance.waiter,
-                            ctx.member!!,
-                            members,
-                            ctx.guild
-                    )
-                            .build(ctx.channel)
-                            .thenAccept {
-                                updateMember(it)
-                            }
-                else
-                    updateMember(members[0])
+        if (opt !in options.map(String::toLowerCase))
+            return ctx.send("Option not found!") // TODO translation
+
+        asyncTransaction(Akatsuki.instance.pool) {
+            Guilds.update({
+                Guilds.id.eq(ctx.guild!!.idLong)
+            }) {
+                val col = columns.first { it.name.toLowerCase() == opt } as Column<Long>
+
+                it[col] = role.idLong
             }
+        }.execute()
 
-            else -> ctx.send("Invalid key: $key")
-        }
+        ctx.send("Role for $opt is now ${role.name}!") // TODO translation
+    }
+}
+
+@Arguments(
+        Argument("option", "string"),
+        Argument("string", "string")
+)
+class SetStringOption : Command() {
+    override val desc = "Set an option's text."
+
+    private val options = listOf(
+            "welcomeMessage",
+            "leaveMessage"
+    )
+
+    override fun run(ctx: Context) {
+        val opt = (ctx.args["option"] as String).toLowerCase()
+        val string = ctx.args["string"] as String
+
+        if (opt !in options.map(String::toLowerCase))
+            return ctx.send("Option not found!") // TODO translation
+
+        asyncTransaction(Akatsuki.instance.pool) {
+            Guilds.update({
+                Guilds.id.eq(ctx.guild!!.idLong)
+            }) {
+                val col = columns.first { it.name.toLowerCase() == opt } as Column<String>
+
+                it[col] = string
+            }
+        }.execute()
+
+        ctx.send("$opt is now $string!") // TODO translation
     }
 }
 
@@ -426,68 +236,52 @@ class Add : Command() {
 @Alias("cfg", "conf", "settings")
 class Config : Command() {
     override val guildOnly = true
-    override val desc = "Change settings in the config!"
+    override val desc = "View the current config!"
 
     init {
-        addSubcommand(Set(), "set")
-        addSubcommand(Add(), "add")
+        addSubcommand(EnableOption(), "enable")
+        addSubcommand(DisableOption(), "disable")
+        addSubcommand(SetChannelOption(), "setchannel")
+        addSubcommand(SetRoleOption(), "setrole")
+        addSubcommand(SetStringOption(), "setstring")
     }
 
-    override fun run(ctx: Context) = ctx.send("""```ini
-[Guild Config]
+    override fun run(ctx: Context) {
+        val embed = EmbedBuilder().apply {
+            setTitle("Settings")
+            addField(
+                    "General",
+                    "**prefixes:** ${if (ctx.storedGuild!!.prefixes.isNotEmpty()) ctx.storedGuild.prefixes.joinToString { "`$it`" } else "none"}\n" +
+                            "**forceLang:** ${if (ctx.storedGuild.forceLang) "enabled" else "disabled"}\n" +
+                            "**logs:** ${if (ctx.storedGuild.logs) "enabled" else "disabled"}\n" +
+                            "**mutedRole:** ${ctx.guild!!.getRoleById(ctx.storedGuild.mutedRole ?: 0L)?.asMention ?: "none"}\n" +
+                            "**levelMessages:** ${if (ctx.storedGuild.levelMessages) "enabled" else "disabled"}\n" +
+                            "**antiInvite:** ${if (ctx.storedGuild.antiInvite) "enabled" else "disabled"}\n" +
+                            "**ignoredChannels:** ${if (ctx.storedGuild.ignoredChannels.isNotEmpty()) ctx.storedGuild.ignoredChannels.joinToString { ctx.guild.getTextChannelById(it)?.asMention ?: "#invalid-channel" } else "none"}",
+                    true
+            )
+            addField(
+                    "Modlogs",
+                    "**modlogs:** ${if (ctx.storedGuild.modlogs) "enabled" else "disabled"}\n" +
+                            "**modlogChannel:** ${ctx.guild.getTextChannelById(ctx.storedGuild.modlogChannel ?: 0L)?.asMention ?: "none"}",
+                    true
+            )
+            addField(
+                    "Starboard",
+                    "**starboard:** ${if (ctx.storedGuild.starboard) "enabled" else "disabled"}\n" +
+                            "**starboardChannel:** ${ctx.guild.getTextChannelById(ctx.storedGuild.starboardChannel ?: 0L)?.asMention ?: "none"}",
+                    true
+            )
+            addField(
+                    "Welcomer",
+                    "**welcome:** ${if (ctx.storedGuild.welcome) "enabled" else "disabled"}\n" +
+                            "**welcomeChannel:** ${ctx.guild.getTextChannelById(ctx.storedGuild.welcomeChannel ?: 0L)?.asMention ?: "none"}\n" +
+                            "**welcomeMessage:** ${ctx.storedGuild.welcomeMessage}\n" +
+                            "**leaveMessage:** ${ctx.storedGuild.leaveMessage}",
+                    true
+            )
+        }
 
-# ----------------------------------------------------------------- #
-# To set something in the config use: 'config set <option> <value>' #
-# Example: 'config set logs true'                                   #
-#                                                                   #
-# To add something use: 'config add <option> <value to add>'        #
-# Example: 'config add antiInviteBypassUsers noud02'                #
-# ----------------------------------------------------------------- #
-
-# Modlogs
-modlogs                 = ${ctx.storedGuild!!.modlogs}
-modlogChannel           = ${
-    if (ctx.storedGuild.modlogChannel != null)
-        "#${ctx.guild!!.getTextChannelById(ctx.storedGuild.modlogChannel)?.name ?: "unknown"}"
-    else
-        "null"
+        ctx.send(embed.build())
     }
-
-# Starboard
-starboard               = ${ctx.storedGuild.starboard}
-starboardChannel        = ${
-    if (ctx.storedGuild.starboardChannel != null)
-        "#${ctx.guild!!.getTextChannelById(ctx.storedGuild.starboardChannel)?.name ?: "unknown"}"
-    else
-        "null"
-    }
-
-# Logs
-logs                    = ${ctx.storedGuild.logs}
-
-# Locale
-lang                    = ${ctx.storedGuild.lang}
-forceLang               = ${ctx.storedGuild.forceLang}
-
-# Welcome
-welcome                 = ${ctx.storedGuild.welcome}
-welcomeChannel          = ${
-    if (ctx.storedGuild.welcomeChannel != null)
-        "#${ctx.guild!!.getTextChannelById(ctx.storedGuild.welcomeChannel)?.name ?: "unknown"}"
-    else
-        "null"
-    }
-welcomeMessage          = "${ctx.storedGuild.welcomeMessage}"
-leaveMessage            = "${ctx.storedGuild.leaveMessage}"
-
-# Anti Invite
-antiInvite              = ${ctx.storedGuild.antiInvite}
-antiInviteBypassRoles   = [${ctx.storedGuild.antiInviteBypassRoles.joinToString { ctx.guild!!.getRoleById(it).name }}]
-antiInviteBypassUsers   = [${ctx.storedGuild.antiInviteBypassUsers.joinToString {
-        val mem = ctx.guild!!.getMemberById(it)
-        "${mem.user.name}#${mem.user.discriminator}"
-    }}]
-
-# Other
-levelMessages           = ${ctx.storedGuild.levelMessages}```""")
 }
