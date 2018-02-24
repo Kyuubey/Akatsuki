@@ -25,6 +25,7 @@
 
 package me.noud02.akatsuki.annotations
 
+@Repeatable
 annotation class Flag(val flag: String, val abbr: Char, val desc: String)
 
 annotation class Flags(vararg val flags: Flag)

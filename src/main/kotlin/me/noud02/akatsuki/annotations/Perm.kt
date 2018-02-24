@@ -27,6 +27,7 @@ package me.noud02.akatsuki.annotations
 
 import net.dv8tion.jda.core.Permission
 
+@Repeatable
 annotation class Perm(val name: Permission, val optional: Boolean = false)
 
 annotation class Perms(vararg val perms: Perm)
