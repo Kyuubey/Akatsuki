@@ -28,9 +28,11 @@ package me.noud02.akatsuki
 import io.sentry.Sentry
 import io.sentry.event.BreadcrumbBuilder
 import io.sentry.event.UserBuilder
+import me.aurieh.ares.exposed.async.asyncTransaction
 import me.aurieh.ares.utils.ArgParser
 import me.noud02.akatsuki.annotations.*
 import me.noud02.akatsuki.db.DatabaseWrapper
+import me.noud02.akatsuki.db.schema.Restrictions
 import me.noud02.akatsuki.entities.*
 import me.noud02.akatsuki.extensions.UTF8Control
 import me.noud02.akatsuki.extensions.searchMembers
@@ -41,6 +43,8 @@ import net.dv8tion.jda.core.Permission
 import net.dv8tion.jda.core.entities.Channel
 import net.dv8tion.jda.core.events.message.MessageReceivedEvent
 import org.apache.commons.validator.routines.UrlValidator
+import org.jetbrains.exposed.sql.and
+import org.jetbrains.exposed.sql.select
 import org.reflections.Reflections
 import org.reflections.util.ClasspathHelper
 import org.reflections.util.ConfigurationBuilder
@@ -121,9 +125,37 @@ class CommandHandler {
             else
                 return
 
-        if (event.guild != null
-                && guild!!.ignoredChannels.contains(event.channel.idLong)
-                && cmd != "unignore")
+        if (event.guild != null) {
+            if (guild!!.ignoredChannels.contains(event.channel.idLong) && cmd != "unignore")
+                return
+
+            val restricted = asyncTransaction(Akatsuki.instance.pool) {
+                val restrictions = Restrictions.select {
+                    Restrictions.guildId.eq(event.guild!!.idLong) and Restrictions.userId.eq(event.author.idLong)
+                }
+
+                restrictions.any {
+                    it[Restrictions.command] == "all" || it[Restrictions.command] == cmd
+                } || Restrictions.select {
+                    Restrictions.guildId.eq(event.guild.idLong) and Restrictions.everyone.eq(true)
+                }.toList().isNotEmpty()
+            }.execute().get()
+
+            if (restricted && cmd != "unrestrict")
+                return
+        }
+
+        val restricted = asyncTransaction(Akatsuki.instance.pool) {
+            val restrictions = Restrictions.select {
+                Restrictions.userId.eq(event.author.idLong) and Restrictions.global.eq(true)
+            }
+
+            restrictions.any {
+                it[Restrictions.command] == "all" || it[Restrictions.command] == cmd
+            }
+        }.execute().get()
+
+        if (restricted && cmd != "unrestrict")
             return
 
         logger.command(event)
