@@ -43,9 +43,17 @@ fun main (args: Array<String>) {
         config = Config(
                 System.getenv("BOT_TOKEN"),
                 System.getenv("BOT_DESCRIPTION"),
-                System.getenv("BOT_OWNERS").split(","),
-                System.getenv("BOT_PREFIXES").split(","),
-                mapper.readValue(File("./games.yml")),
+                System.getenv("BOT_OWNERS").split("::"),
+                System.getenv("BOT_PREFIXES").split("::"),
+                System.getenv("BOT_GAMES").split("::").map {
+                    val gameRegex = "game=([^$]+)".toRegex()
+                    val typeRegex = "type=([^$]+)".toRegex()
+
+                    val game = gameRegex.find(it)?.groupValues?.get(1) ?: ""
+                    val type = typeRegex.find(it)?.groupValues?.get(1) ?: "playing"
+
+                    PresenceConfig(game, type)
+                },
                 if (System.getenv("DATABASE_URL") != null) {
                     val pgUrl = System.getenv("DATABASE_URL").removePrefix("postgres://")
 
