@@ -21,4 +21,4 @@ USER 1000
 
 WORKDIR /opt/app
 
-CMD ["/bin/sh", "-c", "'java", "-jar", "./Akatsuki.jar'"]
+CMD ["java", "-jar", "./Akatsuki.jar"]

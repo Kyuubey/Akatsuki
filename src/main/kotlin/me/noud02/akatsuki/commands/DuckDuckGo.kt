@@ -42,6 +42,8 @@ import kotlin.math.min
 @Argument("query", "string")
 @Alias("ddg")
 class DuckDuckGo : ThreadedCommand() {
+    override val desc = "Search on DuckDuckGo."
+
     override fun threadedRun(ctx: Context) {
         val res = Akatsuki.instance.okhttp.newCall(Request.Builder().apply {
             url(HttpUrl.Builder().apply {
