@@ -57,13 +57,12 @@ import net.dv8tion.jda.core.events.message.MessageUpdateEvent
 import net.dv8tion.jda.core.events.message.react.MessageReactionAddEvent
 import net.dv8tion.jda.core.events.message.react.MessageReactionRemoveEvent
 import net.dv8tion.jda.core.hooks.ListenerAdapter
-import org.jetbrains.exposed.sql.Database
 import org.jetbrains.exposed.sql.insert
 import org.jetbrains.exposed.sql.select
 import org.jetbrains.exposed.sql.update
 import java.awt.Color
 import java.util.*
-import kotlin.math.exp
+import java.util.concurrent.ExecutorService
 import kotlin.reflect.jvm.jvmName
 
 class EventListener : ListenerAdapter() {
@@ -129,7 +128,7 @@ class EventListener : ListenerAdapter() {
 
                     if (stored.levelMessages)
                         event.channel.sendMessage(EmbedBuilder().apply {
-                            setTitle("${event.author.name}, you are now rank ${curLevel+1}!")
+                            setTitle("${event.author.name}, you are now rank ${curLevel+1}!") // TODO translation
                             setColor(Color.CYAN)
                             descriptionBuilder.append("+2500$\n")
 
@@ -175,27 +174,27 @@ class EventListener : ListenerAdapter() {
 
     override fun onMessageReactionAdd(event: MessageReactionAddEvent) {
         if (event.guild != null && event.reaction.reactionEmote.name == "\u2b50") {
-            val guild = DatabaseWrapper.getGuildSafe(event.guild).get()
+            DatabaseWrapper.getGuildSafe(event.guild).thenAccept { guild ->
+                if (!guild.starboard)
+                    return@thenAccept
 
-            if (!guild.starboard)
-                return
-
-            val msg = event.channel.getMessageById(event.messageId).complete()
-
-            event.guild.addStar(msg, event.user)
+                event.channel.getMessageById(event.messageId).queue { msg ->
+                    event.guild.addStar(msg, event.user)
+                }
+            }
         }
     }
 
     override fun onMessageReactionRemove(event: MessageReactionRemoveEvent) {
         if (event.guild != null && event.reaction.reactionEmote.name == "\u2b50") {
-            val guild = DatabaseWrapper.getGuildSafe(event.guild).get()
+            DatabaseWrapper.getGuildSafe(event.guild).thenAccept { guild ->
+                if (!guild.starboard)
+                    return@thenAccept
 
-            if (!guild.starboard)
-                return
-
-            val msg = event.channel.getMessageById(event.messageId).complete()
-
-            event.guild.removeStar(msg, event.user)
+                event.channel.getMessageById(event.messageId).queue { msg ->
+                    event.guild.removeStar(msg, event.user)
+                }
+            }
         }
     }
 
