@@ -41,10 +41,14 @@ class Cuddle : Command() {
     override val guildOnly = true
     override val desc = "Cuddle someone."
 
-    override fun run(ctx: Context) = ctx.send(EmbedBuilder().apply {
-        setTitle("${(ctx.args["user"] as Member).effectiveName}, you got a cuddle from ${ctx.member!!.effectiveName}")
-        setImage(Wolk.getByType(WolkType.CUDDLE).url)
-        setColor(Color.CYAN)
-        setFooter("Powered by weeb.sh", null)
-    }.build())
+    override fun run(ctx: Context) {
+        Wolk.getByType(WolkType.CUDDLE).thenAccept { res ->
+            ctx.send(EmbedBuilder().apply {
+                setTitle("${(ctx.args["user"] as Member).effectiveName}, you got a cuddle from ${ctx.member!!.effectiveName}")
+                setImage(res.url)
+                setColor(Color.CYAN)
+                setFooter("Powered by weeb.sh", null)
+            }.build())
+        }
+    }
 }

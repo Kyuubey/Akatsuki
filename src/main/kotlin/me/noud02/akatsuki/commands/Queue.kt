@@ -68,7 +68,7 @@ class Queue : Command() {
 
         if (formatted.length > 2048) {
             val parts = mutableListOf<String>()
-            val picker = ItemPicker(EventListener.instance.waiter, ctx.member!!, ctx.guild)
+            val picker = ItemPicker(EventListener.waiter, ctx.member!!, ctx.guild)
             var part = ""
 
             val items = manager.scheduler.queue.mapIndexed {

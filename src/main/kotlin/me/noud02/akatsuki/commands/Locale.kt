@@ -37,12 +37,12 @@ import org.jetbrains.exposed.sql.update
 
 @Alias("change")
 @Argument("lang", "string")
-class SetLocale : AsyncCommand() {
+class SetLocale : Command() {
     override val name = "set"
     override val desc = "Set your language"
 
-    override suspend fun asyncRun(ctx: Context) {
-        asyncTransaction(Akatsuki.instance.pool) {
+    override fun run(ctx: Context) {
+        asyncTransaction(Akatsuki.pool) {
             val language = I18n.langToCode(ctx.args["lang"] as String)
 
             Users.update({
@@ -59,7 +59,7 @@ class SetLocale : AsyncCommand() {
                             )
                     )
             )
-        }.await()
+        }.execute()
     }
 }
 

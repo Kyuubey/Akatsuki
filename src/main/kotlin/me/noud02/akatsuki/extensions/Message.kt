@@ -36,7 +36,7 @@ import org.json.JSONObject
 fun Message.log(ev: String = "CREATE") {
     val gson = Gson()
 
-    asyncTransaction(Akatsuki.instance.pool) {
+    asyncTransaction(Akatsuki.pool) {
         Logs.insert {
             it[event] =  ev
             it[messageId] = idLong

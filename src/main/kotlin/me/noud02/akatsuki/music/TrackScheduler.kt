@@ -33,6 +33,7 @@ import com.sedmelluq.discord.lavaplayer.track.AudioPlaylist
 import com.sedmelluq.discord.lavaplayer.track.AudioTrack
 import com.sedmelluq.discord.lavaplayer.track.AudioTrackEndReason
 import me.noud02.akatsuki.Akatsuki
+import me.noud02.akatsuki.utils.Http
 import net.dv8tion.jda.core.EmbedBuilder
 import okhttp3.HttpUrl
 import okhttp3.Request
@@ -83,43 +84,33 @@ class TrackScheduler(private val player: AudioPlayer, private val manager: Guild
                 embed.setFooter("Next: ${nextTrack.info.title}", null)
 
             if (manager.autoplay && track.info.uri.indexOf("youtube") > -1) {
-                val res = Akatsuki.instance.okhttp.newCall(Request.Builder().apply {
-                    url(HttpUrl.Builder().apply {
-                        scheme("https")
-                        host("www.googleapis.com")
-                        addPathSegment("youtube")
-                        addPathSegment("v3")
-                        addPathSegment("search")
-                        addQueryParameter("key", Akatsuki.instance.config.api.google)
-                        addQueryParameter("part", "snippet")
-                        addQueryParameter("maxResults", "10")
-                        addQueryParameter("type", "video")
-                        addQueryParameter("relatedToVideoId", track.info.identifier)
-                    }.build())
-                }.build()).execute()
+                val qs = "?key=${Akatsuki.config.api.google}&part=snippet&maxResults=10&type=video&relatedToVideoId=${track.info.identifier}"
 
-                val id = JSONObject(res.body()!!.string())
-                        .getJSONArray("items")
-                        .getJSONObject(0)
-                        .getJSONObject("id")
-                        .getString("videoId")
+                Http.get("https://www.googleapis.com/youtube/v3/search$qs").thenAccept { res ->
+                    val id = JSONObject(res.body()!!.string())
+                            .getJSONArray("items")
+                            .getJSONObject(0)
+                            .getJSONObject("id")
+                            .getString("videoId")
 
-                MusicManager.playerManager.loadItem("https://youtube.com/watch?v=$id", object : AudioLoadResultHandler {
-                    override fun loadFailed(exception: FriendlyException) = manager.textChannel.sendMessage(
-                            "[autoplay] Failed to add song to queue: ${exception.message}"
-                    ).queue()
-                    override fun noMatches() = manager.textChannel.sendMessage("[autoplay] YouTube url is (probably) invalid!").queue()
-                    override fun trackLoaded(track: AudioTrack) = manager.scheduler.add(track)
-                    override fun playlistLoaded(playlist: AudioPlaylist) = trackLoaded(playlist.tracks.first())
-                })
-            } else
+                    MusicManager.playerManager.loadItem("https://youtube.com/watch?v=$id", object : AudioLoadResultHandler {
+                        override fun loadFailed(exception: FriendlyException) = manager.textChannel.sendMessage(
+                                "[autoplay] Failed to add song to queue: ${exception.message}"
+                        ).queue()
+                        override fun noMatches() = manager.textChannel.sendMessage("[autoplay] YouTube url is (probably) invalid!").queue()
+                        override fun trackLoaded(track: AudioTrack) = manager.scheduler.add(track)
+                        override fun playlistLoaded(playlist: AudioPlaylist) = trackLoaded(playlist.tracks.first())
+                    })
+                }
+            } else {
                 MusicManager.inactivityScheduler.schedule(timerTask {
                     if (player.playingTrack != null || !manager.textChannel.guild.audioManager.isConnected)
                         return@timerTask
-                    
+
                     manager.textChannel.sendMessage("Left voicechannel because of inactivity").queue()
                     MusicManager.leave(manager.textChannel.guild.id)
                 }, 300000L)
+            }
             manager.textChannel.sendMessage(embed.build()).queue()
             next()
         }

@@ -30,6 +30,7 @@ import me.noud02.akatsuki.annotations.Argument
 import me.noud02.akatsuki.annotations.Load
 import me.noud02.akatsuki.entities.Context
 import me.noud02.akatsuki.entities.ThreadedCommand
+import me.noud02.akatsuki.utils.Http
 import net.dv8tion.jda.core.entities.Member
 import okhttp3.MediaType
 import okhttp3.Request
@@ -44,13 +45,15 @@ class ShitWaifu : ThreadedCommand() {
     override fun threadedRun(ctx: Context) {
         val member = ctx.args["user"] as Member
 
-        val res = Akatsuki.instance.okhttp.newCall(Request.Builder().apply {
-            url("https://api.weeb.sh/auto-image/waifu-insult")
-            header("Authorization", "Wolke ${Akatsuki.instance.config.api.weebsh}")
-            post(RequestBody.create(MediaType.parse("application/json"), "{\"avatar\":\"${member.user.avatarUrl}\"}"))
-        }.build()).execute()
+        Http.post(
+                "https://api.weeb.sh/auto-image/waifu-insult",
+                RequestBody.create(MediaType.parse("application/json"), JSONObject(mapOf("avatar" to member.user.avatarUrl)).toString())
+        ) {
+            addHeader("Authorization", "Wolke ${Akatsuki.config.api.weebsh}")
+        }.thenAccept { res ->
+            val bytes = res.body()!!.bytes()
 
-        ctx.channel.sendFile(res.body()!!.bytes(), "shitwaifu.png").queue {
+            ctx.channel.sendFile(bytes, "shitwaifu.png").queue()
             res.close()
         }
     }

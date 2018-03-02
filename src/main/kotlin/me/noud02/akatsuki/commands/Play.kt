@@ -36,10 +36,10 @@ import me.noud02.akatsuki.entities.Context
 import me.noud02.akatsuki.annotations.Load
 import me.noud02.akatsuki.entities.Command
 import me.noud02.akatsuki.entities.PickerItem
-import me.noud02.akatsuki.entities.ThreadedCommand
 import me.noud02.akatsuki.music.GuildMusicManager
 import me.noud02.akatsuki.utils.I18n
 import me.noud02.akatsuki.music.MusicManager
+import me.noud02.akatsuki.utils.Http
 import me.noud02.akatsuki.utils.ItemPicker
 import net.dv8tion.jda.core.audio.hooks.ConnectionListener
 import net.dv8tion.jda.core.audio.hooks.ConnectionStatus
@@ -47,17 +47,16 @@ import net.dv8tion.jda.core.entities.Guild
 import net.dv8tion.jda.core.entities.Member
 import net.dv8tion.jda.core.entities.User
 import okhttp3.HttpUrl
-import okhttp3.Request
 import org.json.JSONObject
 import java.awt.Color
 
 @Load
 @Argument("url|query", "string")
-class Play : ThreadedCommand() {
+class Play : Command() {
     override val desc = "Play music!"
     override val guildOnly = true
 
-    override fun threadedRun(ctx: Context) {
+    override fun run(ctx: Context) {
         if (!ctx.member!!.voiceState.inVoiceChannel())
             return ctx.send(I18n.parse(ctx.lang.getString("join_voice_channel_fail"), mapOf("username" to ctx.author.name)))
 
@@ -88,73 +87,71 @@ class Play : ThreadedCommand() {
             override fun loadFailed(exception: FriendlyException) = ctx.sendError(exception)
 
             override fun noMatches() {
-                val picker = ItemPicker(EventListener.instance.waiter, ctx.member as Member, ctx.guild as Guild, true)
+                val picker = ItemPicker(EventListener.waiter, ctx.member as Member, ctx.guild as Guild, true)
 
-                val res = Akatsuki.instance.okhttp.newCall(Request.Builder().apply {
-                    url(HttpUrl.Builder().apply {
-                        scheme("https")
-                        host("www.googleapis.com")
-                        addPathSegment("youtube")
-                        addPathSegment("v3")
-                        addPathSegment("search")
-                        addQueryParameter("key", Akatsuki.instance.config.api.google)
-                        addQueryParameter("part", "snippet")
-                        addQueryParameter("maxResults", "10")
-                        addQueryParameter("type", "video")
-                        addQueryParameter("q", search)
-                    }.build())
-                }.build()).execute()
+                Http.get(HttpUrl.Builder().apply {
+                    scheme("https")
+                    host("www.googleapis.com")
+                    addPathSegment("youtube")
+                    addPathSegment("v3")
+                    addPathSegment("search")
+                    addQueryParameter("key", Akatsuki.config.api.google)
+                    addQueryParameter("part", "snippet")
+                    addQueryParameter("maxResults", "10")
+                    addQueryParameter("type", "video")
+                    addQueryParameter("q", search)
+                }.build()).thenAccept { res ->
+                    val items = JSONObject(res.body()!!.string()).getJSONArray("items")
 
-                val items = JSONObject(res.body()!!.string()).getJSONArray("items")
+                    for (i in 0 until items.length()) {
+                        val item = items.getJSONObject(i)
 
-                for (i in 0 until items.length()) {
-                    val item = items.getJSONObject(i)
+                        val id = item
+                                .getJSONObject("id")
+                                .getString("videoId")
 
-                    val id = item
-                            .getJSONObject("id")
-                            .getString("videoId")
+                        val snippet = item.getJSONObject("snippet")
 
-                    val snippet = item.getJSONObject("snippet")
+                        val title = snippet.getString("title")
+                        val thumb = snippet
+                                .getJSONObject("thumbnails")
+                                .getJSONObject("medium")
+                                .getString("url")
 
-                    val title = snippet.getString("title")
-                    val thumb = snippet
-                            .getJSONObject("thumbnails")
-                            .getJSONObject("medium")
-                            .getString("url")
+                        val channel = snippet.getString("channelTitle")
 
-                    val channel = snippet.getString("channelTitle")
-
-                    picker.addItem(PickerItem(id, title, "", channel, thumb, url = "https://youtu.be/$id"))
-                }
-
-                picker.color = Color(255, 0, 0)
-
-                val item = picker.build(ctx.channel).get()
-                res.close()
-
-                MusicManager.playerManager.loadItemOrdered(manager, item.url, object : AudioLoadResultHandler {
-                    override fun loadFailed(exception: FriendlyException) = ctx.sendError(exception)
-
-                    override fun noMatches() = ctx.send(
-                            I18n.parse(
-                                    ctx.lang.getString("no_matching_songs"),
-                                    mapOf("username" to ctx.author.name)
-                            )
-                    )
-
-                    override fun trackLoaded(track: AudioTrack) {
-                        manager.scheduler.add(track)
-
-                        ctx.send(
-                                I18n.parse(
-                                        ctx.lang.getString("added_to_queue"),
-                                        mapOf("song" to track.info.title)
-                                )
-                        )
+                        picker.addItem(PickerItem(id, title, "", channel, thumb, url = "https://youtu.be/$id"))
                     }
 
-                    override fun playlistLoaded(playlist: AudioPlaylist) = trackLoaded(playlist.tracks.first())
-                })
+                    picker.color = Color(255, 0, 0)
+
+                    val item = picker.build(ctx.channel).get()
+                    res.close()
+
+                    MusicManager.playerManager.loadItemOrdered(manager, item.url, object : AudioLoadResultHandler {
+                        override fun loadFailed(exception: FriendlyException) = ctx.sendError(exception)
+
+                        override fun noMatches() = ctx.send(
+                                I18n.parse(
+                                        ctx.lang.getString("no_matching_songs"),
+                                        mapOf("username" to ctx.author.name)
+                                )
+                        )
+
+                        override fun trackLoaded(track: AudioTrack) {
+                            manager.scheduler.add(track)
+
+                            ctx.send(
+                                    I18n.parse(
+                                            ctx.lang.getString("added_to_queue"),
+                                            mapOf("song" to track.info.title)
+                                    )
+                            )
+                        }
+
+                        override fun playlistLoaded(playlist: AudioPlaylist) = trackLoaded(playlist.tracks.first())
+                    })
+                }
             }
 
             override fun trackLoaded(track: AudioTrack) {
@@ -179,8 +176,9 @@ class Play : ThreadedCommand() {
                     val index = playlist.tracks.indexOfFirst { it.identifier == id }
 
                     playlist.tracks.subList(index, playlist.tracks.size)
-                } else
+                } else {
                     playlist.tracks
+                }
 
                 for (track in tracks) {
                     manager.scheduler.add(track)

@@ -25,11 +25,10 @@
 
 package me.noud02.akatsuki.commands
 
-import me.noud02.akatsuki.Akatsuki
 import me.noud02.akatsuki.entities.Command
 import me.noud02.akatsuki.entities.Context
 import me.noud02.akatsuki.annotations.Load
-import okhttp3.Request
+import me.noud02.akatsuki.utils.Http
 
 @Load
 class Birb : Command() {
@@ -37,11 +36,9 @@ class Birb : Command() {
     override val desc = "Get a random birb"
 
     override fun run(ctx: Context) {
-        val res = Akatsuki.instance.okhttp.newCall(Request.Builder().apply {
-            url("https://random.birb.pw/tweet")
-        }.build()).execute()
-
-        ctx.send("https://random.birb.pw/img/${res.body()!!.string()}")
-        res.close()
+        Http.get("https://random.birb.pw/tweet").thenAccept { res ->
+            ctx.send("https://random.birb.pw/img/${res.body()!!.string()}")
+            res.close()
+        }
     }
 }

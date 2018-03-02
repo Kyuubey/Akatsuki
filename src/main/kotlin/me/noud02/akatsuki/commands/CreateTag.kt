@@ -51,7 +51,7 @@ class CreateTag : Command() {
         val name = ctx.args["name"] as String
         val content = ctx.args["content"] as String
 
-        asyncTransaction(Akatsuki.instance.pool) {
+        asyncTransaction(Akatsuki.pool) {
             if (Tags.select { Tags.tagName.eq(name) }.firstOrNull() != null)
                 return@asyncTransaction ctx.send(
                         I18n.parse(

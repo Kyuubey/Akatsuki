@@ -70,7 +70,7 @@ class EnableOption : Command() {
         if (opt !in humanOptions)
             return ctx.send("Option not found!") // TODO translation
 
-        asyncTransaction(Akatsuki.instance.pool) {
+        asyncTransaction(Akatsuki.pool) {
             Guilds.update({
                 Guilds.id.eq(ctx.guild!!.idLong)
             }) {
@@ -117,7 +117,7 @@ class DisableOption : Command() {
         if (opt !in humanOptions)
             return ctx.send("Option not found!") // TODO translation
 
-        asyncTransaction(Akatsuki.instance.pool) {
+        asyncTransaction(Akatsuki.pool) {
             Guilds.update({
                 Guilds.id.eq(ctx.guild!!.idLong)
             }) {
@@ -152,7 +152,7 @@ class SetChannelOption : Command() {
         if (opt !in options.map(String::toLowerCase))
             return ctx.send("Option not found!") // TODO translation
 
-        asyncTransaction(Akatsuki.instance.pool) {
+        asyncTransaction(Akatsuki.pool) {
             Guilds.update({
                 Guilds.id.eq(ctx.guild!!.idLong)
             }) {
@@ -185,7 +185,7 @@ class SetRoleOption : Command() {
         if (opt !in options.map(String::toLowerCase))
             return ctx.send("Option not found!") // TODO translation
 
-        asyncTransaction(Akatsuki.instance.pool) {
+        asyncTransaction(Akatsuki.pool) {
             Guilds.update({
                 Guilds.id.eq(ctx.guild!!.idLong)
             }) {
@@ -218,7 +218,7 @@ class SetStringOption : Command() {
         if (opt !in options.map(String::toLowerCase))
             return ctx.send("Option not found!") // TODO translation
 
-        asyncTransaction(Akatsuki.instance.pool) {
+        asyncTransaction(Akatsuki.pool) {
             Guilds.update({
                 Guilds.id.eq(ctx.guild!!.idLong)
             }) {

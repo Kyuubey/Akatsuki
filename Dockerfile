@@ -1,7 +1,7 @@
 # Akatsuki Dockerfile
 # Copyright 2018 (c) Noud Kerver
 FROM openjdk:alpine
-MAINTAINER Noud Kerver <me@noud02.me>
+MAINTAINER Noud Kerver <noud.kerver@hotmail.nl>
 MAINTAINER Ayane Satomi <enra@headbow.stream>
 
 RUN addgroup -g 1000 java \

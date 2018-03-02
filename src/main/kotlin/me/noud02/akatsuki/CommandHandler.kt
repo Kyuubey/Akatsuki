@@ -105,7 +105,7 @@ class CommandHandler {
 
         val lang = ResourceBundle.getBundle("i18n.Kyubey", locale, UTF8Control())
 
-        val usedPrefix = Akatsuki.instance.config.prefixes.lastOrNull {
+        val usedPrefix = Akatsuki.config.prefixes.firstOrNull {
             event.message.contentRaw.startsWith(it.toLowerCase())
         } ?: guildPrefixes.lastOrNull {
             event.message.contentRaw.startsWith(it.toLowerCase())
@@ -129,7 +129,7 @@ class CommandHandler {
             if (guild!!.ignoredChannels.contains(event.channel.idLong) && cmd != "unignore")
                 return
 
-            val restricted = asyncTransaction(Akatsuki.instance.pool) {
+            val restricted = asyncTransaction(Akatsuki.pool) {
                 val restrictions = Restrictions.select {
                     Restrictions.guildId.eq(event.guild!!.idLong) and Restrictions.userId.eq(event.author.idLong)
                 }
@@ -145,7 +145,7 @@ class CommandHandler {
                 return
         }
 
-        val restricted = asyncTransaction(Akatsuki.instance.pool) {
+        val restricted = asyncTransaction(Akatsuki.pool) {
             val restrictions = Restrictions.select {
                 Restrictions.userId.eq(event.author.idLong) and Restrictions.global.eq(true)
             }
@@ -183,7 +183,7 @@ class CommandHandler {
 
         var command = commands[cmd] as Command
 
-        if (command.ownerOnly && !Akatsuki.instance.config.owners.contains(event.author.id))
+        if (command.ownerOnly && !Akatsuki.config.owners.contains(event.author.id))
             return
 
         if (command.guildOnly && event.guild == null)
@@ -202,7 +202,7 @@ class CommandHandler {
                     )
             ).queue()
 
-        if (!Akatsuki.instance.config.owners.contains(event.author.id)) {
+        if (!Akatsuki.config.owners.contains(event.author.id)) {
             val lastMsg = cooldowns[event.author.idLong]
 
             if (lastMsg != null && lastMsg.until(event.message.creationTime, ChronoUnit.SECONDS) < command.cooldown)
@@ -332,7 +332,7 @@ class CommandHandler {
                     ?: event.member?.hasPermission(Permission.ADMINISTRATOR) ?: false
             if (!perm.optional && !newPerms[perm.name.name]!!
                     && !event.member?.hasPermission(Permission.ADMINISTRATOR)!!
-                    && !Akatsuki.instance.config.owners.contains(event.member.user.id))
+                    && !Akatsuki.config.owners.contains(event.member.user.id))
                 throw Exception(
                         I18n.parse(
                                 lang.getString("user_lack_perms"),
@@ -411,7 +411,7 @@ class CommandHandler {
 
                         if (channels.size > 1) {
                             val picker = TextChannelPicker(
-                                    EventListener.instance.waiter,
+                                    EventListener.waiter,
                                     event.member,
                                     channels,
                                     event.guild
@@ -445,7 +445,7 @@ class CommandHandler {
                             )
 
                         if (users.size > 1) {
-                            val picker = UserPicker(EventListener.instance.waiter, event.member, users, event.guild)
+                            val picker = UserPicker(EventListener.waiter, event.member, users, event.guild)
 
                             picker.build(event.message).thenAccept {
                                 newArgs[arg.name] = it
@@ -475,7 +475,7 @@ class CommandHandler {
                             )
 
                         if (roles.size > 1) {
-                            val picker = RolePicker(EventListener.instance.waiter, event.member, roles, event.guild)
+                            val picker = RolePicker(EventListener.waiter, event.member, roles, event.guild)
 
                             picker.build(event.message).thenAccept {
                                 newArgs[arg.name] = it

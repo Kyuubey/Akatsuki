@@ -32,7 +32,7 @@ abstract class AsyncCommand : Command() {
     abstract suspend fun asyncRun(ctx: Context)
 
     override fun run(ctx: Context) {
-        async(Akatsuki.instance.coroutineDispatcher) {
+        async(Akatsuki.coroutineDispatcher) {
             try {
                 asyncRun(ctx)
             } catch (e: Throwable) {

@@ -46,7 +46,7 @@ class DeleteTag : Command() {
     override fun run(ctx: Context) {
         val name = ctx.args["name"] as String
 
-        asyncTransaction(Akatsuki.instance.pool) {
+        asyncTransaction(Akatsuki.pool) {
             val tag = Tags.select { Tags.tagName.eq(name) }.firstOrNull()
                     ?: return@asyncTransaction ctx.send(
                             I18n.parse(
@@ -55,7 +55,7 @@ class DeleteTag : Command() {
                             )
                     )
 
-            if (tag[Tags.ownerId] != ctx.author.idLong && !Akatsuki.instance.config.owners.contains(ctx.author.id))
+            if (tag[Tags.ownerId] != ctx.author.idLong && !Akatsuki.config.owners.contains(ctx.author.id))
                 return@asyncTransaction ctx.send(
                         I18n.parse(
                                 ctx.lang.getString("tag_not_owner"),

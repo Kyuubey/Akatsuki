@@ -27,25 +27,20 @@ package me.noud02.akatsuki.commands
 
 import me.noud02.akatsuki.Akatsuki
 import me.noud02.akatsuki.annotations.Argument
+import me.noud02.akatsuki.annotations.Load
 import me.noud02.akatsuki.entities.Command
 import me.noud02.akatsuki.entities.Context
-import me.noud02.akatsuki.annotations.Load
-import me.noud02.akatsuki.entities.ThreadedCommand
+import me.noud02.akatsuki.utils.Http
 import okhttp3.Request
 
 @Load
 @Argument("number", "number", true)
-class NumFact : ThreadedCommand() {
+class NumFact : Command() {
     override val desc = "Get a random fact about a number!"
 
-    override fun threadedRun(ctx: Context) {
-        val res = Akatsuki.instance.okhttp.newCall(
-                Request.Builder()
-                        .url("http://numbersapi.com/${if (ctx.args.containsKey("number")) ctx.args["number"].toString() else "random"}")
-                        .build()
-        ).execute()
-
-        ctx.channel.sendMessage(res.body()!!.string()).queue {
+    override fun run(ctx: Context) {
+        Http.get("https://numberspapi.com/${if ("number" in ctx.args) ctx.args["number"].toString() else "random"}").thenAccept { res ->
+            ctx.send(res.body()!!.string())
             res.close()
         }
     }

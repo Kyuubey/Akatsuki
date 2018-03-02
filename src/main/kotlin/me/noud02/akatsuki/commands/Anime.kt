@@ -30,9 +30,9 @@ package me.noud02.akatsuki.commands
 import me.noud02.akatsuki.Akatsuki
 import me.noud02.akatsuki.annotations.Argument
 import me.noud02.akatsuki.annotations.Load
-import me.noud02.akatsuki.entities.Command
 import me.noud02.akatsuki.entities.Context
 import me.noud02.akatsuki.entities.ThreadedCommand
+import me.noud02.akatsuki.utils.Http
 import me.noud02.akatsuki.utils.I18n
 import net.dv8tion.jda.core.EmbedBuilder
 import okhttp3.*
@@ -46,87 +46,81 @@ class Anime : ThreadedCommand() {
     override val desc = "Search for anime on MyAnimeList"
 
     override fun threadedRun(ctx: Context) {
-        val res = Akatsuki.instance.okhttp.newCall(Request.Builder().apply {
-            url(HttpUrl.Builder().apply {
-                scheme("https")
-                host("myanimelist.net")
-                addPathSegment("api")
-                addPathSegment("anime")
-                addPathSegment("search.xml")
-                addQueryParameter("q", ctx.args["anime"] as String)
-            }.build())
-
-            val mal = Akatsuki.instance.config.api.myanimelist
+        Http.get(HttpUrl.Builder().apply {
+            scheme("https")
+            host("myanimelist.net")
+            addPathSegments("/api/anime/search.xml")
+            addQueryParameter("q", ctx.args["anime"] as String)
+        }.build()) {
+            val mal = Akatsuki.config.api.myanimelist
             val cred = Credentials.basic(mal.split(":")[0], mal.split(":")[1])
 
-            header("Authorization", cred)
+            addHeader("Authorization", cred)
+        }.thenAccept { res ->
+            val obj = XML
+                    .toJSONObject(res.body()!!.string())
 
-        }.build()).execute()
-
-        val obj = XML
-                .toJSONObject(res.body()!!.string())
-
-        if (!obj.has("anime"))
-            return ctx.send(
-                    I18n.parse(
-                            ctx.lang.getString("anime_not_found"),
-                            mapOf("username" to ctx.author.name)
-                    )
-            )
-
-        val json = obj.getJSONObject("anime")
-
-        if (!json.has("entry"))
-            return ctx.send(
-                    I18n.parse(
-                            ctx.lang.getString("anime_not_found"),
-                            mapOf("username" to ctx.author.name)
-                    )
-            )
-
-        val entry = json.optJSONObject("entry")
-                ?: json.getJSONArray("entry").optJSONObject(0)
-                ?: return ctx.send(
-                I18n.parse(
-                        ctx.lang.getString("anime_not_found"),
-                        mapOf("username"  to ctx.author.name)
+            if (!obj.has("anime")) {
+                return@thenAccept ctx.send(
+                        I18n.parse(
+                                ctx.lang.getString("anime_not_found"),
+                                mapOf("username" to ctx.author.name)
+                        )
                 )
-        )
-
-        val embed = EmbedBuilder().apply {
-            setTitle(entry.getString("title"))
-
-            descriptionBuilder.append("${entry.getDouble("score")} \u2606 | ${entry.getInt("episodes")} ${
-            when (entry.getString("type").toLowerCase()) {
-                "tv" -> "\uD83D\uDCFA"
-
-                "movie" -> "\uD83C\uDF7F"
-                else -> "?"
             }
-            } ${entry.getString("status")} | ${
-            if (entry.getString("start_date") != "0000-00-00")
-                entry.getString("start_date")
-            else
-                "unknown"
-            } -> ${
-            if (entry.getString("end_date") != "0000-00-00")
-                entry.getString("end_date")
-            else
-                "unknown"
-            }")
 
-            addField(
-                    "Synopsis",
-                    StringEscapeUtils
-                            .unescapeHtml4(entry.getString("synopsis"))
-                            .replace("<br />", "\n"),
-                    false
-            )
-            setColor(Color.CYAN)
-            setImage(entry.getString("image"))
+            val json = obj.getJSONObject("anime")
+
+            if (!json.has("entry")) {
+                return@thenAccept ctx.send(
+                        I18n.parse(
+                                ctx.lang.getString("anime_not_found"),
+                                mapOf("username" to ctx.author.name)
+                        )
+                )
+            }
+
+            val entry = json.optJSONObject("entry")
+                    ?: json.getJSONArray("entry").optJSONObject(0)
+                    ?: return@thenAccept ctx.send(
+                            I18n.parse(
+                                    ctx.lang.getString("anime_not_found"),
+                                    mapOf("username"  to ctx.author.name)
+                            )
+                    )
+
+            val embed = EmbedBuilder().apply {
+                setTitle(entry.getString("title"))
+
+                val score = entry.getDouble("score")
+                val episodes = entry.getInt("episodes")
+                val type = when (entry.getString("type").toLowerCase()) {
+                    "tv" -> "\uD83D\uDCFA"
+
+                    "movie" -> "\uD83C\uDF7F"
+                    else -> "?"
+                }
+                val status = entry.getString("status")
+                val startDateRaw = entry.getString("start_date")
+                val startDate = if (startDateRaw != "0000-00-00") startDateRaw else "unknown"
+                val endDateRaw = entry.getString("end_date")
+                val endDate = if (endDateRaw != "0000-00-00") endDateRaw else "unknown"
+
+                descriptionBuilder.append("$score \u2606 | $episodes $type $status | $startDate -> $endDate")
+
+                addField(
+                        "Synopsis",
+                        StringEscapeUtils
+                                .unescapeHtml4(entry.getString("synopsis"))
+                                .replace("<br />", "\n"),
+                        false
+                )
+                setColor(Color(46, 81, 162))
+                setImage(entry.getString("image"))
+            }
+
+            ctx.send(embed.build())
+            res.close()
         }
-
-        ctx.send(embed.build())
-        res.close()
     }
 }

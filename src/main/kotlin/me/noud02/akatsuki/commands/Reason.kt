@@ -71,7 +71,7 @@ class Reason : Command() {
 
         val caseArg = (ctx.args["case"] as String).toLowerCase()
 
-        asyncTransaction(Akatsuki.instance.pool) {
+        asyncTransaction(Akatsuki.pool) {
             val cases = Modlogs.select { Modlogs.guildId eq ctx.guild!!.idLong }
             val caseIds: List<Int> = when (caseArg) {
                 "l" -> listOf(cases.count())

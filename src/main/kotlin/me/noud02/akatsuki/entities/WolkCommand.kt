@@ -30,14 +30,16 @@ import me.noud02.akatsuki.utils.WolkType
 import net.dv8tion.jda.core.EmbedBuilder
 import java.awt.Color
 
-abstract class WolkCommand : ThreadedCommand() {
+abstract class WolkCommand : Command() {
     abstract val type: WolkType
 
-    override fun threadedRun(ctx: Context) {
-        ctx.send(EmbedBuilder().apply {
-            setImage(Wolk.getByType(type).url)
-            setColor(Color.CYAN)
-            setFooter("Powered by weeb.sh", null)
-        }.build())
+    override fun run(ctx: Context) {
+        Wolk.getByType(type).thenAccept { res ->
+            ctx.send(EmbedBuilder().apply {
+                setImage(res.url)
+                setColor(Color.CYAN)
+                setFooter("Powered by weeb.sh", null)
+            }.build())
+        }
     }
 }

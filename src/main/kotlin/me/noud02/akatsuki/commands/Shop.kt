@@ -58,7 +58,7 @@ class AddItem : Command() {
         val itemContent = ctx.args["item"] as String
         val itemDesc = ctx.args.getOrDefault("description", "") as String
 
-        asyncTransaction(Akatsuki.instance.pool) {
+        asyncTransaction(Akatsuki.pool) {
             if (Items.select { Items.id.eq(itemId) }.firstOrNull() != null)
                 return@asyncTransaction ctx.send("Item with that ID already exists!") // TODO add translation
 
@@ -86,7 +86,7 @@ class BuyItem : Command() {
         val id = ctx.args["item"] as String
         val amount = ctx.args.getOrDefault("amount", 1) as Int
 
-        asyncTransaction(Akatsuki.instance.pool) {
+        asyncTransaction(Akatsuki.pool) {
             val contract = Contracts.select { Contracts.userId.eq(ctx.author.idLong) }.firstOrNull()
                     ?: return@asyncTransaction ctx.send("You haven't made a contract with me yet!") // TODO add translation
             val item = Items.select { Items.id.eq(id) }.firstOrNull()
@@ -122,7 +122,7 @@ class SearchItem : Command() {
     override fun run(ctx: Context) {
         val search = ctx.args["item"] as String
 
-        asyncTransaction(Akatsuki.instance.pool) {
+        asyncTransaction(Akatsuki.pool) {
             val matches = Items.selectAll().filter { it[Items.id].indexOf(search) > -1 }
 
             if (matches.isEmpty())
@@ -149,7 +149,7 @@ class Shop : Command() {
     }
 
     override fun run(ctx: Context) {
-        asyncTransaction(Akatsuki.instance.pool) {
+        asyncTransaction(Akatsuki.pool) {
             val items = Items.selectAll().limit(15)
 
             val embed = EmbedBuilder().apply {

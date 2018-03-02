@@ -49,7 +49,7 @@ class ViewContract : Command() {
     override fun run(ctx: Context) {
         val member = ctx.args.getOrDefault("user", ctx.member!!) as Member
 
-        asyncTransaction(Akatsuki.instance.pool) {
+        asyncTransaction(Akatsuki.pool) {
             val contract = Contracts.select { Contracts.userId.eq(member.user.idLong) }.firstOrNull()
                     ?: return@asyncTransaction ctx.send(
                             I18n.parse(
@@ -126,7 +126,7 @@ class Contract : Command() {
     }
 
     override fun run(ctx: Context) {
-        asyncTransaction(Akatsuki.instance.pool) {
+        asyncTransaction(Akatsuki.pool) {
             if (!Contracts.select { Contracts.userId.eq(ctx.author.idLong) }.empty())
                 return@asyncTransaction ctx.send(
                         I18n.parse(
@@ -142,7 +142,7 @@ class Contract : Command() {
                     )
             )
 
-            EventListener.instance.waiter.await<MessageReceivedEvent>(1, 60000L) {
+            EventListener.waiter.await<MessageReceivedEvent>(1, 60000L) {
                 if (it.author.id == ctx.author.id && it.channel.id == ctx.channel.id) {
                     val ans = it.message.contentRaw
 
@@ -156,7 +156,7 @@ class Contract : Command() {
                             )
                     )
 
-                    EventListener.instance.waiter.await<MessageReceivedEvent>(1, 60000L) {
+                    EventListener.waiter.await<MessageReceivedEvent>(1, 60000L) {
                         if (it.author.id == ctx.author.id && it.channel.id == ctx.channel.id) {
                             val ans2 = it.message.contentRaw
 

@@ -44,15 +44,16 @@ class UserInfo : Command() {
     override fun run(ctx: Context) {
         val member = ctx.args["user"] as? Member ?: ctx.member!!
         val embed = EmbedBuilder().apply {
-            val statusEmote = if (member.game != null && member.game.type == Game.GameType.STREAMING)
+            val statusEmote = if (member.game != null && member.game.type == Game.GameType.STREAMING) {
                 "<:streaming:313956277132853248>"
-            else
+            } else {
                 when (member.onlineStatus.name) {
                     "ONLINE" -> "<:online:313956277808005120>"
                     "OFFLINE" -> "<:offline:313956277237710868>"
                     "IDLE" -> "<:away:313956277220802560>"
                     else -> "<:invisible:313956277107556352>"
                 }
+            }
 
             setTitle(
                     "$statusEmote ${member.user.name}#${member.user.discriminator}${

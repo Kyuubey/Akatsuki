@@ -32,6 +32,7 @@ import me.noud02.akatsuki.entities.Context
 import me.noud02.akatsuki.annotations.Load
 import me.noud02.akatsuki.entities.ThreadedCommand
 import me.noud02.akatsuki.music.MusicManager
+import me.noud02.akatsuki.utils.Http
 import me.noud02.akatsuki.utils.I18n
 import net.dv8tion.jda.core.EmbedBuilder
 import okhttp3.HttpUrl
@@ -73,7 +74,7 @@ class NowPlaying : ThreadedCommand() {
             setColor(Color.CYAN)
         }
 
-        if (manager.scheduler.queue.isNotEmpty())
+        if (manager.scheduler.queue.isNotEmpty()) {
             embed.setFooter(
                     I18n.parse(
                             ctx.lang.getString("next"),
@@ -81,15 +82,15 @@ class NowPlaying : ThreadedCommand() {
                     ),
                     null
             )
-        else if (manager.autoplay && manager.player.playingTrack.info.uri.indexOf("youtube") > -1) {
-            val res = Akatsuki.instance.okhttp.newCall(Request.Builder().apply {
+        } else if (manager.autoplay && manager.player.playingTrack.info.uri.indexOf("youtube") > -1) {
+            val res = Http.okhttp.newCall(Request.Builder().apply { // TODO use Http.get here
                 url(HttpUrl.Builder().apply {
                     scheme("https")
                     host("www.googleapis.com")
                     addPathSegment("youtube")
                     addPathSegment("v3")
                     addPathSegment("search")
-                    addQueryParameter("key", Akatsuki.instance.config.api.google)
+                    addQueryParameter("key", Akatsuki.config.api.google)
                     addQueryParameter("part", "snippet")
                     addQueryParameter("maxResults", "10")
                     addQueryParameter("type", "video")

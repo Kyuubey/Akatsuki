@@ -46,7 +46,7 @@ class AddPrefix : Command() {
     override fun run(ctx: Context) {
         val prefix = ctx.args["prefix"] as String
 
-        asyncTransaction(Akatsuki.instance.pool) {
+        asyncTransaction(Akatsuki.pool) {
             val guild = Guilds.select {
                 Guilds.id.eq(ctx.guild!!.idLong)
             }.first()
@@ -79,7 +79,7 @@ class RemPrefix : Command() {
     override fun run(ctx: Context) {
         val prefix = ctx.args["prefix"] as String
 
-        asyncTransaction(Akatsuki.instance.pool) {
+        asyncTransaction(Akatsuki.pool) {
             if (ctx.storedGuild!!.prefixes.isEmpty())
                 return@asyncTransaction ctx.send(ctx.lang.getString("remove_no_prefix"))
 

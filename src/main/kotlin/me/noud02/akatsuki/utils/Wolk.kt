@@ -29,6 +29,7 @@ import me.noud02.akatsuki.Akatsuki
 import okhttp3.HttpUrl
 import okhttp3.Request
 import org.json.JSONObject
+import java.util.concurrent.CompletableFuture
 
 enum class WolkType(val str: String) {
     AWOO("awoo"),
@@ -109,56 +110,56 @@ object Wolk {
 
     fun getByType(type: WolkType) = getByType(type.str)
 
-    fun getByType(type: String): WolkResponse {
-        if (token.isNullOrBlank())
-            throw Exception("Invalid or no token")
+    fun getByType(type: String): CompletableFuture<WolkResponse> {
+        val fut = CompletableFuture<WolkResponse>()
 
-        val res = Akatsuki.instance.okhttp.newCall(Request.Builder().apply {
-            url(HttpUrl.Builder().apply {
-                scheme("https")
-                host("api.weeb.sh")
-                addPathSegment("images")
-                addPathSegment("random")
-                addQueryParameter("type", type)
-            }.build())
+        if (token.isNullOrBlank()) {
+            fut.completeExceptionally(Exception("Invalid or no token"))
+            return fut
+        }
 
-
+        Http.get("https://api.weeb.sh/images/random?type=$type") {
             addHeader("User-Agent", "Akatsuki (https://github.com/noud02/Akatsuki)")
             addHeader("Authorization", if (wolkeToken) "Wolke $token" else "Bearer $token")
-        }.build()).execute()
+        }
+                .thenAccept { res ->
+                    val json = JSONObject(res.body()!!.string())
+                    val tags = mutableListOf<WolkTag>()
 
-        val json = JSONObject(res.body()!!.string())
-        val tags = mutableListOf<WolkTag>()
+                    if (res.code() != 200)
+                        throw Exception("Expected status code 200, got ${res.code()}")
 
-        if (res.code() != 200)
-            throw Exception("Expected status code 200, got ${res.code()}")
+                    (0 until json.getJSONArray("tags").length())
+                            .map {
+                                json
+                                        .getJSONArray("tags")
+                                        .getJSONObject(it)
+                            }
+                            .forEach {
+                                tags += WolkTag(
+                                        it.getString("name"),
+                                        it.getBoolean("hidden"),
+                                        it.getString("user")
+                                )
+                            }
 
-        (0 until json.getJSONArray("tags").length())
-                .map {
-                    json
-                            .getJSONArray("tags")
-                            .getJSONObject(it)
-                }
-                .forEach {
-                    tags += WolkTag(
-                            it.getString("name"),
-                            it.getBoolean("hidden"),
-                            it.getString("user")
+                    res.close()
+
+                    fut.complete(
+                            WolkResponse(
+                                    json.getString("id"),
+                                    json.getString("baseType"),
+                                    json.getString("fileType"),
+                                    json.getString("mimeType"),
+                                    json.getString("account"),
+                                    json.getBoolean("hidden"),
+                                    json.getBoolean("nsfw"),
+                                    tags,
+                                    json.getString("url")
+                            )
                     )
                 }
 
-        res.close()
-
-        return WolkResponse(
-                json.getString("id"),
-                json.getString("baseType"),
-                json.getString("fileType"),
-                json.getString("mimeType"),
-                json.getString("account"),
-                json.getBoolean("hidden"),
-                json.getBoolean("nsfw"),
-                tags,
-                json.getString("url")
-        )
+        return fut
     }
 }

@@ -30,5 +30,5 @@ import me.noud02.akatsuki.Akatsuki
 abstract class ThreadedCommand : Command() {
     abstract fun threadedRun(ctx: Context)
 
-    override fun run(ctx: Context) = Akatsuki.instance.pool.execute { threadedRun(ctx) }
+    override fun run(ctx: Context) = Akatsuki.pool.execute { threadedRun(ctx) }
 }

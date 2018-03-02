@@ -48,7 +48,7 @@ class Divorce : Command() {
                     )
             )
 
-        asyncTransaction(Akatsuki.instance.pool) {
+        asyncTransaction(Akatsuki.pool) {
             Users.update({
                 Users.id.eq(ctx.author.idLong)
             }) {

@@ -50,10 +50,10 @@ class Logs : Command() {
     override fun run(ctx: Context) {
         val num = ctx.args.getOrDefault("logs", 100)
         val url = URIBuilder().apply {
-            scheme = if (Akatsuki.instance.config.site.ssl) "https" else "http"
-            host = Akatsuki.instance.config.site.host
-            if (Akatsuki.instance.config.site.port != 80)
-                port = Akatsuki.instance.config.site.port
+            scheme = if (Akatsuki.config.site.ssl) "https" else "http"
+            host = Akatsuki.config.site.host
+            if (Akatsuki.config.site.port != 80)
+                port = Akatsuki.config.site.port
             path = "/logs/${ctx.channel.id}/${ctx.msg.creationTime.toInstant().toEpochMilli()}"
 
             when {

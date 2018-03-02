@@ -32,6 +32,7 @@ import me.noud02.akatsuki.annotations.Flags
 import me.noud02.akatsuki.annotations.Load
 import me.noud02.akatsuki.entities.Context
 import me.noud02.akatsuki.entities.ThreadedCommand
+import me.noud02.akatsuki.utils.Http
 import me.noud02.akatsuki.utils.I18n
 import net.dv8tion.jda.core.EmbedBuilder
 import okhttp3.HttpUrl
@@ -59,91 +60,90 @@ class Osu : ThreadedCommand() {
             ctx.flags.argMap.containsKey("mania") || ctx.flags.argMap.containsKey("m") -> "3"
             else -> "0"
         }
-        val res = Akatsuki.instance.okhttp.newCall(Request.Builder().apply {
-            url(HttpUrl.Builder().apply {
-                scheme("https")
-                host("osu.ppy.sh")
-                addPathSegment("api")
-                addPathSegment("get_user")
-                addQueryParameter("k", Akatsuki.instance.config.api.osu)
-                addQueryParameter("u", username)
-                addQueryParameter("m", mode)
-                addQueryParameter("type", "string")
-            }.build())
-        }.build()).execute()
 
-        val body = res.body()!!.string()
-        val json = JSONArray(body)
+        Http.get(HttpUrl.Builder().apply {
+            scheme("https")
+            host("osu.ppy.sh")
+            addPathSegment("api")
+            addPathSegment("get_user")
+            addQueryParameter("k", Akatsuki.config.api.osu)
+            addQueryParameter("u", username)
+            addQueryParameter("m", mode)
+            addQueryParameter("type", "string")
+        }.build()).thenAccept { res ->
+            val body = res.body()!!.string()
+            val json = JSONArray(body)
 
-        if (json.length() == 0)
-            return ctx.send(
-                    I18n.parse(
-                            ctx.lang.getString("user_not_found"),
-                            mapOf("username" to ctx.author.name)
-                    )
-            )
+            if (json.length() == 0) {
+                return@thenAccept ctx.send(
+                        I18n.parse(
+                                ctx.lang.getString("user_not_found"),
+                                mapOf("username" to ctx.author.name)
+                        )
+                )
+            }
 
-        val user = json.getJSONObject(0)
+            val user = json.getJSONObject(0)
 
-        val bestRes = Akatsuki.instance.okhttp.newCall(Request.Builder().apply {
-            url(HttpUrl.Builder().apply {
+            Http.get(HttpUrl.Builder().apply {
                 scheme("https")
                 host("osu.ppy.sh")
                 addPathSegment("api")
                 addPathSegment("get_user_best")
-                addQueryParameter("k", Akatsuki.instance.config.api.osu)
+                addQueryParameter("k", Akatsuki.config.api.osu)
                 addQueryParameter("u", user.getString("user_id"))
                 addQueryParameter("m", mode)
                 addQueryParameter("type", "id")
-            }.build())
-        }.build()).execute()
+            }.build()).thenAccept { bestRes ->
+                val bestBody = bestRes.body()!!.string()
+                val bestJson = JSONArray(bestBody)
 
-        val bestBody = bestRes.body()!!.string()
-        val bestJson = JSONArray(bestBody)
+                val embed = EmbedBuilder().apply {
+                    setTitle("${user.getString("username")} (${user.getString("country")})", "https://osu.ppy.sh/users/${user.getString("user_id")}")
+                    setColor(Color(232, 102, 160))
+                    descriptionBuilder.append("**Level:** ${floor(user.getString("level").toFloat()).roundToInt()}\n")
+                    descriptionBuilder.append("**Plays:** ${user.getString("playcount")}\n")
+                    descriptionBuilder.append("**Accuracy:** ${round(user.getString("accuracy").toFloat() * 100) / 100}%\n")
+                    descriptionBuilder.append("**Score:** ${user.getString("ranked_score")}\n")
+                    descriptionBuilder.append("**Rank:** ${user.getString("pp_rank")}\n")
+                    descriptionBuilder.append("**PP:** ${user.getString("pp_raw").toFloat().roundToInt()}\n")
+                    descriptionBuilder.append("\n\uD83C\uDFC6 **Best Plays** \uD83C\uDFC6")
 
-        val embed = EmbedBuilder().apply {
-            setTitle("${user.getString("username")} (${user.getString("country")})", "https://osu.ppy.sh/users/${user.getString("user_id")}")
-            setColor(Color(232, 102, 160))
-            descriptionBuilder.append("**Level:** ${floor(user.getString("level").toFloat()).roundToInt()}\n")
-            descriptionBuilder.append("**Plays:** ${user.getString("playcount")}\n")
-            descriptionBuilder.append("**Accuracy:** ${round(user.getString("accuracy").toFloat() * 100) / 100}%\n")
-            descriptionBuilder.append("**Score:** ${user.getString("ranked_score")}\n")
-            descriptionBuilder.append("**Rank:** ${user.getString("pp_rank")}\n")
-            descriptionBuilder.append("**PP:** ${user.getString("pp_raw").toFloat().roundToInt()}\n")
-            descriptionBuilder.append("\n\uD83C\uDFC6 **Best Plays** \uD83C\uDFC6")
+                    for (i in 0 until min(bestJson.length(), 5)) {
+                        val best = bestJson.getJSONObject(i)
 
-            for (i in 0 until min(bestJson.length(), 5)) {
-                val best = bestJson.getJSONObject(i)
+                        val beatmapRes = Http.okhttp.newCall(Request.Builder().apply { // TODO use Http.get here
+                            url(HttpUrl.Builder().apply {
+                                scheme("https")
+                                host("osu.ppy.sh")
+                                addPathSegment("api")
+                                addPathSegment("get_beatmaps")
+                                addQueryParameter("k", Akatsuki.config.api.osu)
+                                addQueryParameter("b", best.getString("beatmap_id"))
+                            }.build())
+                        }.build()).execute()
 
-                val beatmapRes = Akatsuki.instance.okhttp.newCall(Request.Builder().apply {
-                    url(HttpUrl.Builder().apply {
-                        scheme("https")
-                        host("osu.ppy.sh")
-                        addPathSegment("api")
-                        addPathSegment("get_beatmaps")
-                        addQueryParameter("k", Akatsuki.instance.config.api.osu)
-                        addQueryParameter("b", best.getString("beatmap_id"))
-                    }.build())
-                }.build()).execute()
+                        val beatmapBody = beatmapRes.body()!!.string()
+                        val beatmap = JSONArray(beatmapBody).getJSONObject(0)
 
-                val beatmapBody = beatmapRes.body()!!.string()
-                val beatmap = JSONArray(beatmapBody).getJSONObject(0)
+                        val rank = best.getString("rank").replace("X", "SS")
 
-                addField(
-                        "${beatmap.getString("artist")} - ${beatmap.getString("title")} [${beatmap.getString("version")}] (${best.getString("rank").replace("X", "SS")})",
-                        "**Score:** ${best.getString("score")}\n" +
-                                "**Combo:** ${best.getString("maxcombo")}\n" +
-                                "**PP:** ${best.getString("pp").toFloat().roundToInt()}",
-                        true
-                )
+                        addField(
+                                "${beatmap.getString("artist")} - ${beatmap.getString("title")} [${beatmap.getString("version")}] ($rank)",
+                                "**Score:** ${best.getString("score")}\n" +
+                                        "**Combo:** ${best.getString("maxcombo")}\n" +
+                                        "**PP:** ${best.getString("pp").toFloat().roundToInt()}",
+                                true
+                        )
 
-                beatmapRes.close()
+                        beatmapRes.close()
+                    }
+                }.build()
+
+                ctx.send(embed)
+                res.close()
+                bestRes.close()
             }
-        }.build()
-
-        ctx.channel.sendMessage(embed).queue {
-            res.close()
-            bestRes.close()
         }
     }
 }

@@ -55,7 +55,7 @@ class GuildInfo : Command() {
                 descriptionBuilder.append("**Prefixes:** ${ctx.storedGuild.prefixes.joinToString(", ")}\n")
 
             if (ctx.jda.shardInfo != null)
-                descriptionBuilder.append("**EventListener:** ${(ctx.guild.idLong shr 22) % ctx.jda.shardInfo.shardTotal}\n")
+                descriptionBuilder.append("**Shard:** ${(ctx.guild.idLong shr 22) % ctx.jda.shardInfo.shardTotal}\n")
             descriptionBuilder.append("**Emotes:** ${ctx.guild.emotes.joinToString(" ") { it.asMention }}\n")
             descriptionBuilder.append("**Mods:**\n${ctx.guild.members.filter {
                 !it.user.isBot && (it.isOwner || it.hasPermission(Permission.BAN_MEMBERS) || it.hasPermission(Permission.KICK_MEMBERS) || it.hasPermission(Permission.ADMINISTRATOR))
