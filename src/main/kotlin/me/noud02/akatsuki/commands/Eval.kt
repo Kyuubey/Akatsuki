@@ -43,12 +43,11 @@ class Eval : Command() {
         engine.put("ctx", ctx)
 
         try {
-            val res = engine.eval("""import me.noud02.akatsuki.Akatsuki
-                |import me.noud092.akatsuki.EventListener
-                |
-                |val ctx = bindings[\"ctx\"] as me.noud02.akatsuki.entities.Context
-                |
-                |${ctx.rawArgs.joinToString(" ")}""".trimMargin())
+            val res = engine.eval(
+                    "import me.noud02.akatsuki.Akatsuki\n" +
+                            "import me.noud02.akatsuki.EventListener\n" +
+                            "val ctx = bindings[\"ctx\"] as me.noud02.akatsuki.entities.Context\n" +
+                            ctx.rawArgs.joinToString(" "))
             ctx.sendCode("kotlin", res ?: "null")
         } catch (e: Throwable) {
             ctx.sendCode("diff", "- $e")
