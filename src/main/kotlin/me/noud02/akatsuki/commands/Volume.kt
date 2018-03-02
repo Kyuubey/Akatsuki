@@ -53,11 +53,13 @@ class Volume : Command() {
         if (ctx.args["volume"] != null) {
             val vol = ctx.args["volume"] as Int
 
-            if (vol > 100)
+            if (vol > 100) {
                 return ctx.send(ctx.lang.getString("too_loud"))
+            }
 
-            if (vol < 0)
+            if (vol < 0) {
                 return ctx.send(ctx.lang.getString("cant_hear"))
+            }
 
             manager.player.volume = vol
         }

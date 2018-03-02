@@ -45,7 +45,7 @@ class Tag : Command() {
     override fun run(ctx: Context) {
         val name = ctx.args["name"] as String
 
-        asyncTransaction(Akatsuki.instance.pool) {
+        asyncTransaction(Akatsuki.pool) {
             val tag = Tags.select { Tags.tagName.eq(name) }.firstOrNull()
                     ?: return@asyncTransaction ctx.send(
                             I18n.parse(

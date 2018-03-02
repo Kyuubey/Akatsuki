@@ -28,80 +28,38 @@ package me.noud02.akatsuki.commands
 import me.noud02.akatsuki.Akatsuki
 import me.noud02.akatsuki.annotations.Argument
 import me.noud02.akatsuki.annotations.Load
-import me.noud02.akatsuki.entities.Command
 import me.noud02.akatsuki.entities.Context
-import me.noud02.akatsuki.entities.ThreadedCommand
-import me.noud02.akatsuki.utils.I18n
+import me.noud02.akatsuki.entities.ImageCommand
+import me.noud02.akatsuki.utils.Http
 import okhttp3.*
-import org.apache.commons.io.IOUtils
 import java.io.File
-import java.io.FileOutputStream
 
 @Load
 @Argument("image", "url", true)
-class Waaw : ThreadedCommand() {
+class Waaw : ImageCommand() {
     override val desc = "Waaw images."
 
-    override fun threadedRun(ctx: Context) {
-        val temp = File.createTempFile("image", "png")
-        temp.deleteOnExit()
-        val out = FileOutputStream(temp)
+    override fun imageRun(ctx: Context, file: File) {
+        val body = MultipartBody.Builder().apply {
+            setType(MultipartBody.FORM)
+            addFormDataPart(
+                    "image",
+                    "image",
+                    RequestBody.create(MediaType.parse("image/${file.extension}"), file)
+            )
+        }.build()
 
-        when {
-            ctx.msg.attachments.isNotEmpty() -> {
-                IOUtils.copy(ctx.msg.attachments[0].inputStream, out)
-                command(ctx, temp)
-            }
-
-            ctx.args.containsKey("image") -> {
-                val imgRes = Akatsuki.instance.okhttp
-                        .newCall(Request.Builder().url(ctx.args["image"] as String).build())
-                        .execute()
-
-                val bytes = imgRes.body()!!.bytes()
-                temp.writeBytes(bytes)
-                command(ctx, temp)
-                imgRes.close()
-            }
-
-
-            else -> ctx.getLastImage()
-                    .thenAccept {
-                        if (it == null)
-                            return@thenAccept ctx.send(
-                                    I18n.parse(
-                                            ctx.lang.getString("no_images_channel"),
-                                            mapOf("username" to ctx.author.name)
-                                    )
-                            )
-
-                        IOUtils.copy(it, out)
-                        command(ctx, temp)
-                    }
-        }
-    }
-
-    fun command(ctx: Context, temp: File) {
-        val res = Akatsuki.instance.okhttp.newCall(Request.Builder().apply {
-            url(HttpUrl.Builder().apply {
-                scheme(if (Akatsuki.instance.config.backend.ssl) "https" else "http")
-                host(Akatsuki.instance.config.backend.host)
-                port(Akatsuki.instance.config.backend.port)
-                addPathSegment("api")
-                addPathSegment("waaw")
-            }.build())
-            post(MultipartBody.Builder().apply {
-                setType(MultipartBody.FORM)
-                addFormDataPart(
-                        "image",
-                        "image",
-                        RequestBody.create(MediaType.parse("image/${temp.extension}"), temp)
-                )
-            }.build())
-        }.build()).execute()
-
-        ctx.channel.sendFile(res.body()!!.byteStream(), "waaw.png", null).queue {
+        Http.post(HttpUrl.Builder().apply {
+            scheme(if (Akatsuki.config.backend.ssl) "https" else "http")
+            host(Akatsuki.config.backend.host)
+            port(Akatsuki.config.backend.port)
+            addPathSegment("api")
+            addPathSegment("waaw")
+        }.build(), body).thenAccept { res ->
+            val bytes = res.body()!!.byteStream()
+            ctx.channel.sendFile(bytes, "waaw.${file.extension}", null).queue()
             res.close()
+            file.delete()
         }
     }
 }

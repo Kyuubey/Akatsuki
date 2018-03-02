@@ -65,7 +65,7 @@ fun Guild.addStar(msg: Message, user: User) {
     val guild = DatabaseWrapper.getGuildSafe(this).get()
     val channel = getTextChannelById(guild.starboardChannel ?: return) ?: return
 
-    asyncTransaction(Akatsuki.instance.pool) {
+    asyncTransaction(Akatsuki.pool) {
         val stars = Starboard.select {
             Starboard.guildId.eq(idLong)
         }
@@ -132,7 +132,7 @@ fun Guild.removeStar(msg: Message, user: User) {
     val guild = DatabaseWrapper.getGuildSafe(this).get()
     val channel = getTextChannelById(guild.starboardChannel ?: return) ?: return
 
-    asyncTransaction(Akatsuki.instance.pool) {
+    asyncTransaction(Akatsuki.pool) {
         val stars = Starboard.select {
             Starboard.guildId.eq(idLong)
         }

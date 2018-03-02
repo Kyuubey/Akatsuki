@@ -31,9 +31,9 @@ import me.noud02.akatsuki.annotations.Arguments
 import me.noud02.akatsuki.annotations.Load
 import me.noud02.akatsuki.entities.Command
 import me.noud02.akatsuki.entities.Context
+import me.noud02.akatsuki.utils.Http
 import net.dv8tion.jda.core.entities.Member
 import okhttp3.HttpUrl
-import okhttp3.Request
 
 @Load
 @Arguments(
@@ -45,19 +45,18 @@ class Floor : Command() {
 
     override fun run(ctx: Context) {
         val member = ctx.args["user"] as Member
-        val res = Akatsuki.instance.okhttp.newCall(Request.Builder().apply {
-            url(HttpUrl.Builder().apply {
-                scheme(if (Akatsuki.instance.config.backend.ssl) "https" else "http")
-                host(Akatsuki.instance.config.backend.host)
-                port(Akatsuki.instance.config.backend.port)
-                addPathSegment("api")
-                addPathSegment("floor")
-                addQueryParameter("text", "the floor is ${ctx.args["text"]}")
-                addQueryParameter("image", member.user.avatarUrl)
-            }.build())
-        }.build()).execute()
 
-        ctx.event.channel.sendFile(res.body()!!.byteStream(), "floorislava.png", null).queue {
+        Http.get(HttpUrl.Builder().apply {
+            scheme(if (Akatsuki.config.backend.ssl) "https" else "http")
+            host(Akatsuki.config.backend.host)
+            port(Akatsuki.config.backend.port)
+            addPathSegment("api")
+            addPathSegment("floor")
+            addQueryParameter("text", "the floor is ${ctx.args["text"]}")
+            addQueryParameter("image", member.user.avatarUrl)
+        }.build()).thenAccept { res ->
+            val bytes = res.body()!!.byteStream()
+            ctx.event.channel.sendFile(bytes, "floorislava.png", null).queue()
             res.close()
         }
     }

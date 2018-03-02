@@ -46,7 +46,7 @@ class AddRole : Command() {
     override fun run(ctx: Context) {
         val role = ctx.args["role"] as Role
 
-        asyncTransaction(Akatsuki.instance.pool) {
+        asyncTransaction(Akatsuki.pool) {
             Guilds.update({
                 Guilds.id.eq(ctx.guild!!.idLong)
             }) {
@@ -72,7 +72,7 @@ class RemRole : Command() {
     override fun run(ctx: Context) {
         val role = ctx.args["role"] as Role
 
-        asyncTransaction(Akatsuki.instance.pool) {
+        asyncTransaction(Akatsuki.pool) {
             Guilds.update({
                 Guilds.id.eq(ctx.guild!!.idLong)
             }) {
@@ -108,11 +108,13 @@ class RoleMe : Command() {
 
     init {
         addSubcommand(AddRole(), "add")
+        addSubcommand(RemRole(), "remove")
         addSubcommand(ListRoles(), "list")
     }
 
     override fun run(ctx: Context) {
         val roleName = (ctx.args["role"] as String).toLowerCase()
+        val roleId = ctx.storedGuild!!.rolemeRoles[roleName]!!
 
         if (!ctx.selfMember!!.canInteract(ctx.member))
             return ctx.send(
@@ -122,16 +124,16 @@ class RoleMe : Command() {
                     )
             )
 
+        val role = if (Akatsuki.jda != null) Akatsuki.jda!!.getRoleById(roleId) else Akatsuki.shardManager.getRoleById(roleId)
+
         if (ctx.flags.argMap.containsKey("remove") || ctx.flags.argMap.containsKey("r")) {
-            if (!ctx.storedGuild!!.rolemeRoles.containsKey(roleName))
+            if (!ctx.storedGuild.rolemeRoles.containsKey(roleName))
                 return ctx.send(
                         I18n.parse(
                                 ctx.lang.getString("roleme_cant_remove"),
                                 mapOf("username" to ctx.author.name)
                         )
                 )
-
-            val role = Akatsuki.instance.shardManager.getRoleById(ctx.storedGuild.rolemeRoles[roleName]!!)
 
             ctx.guild!!.controller.removeSingleRoleFromMember(ctx.member!!, role).reason("[ RoleMe ]").queue({
                 ctx.send(
@@ -144,10 +146,8 @@ class RoleMe : Command() {
                 ctx.sendError(it)
             }
         } else {
-            if (!ctx.storedGuild!!.rolemeRoles.containsKey(roleName))
+            if (!ctx.storedGuild.rolemeRoles.containsKey(roleName))
                 return ctx.send("You can't assign that role to yourself!")
-
-            val role = Akatsuki.instance.shardManager.getRoleById(ctx.storedGuild.rolemeRoles[roleName]!!)
 
             ctx.guild!!.controller.addSingleRoleToMember(ctx.member!!, role).reason("[ RoleMe ]").queue({
                 ctx.send(

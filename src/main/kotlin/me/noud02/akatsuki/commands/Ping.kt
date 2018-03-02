@@ -34,8 +34,7 @@ import java.time.temporal.ChronoUnit
 class Ping : Command() {
     override val desc = "Pong!"
 
-    override fun run(ctx: Context)
-            = ctx.event.channel.sendMessage("Pong!").queue {
+    override fun run(ctx: Context) = ctx.event.channel.sendMessage("Pong!").queue {
         it.editMessage("Pong! `${ctx.msg.creationTime.until(it.creationTime, ChronoUnit.MILLIS)}ms`").queue()
     }
 }

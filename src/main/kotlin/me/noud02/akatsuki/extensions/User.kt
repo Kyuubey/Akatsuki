@@ -35,7 +35,7 @@ import org.jetbrains.exposed.sql.select
 import org.joda.time.DateTime
 
 fun User.createContract(wish: String) {
-    asyncTransaction(Akatsuki.instance.pool) {
+    asyncTransaction(Akatsuki.pool) {
         Contracts.insert {
             it[userId] = idLong
             it[this.wish] = wish

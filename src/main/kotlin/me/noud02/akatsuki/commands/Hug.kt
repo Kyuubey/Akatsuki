@@ -29,7 +29,6 @@ import me.noud02.akatsuki.annotations.Argument
 import me.noud02.akatsuki.entities.Command
 import me.noud02.akatsuki.entities.Context
 import me.noud02.akatsuki.annotations.Load
-import me.noud02.akatsuki.entities.ThreadedCommand
 import me.noud02.akatsuki.utils.Wolk
 import me.noud02.akatsuki.utils.WolkType
 import net.dv8tion.jda.core.EmbedBuilder
@@ -38,18 +37,19 @@ import java.awt.Color
 
 @Load
 @Argument("user", "user")
-class Hug : ThreadedCommand() {
+class Hug : Command() {
     override val desc = "Hug people!"
     override val guildOnly = true
 
-    override fun threadedRun(ctx: Context) {
-        val user = ctx.args["user"] as Member
-        val embed = EmbedBuilder().apply {
-            setTitle("${user.effectiveName}, you got a hug from ${ctx.member!!.effectiveName}!")
-            setImage(Wolk.getByType(WolkType.HUG).url)
-            setColor(Color.CYAN)
-        }.build()
-
-        ctx.send(embed)
+    override fun run(ctx: Context) {
+        Wolk.getByType(WolkType.HUG).thenAccept { res ->
+            ctx.send(EmbedBuilder().apply {
+                val mem = ctx.args["user"] as Member
+                setTitle("${mem.effectiveName}, you got a hug from ${ctx.member!!.effectiveName}")
+                setImage(res.url)
+                setColor(Color.CYAN)
+                setFooter("Powered by weeb.sh", null)
+            }.build())
+        }
     }
 }

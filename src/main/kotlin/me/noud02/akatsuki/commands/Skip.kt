@@ -41,7 +41,7 @@ class Skip : Command() {
     override val guildOnly = true
 
     override fun run(ctx: Context) {
-        if (!ctx.member!!.voiceState.inVoiceChannel())
+        if (!ctx.member!!.voiceState.inVoiceChannel()) {
             return ctx.send(
                     I18n.parse(
                             ctx.lang.getString("join_voice_channel_fail"),
@@ -50,6 +50,8 @@ class Skip : Command() {
                             )
                     )
             )
+        }
+
         val manager = MusicManager.musicManagers[ctx.guild!!.id]
                 ?: return ctx.send(
                         I18n.parse(
@@ -58,8 +60,9 @@ class Skip : Command() {
                         )
                 )
 
-        if (manager.scheduler.queue.isEmpty())
+        if (manager.scheduler.queue.isEmpty()) {
             return ctx.send("There's nothing in the queue!")
+        }
 
         if (ctx.perms["MANAGE_SERVER"] == true) {
             manager.scheduler.next()

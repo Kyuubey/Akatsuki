@@ -35,6 +35,7 @@ import me.noud02.akatsuki.db.schema.*
 import me.noud02.akatsuki.entities.Config
 import me.noud02.akatsuki.entities.CoroutineDispatcher
 import me.noud02.akatsuki.extensions.UTF8Control
+import me.noud02.akatsuki.utils.Http
 import me.noud02.akatsuki.utils.I18n
 import me.noud02.akatsuki.utils.Wolk
 import net.dv8tion.jda.bot.sharding.DefaultShardManagerBuilder
@@ -53,26 +54,14 @@ import java.util.concurrent.Executors
 import java.util.concurrent.TimeUnit
 import kotlin.concurrent.timer
 
-class Akatsuki(val config: Config) {
+class Akatsuki(private val config: Config) {
     private lateinit var presenceTimer: Timer
-    lateinit var shardManager: ShardManager
-    var jda: JDA? = null
-
-    val pool: ExecutorService by lazy {
-        Executors.newCachedThreadPool {
-            Thread(it, "Akatsuki-Main-Pool-Thread").apply {
-                isDaemon = true
-            }
-        }
-    }
-    val coroutineDispatcher by lazy {
-        CoroutineDispatcher(pool)
-    }
-    val sentry = SentryClientFactory.sentryClient()
-    val okhttp = OkHttpClient()
+    private lateinit var shardManager: ShardManager
+    private val sentry = SentryClientFactory.sentryClient()
+    private var jda: JDA? = null
 
     init {
-        Akatsuki.instance = this
+        Akatsuki.config = config
 
         Sentry.init(config.api.sentry)
         Database.connect(
@@ -162,78 +151,47 @@ class Akatsuki(val config: Config) {
     }
 
     fun updateStats() {
+        val jsonType = MediaType.parse("application/json")
+
         if (jda != null) {
             val json = mutableMapOf(
                     "server_count" to jda!!.guilds.size
             )
+            val body = RequestBody.create(jsonType, JSONObject(json).toString())
 
-            if (config.api.discordbots.isNotEmpty())
-                okhttp.newCall(Request.Builder().apply {
-                    post(RequestBody.create(MediaType.parse("application/json"), JSONObject(json).toString()))
-                    url(HttpUrl.Builder().apply {
-                        scheme("https")
-                        host("bots.discord.pw")
-                        addPathSegment("api")
-                        addPathSegment("bots")
-                        addPathSegment(jda!!.selfUser.id)
-                        addPathSegment("stats")
-                    }.build())
-
+            if (config.api.discordbots.isNotEmpty()) {
+                Http.post("https://bots.discord.pw/api/bots/${jda!!.selfUser.id}/stats", body) {
                     addHeader("Authorization", config.api.discordbots)
-                }.build()).execute().close()
+                }.thenAccept { it.close() }
+            }
 
-            if (config.api.discordbotsorg.isNotEmpty())
-                okhttp.newCall(Request.Builder().apply {
-                    post(RequestBody.create(MediaType.parse("application/json"), JSONObject(json).toString()))
-                    url(HttpUrl.Builder().apply {
-                        scheme("https")
-                        host("discordbots.org")
-                        addPathSegment("api")
-                        addPathSegment("bots")
-                        addPathSegment(jda!!.selfUser.id)
-                        addPathSegment("stats")
-                    }.build())
-
+            if (config.api.discordbotsorg.isNotEmpty()) {
+                Http.post("https://discordbots.org/api/bots/${jda!!.selfUser.id}/stats", body) {
                     addHeader("Authorization", config.api.discordbotsorg)
-                }.build()).execute().close()
-        } else
+                }.thenAccept { it.close() }
+            }
+        } else {
             for (shard in shardManager.shards) {
                 val json = mapOf(
                         "server_count" to shard.guilds.size,
                         "shard_id" to shard.shardInfo.shardId,
                         "shard_count" to shardManager.shardsTotal
                 )
+                val body = RequestBody.create(jsonType, JSONObject(json).toString())
 
-                if (config.api.discordbots.isNotEmpty())
-                    okhttp.newCall(Request.Builder().apply {
-                        post(RequestBody.create(MediaType.parse("application/json"), JSONObject(json).toString()))
-                        url(HttpUrl.Builder().apply {
-                            scheme("https")
-                            host("bots.discord.pw")
-                            addPathSegment("api")
-                            addPathSegment("bots")
-                            addPathSegment(shard.selfUser.id)
-                            addPathSegment("stats")
-                        }.build())
-
+                if (config.api.discordbots.isNotEmpty()) {
+                    Http.post("https://bots.discord.pw/api/bots/${shard.selfUser.id}/stats", body) {
                         addHeader("Authorization", config.api.discordbots)
-                    }.build()).execute().close()
+                    }.thenAccept { it.close() }
+                }
 
-                if (config.api.discordbotsorg.isNotEmpty())
-                    okhttp.newCall(Request.Builder().apply {
-                        post(RequestBody.create(MediaType.parse("application/json"), JSONObject(json).toString()))
-                        url(HttpUrl.Builder().apply {
-                            scheme("https")
-                            host("discordbots.org")
-                            addPathSegment("api")
-                            addPathSegment("bots")
-                            addPathSegment(shard.selfUser.id)
-                            addPathSegment("stats")
-                        }.build())
-
+                if (config.api.discordbotsorg.isNotEmpty()) {
+                    Http.post("https://discordbots.org/api/bots/${shard.selfUser.id}/stats", body) {
                         addHeader("Authorization", config.api.discordbotsorg)
-                    }.build()).execute().close()
+                    }.thenAccept { it.close() }
+                }
             }
+        }
     }
 
     fun build() {
@@ -241,6 +199,8 @@ class Akatsuki(val config: Config) {
             setToken(config.token)
             addEventListener(EventListener())
         }.buildAsync()
+
+        Akatsuki.jda = jda
 
         startPresenceTimer()
         startReminderChecker()
@@ -255,12 +215,25 @@ class Akatsuki(val config: Config) {
             setShards(firstShard, lastShard)
         }.build()
 
+        Akatsuki.shardManager = shardManager
+
         startPresenceTimer()
         startReminderChecker()
     }
 
     companion object {
-        @JvmStatic
-        lateinit var instance: Akatsuki
+        lateinit var config: Config
+        lateinit var shardManager: ShardManager
+        var jda: JDA? = null
+        val pool: ExecutorService by lazy {
+            Executors.newCachedThreadPool {
+                Thread(it, "Akatsuki-Main-Pool-Thread").apply {
+                    isDaemon = true
+                }
+            }
+        }
+        val coroutineDispatcher by lazy {
+            CoroutineDispatcher(pool)
+        }
     }
 }

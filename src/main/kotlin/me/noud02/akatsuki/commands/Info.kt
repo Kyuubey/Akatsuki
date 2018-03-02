@@ -29,35 +29,35 @@ import me.noud02.akatsuki.Akatsuki
 import me.noud02.akatsuki.entities.Command
 import me.noud02.akatsuki.entities.Context
 import me.noud02.akatsuki.annotations.Load
-import me.noud02.akatsuki.entities.ThreadedCommand
+import me.noud02.akatsuki.utils.Http
 import net.dv8tion.jda.core.EmbedBuilder
-import okhttp3.Request
 import org.json.JSONObject
 
 @Load
-class Info : ThreadedCommand() {
+class Info : Command() {
     override val desc = "Get info on the bot."
 
-    override fun threadedRun(ctx: Context) {
-        val embed = EmbedBuilder().apply {
-            val res = Akatsuki.instance.okhttp.newCall(
-                    Request.Builder().url("https://api.github.com/repos/noud02/Akatsuki").build()
-            ).execute()
+    override fun run(ctx: Context) {
+        Http.get("https://api.github.com/repos/noud02/Akatsuki").thenAccept { res ->
+            val embed = EmbedBuilder().apply {
 
-            val json = JSONObject(res.body()!!.string())
-            val stars = json.getInt("stargazers_count")
-            val issues = json.getInt("open_issues")
-            val forks = json.getInt("forks_count")
+                val body = res.body()!!.string()
+                val json = JSONObject(body)
+                val stars = json.getInt("stargazers_count")
+                val issues = json.getInt("open_issues")
+                val forks = json.getInt("forks_count")
 
-            setTitle(ctx.jda.selfUser.name)
+                setTitle(ctx.jda.selfUser.name)
 
-            descriptionBuilder.append("This bot runs on [Akatsuki](https://github.com/noud02/Akatsuki), an open-source Discord bot written in Kotlin.\n")
-            descriptionBuilder.append("\n${Akatsuki.instance.config.description}\n\n")
-            descriptionBuilder.append("[Bugs](https://github.com/noud02/Akatsuki/issues) | [GitHub](https://github.com/noud02/Akatsuki)\n")
-            descriptionBuilder.append("\n\u2B50 $stars | \u26A0 $issues | \uD83C\uDF74 $forks\n")
+                descriptionBuilder.append("This bot runs on [Akatsuki](https://github.com/noud02/Akatsuki), an open-source Discord bot written in Kotlin.\n")
+                descriptionBuilder.append("\n${Akatsuki.config.description}\n\n")
+                descriptionBuilder.append("[Bugs](https://github.com/noud02/Akatsuki/issues) | [GitHub](https://github.com/noud02/Akatsuki)\n")
+                descriptionBuilder.append("\n\u2B50 $stars | \u26A0 $issues | \uD83C\uDF74 $forks\n")
+                res.close()
+            }
+
+            ctx.send(embed.build())
             res.close()
         }
-        
-        ctx.send(embed.build())
     }
 }

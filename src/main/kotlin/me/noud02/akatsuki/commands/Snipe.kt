@@ -51,8 +51,8 @@ class Snipe : Command() {
                     )
             )
 
-        asyncTransaction(Akatsuki.instance.pool) {
-            val snipe = EventListener.instance.snipes.remove(ctx.channel.idLong)
+        asyncTransaction(Akatsuki.pool) {
+            val snipe = EventListener.snipes.remove(ctx.channel.idLong)
 
             if (snipe != null) {
                 val log = Logs.select {
@@ -73,8 +73,9 @@ class Snipe : Command() {
                 }
 
                 ctx.send(embed.build())
-            } else
+            } else {
                 ctx.send(ctx.lang.getString("no_snipes"))
+            }
         }.execute()
     }
 }

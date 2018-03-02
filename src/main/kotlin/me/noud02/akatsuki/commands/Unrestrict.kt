@@ -55,7 +55,7 @@ class UnrestrictGlobally : Command() {
         val cmd = ctx.args["command"] as String
         val mem = ctx.args["user"] as Member
 
-        if (cmd !in EventListener.instance.cmdHandler.commands && cmd != "all")
+        if (cmd !in EventListener.cmdHandler.commands && cmd != "all")
             return ctx.send(
                     I18n.parse(
                             ctx.lang.getString("command_not_found"),
@@ -63,7 +63,7 @@ class UnrestrictGlobally : Command() {
                     )
             )
 
-        asyncTransaction(Akatsuki.instance.pool) {
+        asyncTransaction(Akatsuki.pool) {
             Restrictions.deleteWhere {
                 Restrictions.global.eq(true) and Restrictions.userId.eq(mem.user.idLong) and Restrictions.command.eq(cmd)
             }
@@ -90,7 +90,7 @@ class Unrestrict : Command() {
     override fun run(ctx: Context) {
         val cmd = ctx.args["command"] as String
 
-        if (cmd !in EventListener.instance.cmdHandler.commands && cmd != "all")
+        if (cmd !in EventListener.cmdHandler.commands && cmd != "all")
             return ctx.send(
                     I18n.parse(
                             ctx.lang.getString("command_not_found"),
@@ -98,7 +98,7 @@ class Unrestrict : Command() {
                     )
             )
 
-        asyncTransaction(Akatsuki.instance.pool) {
+        asyncTransaction(Akatsuki.pool) {
             if ("user" in ctx.args) {
                 val mem = ctx.args["user"] as Member
 

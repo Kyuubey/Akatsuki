@@ -95,7 +95,7 @@ data class DBContract(
 )
 
 object DatabaseWrapper {
-    private val pool: ExecutorService = Akatsuki.instance.pool
+    private val pool: ExecutorService = Akatsuki.pool
 
     fun getGuild(guild: Guild) = getGuild(guild.idLong)
 
@@ -241,13 +241,6 @@ object DatabaseWrapper {
         return fut
     }
 
-    /*fun getUserSafe(user: User): DBUser = try {
-        getUser(user)
-    } catch (e: Exception) {
-        newUser(user)
-        getUser(user)
-    }*/
-
     fun logEvent(event: GenericMessageEvent) = asyncTransaction(pool) {
         when (event) {
             is MessageDeleteEvent -> {
@@ -256,7 +249,7 @@ object DatabaseWrapper {
                 }.firstOrNull()
 
                 if (log != null) {
-                    EventListener.instance.snipes[event.channel.idLong] = log[Logs.messageId]
+                    EventListener.snipes[event.channel.idLong] = log[Logs.messageId]
 
                     Logs.insert {
                         it[Logs.event] = "DELETE"

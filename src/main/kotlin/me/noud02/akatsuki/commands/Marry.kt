@@ -43,41 +43,45 @@ import org.jetbrains.exposed.sql.update
 @Argument("user", "user")
 class Marry : Command() {
     override val guildOnly = true
-    override val desc = "Marry people"
+    override val desc = "Marry people."
 
     override fun run(ctx: Context) {
         val member = ctx.args["user"] as Member
 
-        if (ctx.storedUser.marriedUserId != null)
+        if (ctx.storedUser.marriedUserId != null) {
             return ctx.send(
                     I18n.parse(
                             ctx.lang.getString("already_married"),
                             mapOf(
                                     "username" to ctx.author.name,
-                                    "user" to (ctx.jda.getUserById(ctx.storedUser.marriedUserId)?.name ?: "an unknown person")
+                                    "user" to (ctx.jda.getUserById(ctx.storedUser.marriedUserId)?.name
+                                            ?: "an unknown person")
                             )
                     )
             )
+        }
 
-        if (member.user.id == ctx.author.id)
+        if (member.user.id == ctx.author.id) {
             return ctx.send(
                     I18n.parse(
                             ctx.lang.getString("cant_marry_self"),
                             mapOf("username" to ctx.author.name)
                     )
             )
+        }
 
-        if (member.user.isBot)
+        if (member.user.isBot) {
             return ctx.send(
                     I18n.parse(
                             ctx.lang.getString("cant_marry_bot"),
                             mapOf("username" to ctx.author.name)
                     )
             )
+        }
 
         val dbUser = DatabaseWrapper.getUserSafe(member.user).get()
 
-        if (dbUser.marriedUserId != null)
+        if (dbUser.marriedUserId != null) {
             return ctx.send(
                     I18n.parse(
                             ctx.lang.getString("user_already_married"),
@@ -88,6 +92,7 @@ class Marry : Command() {
                             )
                     )
             )
+        }
 
         val yesEmote = "\u2705"
         val noEmote = "\u274E"
@@ -104,11 +109,11 @@ class Marry : Command() {
             msg.addReaction(yesEmote).queue()
             msg.addReaction(noEmote).queue()
 
-            EventListener.instance.waiter.await<MessageReactionAddEvent>(1, 60000L) {
+            EventListener.waiter.await<MessageReactionAddEvent>(1, 60000L) {
                 if (it.user.id == member.user.id && it.messageId == msg.id) {
                     when (it.reactionEmote.name) {
                         yesEmote -> {
-                            asyncTransaction(Akatsuki.instance.pool) {
+                            asyncTransaction(Akatsuki.pool) {
                                 Users.update({
                                     Users.id.eq(ctx.author.idLong)
                                 }) {
@@ -133,13 +138,14 @@ class Marry : Command() {
                             }.execute()
                         }
 
-                        noEmote ->
+                        noEmote -> {
                             ctx.send(
                                     I18n.parse(
                                             ctx.lang.getString("marriage_declined"),
                                             mapOf("username" to member.user.name)
                                     )
                             )
+                        }
 
                         else -> return@await false
                     }

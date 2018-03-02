@@ -29,18 +29,17 @@ import me.noud02.akatsuki.Akatsuki
 import me.noud02.akatsuki.entities.Command
 import me.noud02.akatsuki.entities.Context
 import me.noud02.akatsuki.annotations.Load
-import me.noud02.akatsuki.entities.ThreadedCommand
+import me.noud02.akatsuki.utils.Http
 import okhttp3.Request
 
 @Load
-class Dog: ThreadedCommand() {
+class Dog: Command() {
     override val desc = "Get a random dog"
 
-    override fun threadedRun(ctx: Context) {
-        val res = Akatsuki.instance.okhttp.newCall(Request.Builder().apply {
-            url("https://random.dog/woof")
-        }.build()).execute()
-
-        ctx.send("https://random.dog/${res.body()!!.string()}")
+    override fun run(ctx: Context) {
+        Http.get("https://random.dog/woof").thenAccept { res ->
+            ctx.send("https://random.dog/${res.body()!!.string()}")
+            res.close()
+        }
     }
 }

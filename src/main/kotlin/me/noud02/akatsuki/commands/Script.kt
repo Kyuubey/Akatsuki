@@ -64,7 +64,7 @@ class AddCommand : Command() {
         val content = ctx.rawArgs.slice(1 until ctx.rawArgs.size).joinToString(" ")
         val name = ctx.args["name"] as String
 
-        asyncTransaction(Akatsuki.instance.pool) {
+        asyncTransaction(Akatsuki.pool) {
             val scriptsMatch = Scripts.select { Scripts.guildId.eq(ctx.guild!!.idLong).and(Scripts.scriptName.eq(name)) }
 
             if (!scriptsMatch.empty())
@@ -106,7 +106,7 @@ class RemoveCommand : Command() {
         val name = ctx.args["name"] as String
         val hasPerm = ctx.perms["ADMINISTRATOR"] as Boolean
 
-        asyncTransaction(Akatsuki.instance.pool) {
+        asyncTransaction(Akatsuki.pool) {
             val match = Scripts.select { Scripts.guildId.eq(ctx.guild!!.idLong).and(Scripts.scriptName.eq(name)) }.firstOrNull()
                     ?: return@asyncTransaction ctx.send(
                             I18n.parse(
@@ -153,7 +153,7 @@ class EditCommand : Command() {
         val name = ctx.args["name"] as String
         val hasPerm = ctx.perms["ADMINISTRATOR"] as Boolean
 
-        asyncTransaction(Akatsuki.instance.pool) {
+        asyncTransaction(Akatsuki.pool) {
             val match = Scripts.select { Scripts.guildId.eq(ctx.guild!!.idLong).and(Scripts.scriptName.eq(name)) }.firstOrNull()
                     ?: return@asyncTransaction ctx.send(
                             I18n.parse(
@@ -208,7 +208,7 @@ class Script : Command() {
         val cmd = ctx.args["command"] as String
         val hasPerm = ctx.perms["ADMINISTRATOR"] as Boolean
 
-        asyncTransaction(Akatsuki.instance.pool) {
+        asyncTransaction(Akatsuki.pool) {
             val command = Scripts.select { Scripts.guildId.eq(ctx.guild!!.idLong).and(Scripts.scriptName.eq(cmd)) }.firstOrNull()
                     ?: return@asyncTransaction ctx.send(
                             I18n.parse(

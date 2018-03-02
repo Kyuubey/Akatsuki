@@ -25,17 +25,16 @@
 
 package me.noud02.akatsuki.commands
 
-import me.noud02.akatsuki.Akatsuki
 import me.noud02.akatsuki.annotations.Argument
 import me.noud02.akatsuki.annotations.Load
-import me.noud02.akatsuki.entities.Command
 import me.noud02.akatsuki.entities.Context
 import me.noud02.akatsuki.entities.ThreadedCommand
+import me.noud02.akatsuki.utils.Http
 import me.noud02.akatsuki.utils.I18n
 import net.dv8tion.jda.core.EmbedBuilder
 import okhttp3.HttpUrl
-import okhttp3.Request
 import org.json.JSONArray
+import java.awt.Color
 
 @Load
 @Argument("tags", "string")
@@ -49,31 +48,30 @@ class Yandere : ThreadedCommand() {
         if (query.indexOf("loli") > -1)
             return ctx.send(I18n.parse(ctx.lang.getString("loli_is_illegal"), mapOf("username" to ctx.author.name)))
 
-        val res = Akatsuki.instance.okhttp.newCall(Request.Builder().apply {
-            url(HttpUrl.Builder().apply {
-                scheme("https")
-                host("yande.re")
-                addPathSegment("post.json")
-                addQueryParameter("limit", "100")
-                addQueryParameter("tags", query)
-            }.build())
-        }.build()).execute()
+        Http.get(HttpUrl.Builder().apply {
+            scheme("https")
+            host("yande.re")
+            addPathSegment("post.json")
+            addQueryParameter("limit", "100")
+            addQueryParameter("tags", query)
+        }.build()).thenAccept { res ->
+            val jsonArr = JSONArray(res.body()!!.string())
 
-        val jsonArr = JSONArray(res.body()!!.string())
+            if (jsonArr.count() == 0)
+                return@thenAccept ctx.send(I18n.parse(ctx.lang.getString("no_images_found"), mapOf("username" to ctx.author.name)))
 
-        if (jsonArr.count() == 0)
-            return ctx.send(I18n.parse(ctx.lang.getString("no_images_found"), mapOf("username" to ctx.author.name)))
+            val json = jsonArr.getJSONObject(Math.floor(Math.random() * jsonArr.count()).toInt())
 
-        val json = jsonArr.getJSONObject(Math.floor(Math.random() * jsonArr.count()).toInt())
+            if (json.getString("tags").indexOf("loli") > -1)
+                return@thenAccept ctx.send(I18n.parse(ctx.lang.getString("loli_is_illegal"), mapOf("username" to ctx.author.name)))
 
-        if (json.getString("tags").indexOf("loli") > -1)
-            return ctx.send(I18n.parse(ctx.lang.getString("loli_is_illegal"), mapOf("username" to ctx.author.name)))
+            val embed = EmbedBuilder().apply {
+                setImage(json.getString("file_url"))
+                setColor(Color(34, 34, 34))
+            }
 
-        val embed = EmbedBuilder().apply {
-            setImage(json.getString("file_url"))
+            ctx.send(embed.build())
+            res.close()
         }
-
-        ctx.send(embed.build())
-        res.close()
     }
 }

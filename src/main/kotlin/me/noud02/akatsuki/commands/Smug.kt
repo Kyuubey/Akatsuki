@@ -32,6 +32,5 @@ import me.noud02.akatsuki.utils.WolkType
 @Load
 class Smug : WolkCommand() {
     override val desc = "Get a random smug image"
-
     override val type = WolkType.SMUG
 }

@@ -62,7 +62,7 @@ class RemindMe : Command() {
                         )
                 )
 
-        asyncTransaction(Akatsuki.instance.pool) {
+        asyncTransaction(Akatsuki.pool) {
             Reminders.insert {
                 it[userId] = ctx.author.idLong
                 it[channelId] = ctx.channel.idLong

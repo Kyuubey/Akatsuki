@@ -51,7 +51,7 @@ class Ignore : Command() {
         if (ctx.storedGuild!!.ignoredChannels.contains(channel.idLong))
             return ctx.send(ctx.lang.getString("channel_already_ignored"))
 
-        asyncTransaction(Akatsuki.instance.pool) {
+        asyncTransaction(Akatsuki.pool) {
             Guilds.update({
                 Guilds.id.eq(ctx.guild!!.idLong)
             }) {

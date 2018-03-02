@@ -68,15 +68,6 @@ import kotlin.reflect.jvm.jvmName
 class EventListener : ListenerAdapter() {
     private val logger = Logger(this::class.jvmName)
 
-    val cmdHandler = CommandHandler()
-    val snipes = mutableMapOf<Long, Long>()
-    val waiter = EventWaiter()
-    val pool = Akatsuki.instance.pool
-
-    init {
-        EventListener.instance = this
-    }
-
     override fun onGenericEvent(event: Event) = waiter.emit(event)
 
     override fun onMessageReceived(event: MessageReceivedEvent) {
@@ -110,7 +101,7 @@ class EventListener : ListenerAdapter() {
                     }
             }
 
-            asyncTransaction(Akatsuki.instance.pool) {
+            asyncTransaction(Akatsuki.pool) {
                 val contract = Contracts.select { Contracts.userId.eq(event.author.idLong) }.firstOrNull() ?: return@asyncTransaction
                 val curLevel = contract[Contracts.level]
                 val xp = contract[Contracts.experience]
@@ -234,7 +225,7 @@ class EventListener : ListenerAdapter() {
                             .replace("%SERVER%", event.guild.name)
             ).queue()
 
-        asyncTransaction(pool) {
+        asyncTransaction(Akatsuki.pool) {
             val guild = Guilds.select { Guilds.id.eq(event.guild.idLong) }.firstOrNull()
 
             if (guild == null || !guild[Guilds.modlogs])
@@ -265,7 +256,7 @@ class EventListener : ListenerAdapter() {
     }
 
     override fun onGuildUnban(event: GuildUnbanEvent) {
-        asyncTransaction(pool) {
+        asyncTransaction(Akatsuki.pool) {
             val guild = Guilds.select { Guilds.id.eq(event.guild.idLong) }.firstOrNull()
 
             if (guild == null || !guild[Guilds.modlogs])
@@ -296,7 +287,7 @@ class EventListener : ListenerAdapter() {
     }
 
     override fun onGuildBan(event: GuildBanEvent) {
-        asyncTransaction(pool) {
+        asyncTransaction(Akatsuki.pool) {
             val guild = Guilds.select { Guilds.id.eq(event.guild.idLong) }.firstOrNull()
 
             if (guild == null || !guild[Guilds.modlogs])
@@ -327,7 +318,7 @@ class EventListener : ListenerAdapter() {
     }
 
     override fun onGuildMemberRoleAdd(event: GuildMemberRoleAddEvent) {
-        asyncTransaction(pool) {
+        asyncTransaction(Akatsuki.pool) {
             val guild = Guilds.select { Guilds.id.eq(event.guild.idLong) }.firstOrNull()
 
             if (guild == null
@@ -360,7 +351,7 @@ class EventListener : ListenerAdapter() {
     }
 
     override fun onGuildMemberRoleRemove(event: GuildMemberRoleRemoveEvent) {
-        asyncTransaction(pool) {
+        asyncTransaction(Akatsuki.pool) {
             val guild = Guilds.select { Guilds.id.eq(event.guild.idLong) }.firstOrNull()
 
             if (guild == null
@@ -393,7 +384,8 @@ class EventListener : ListenerAdapter() {
     }
 
     companion object {
-        @JvmStatic
-        lateinit var instance: EventListener
+        val snipes = mutableMapOf<Long, Long>()
+        val cmdHandler = CommandHandler()
+        val waiter = EventWaiter()
     }
 }

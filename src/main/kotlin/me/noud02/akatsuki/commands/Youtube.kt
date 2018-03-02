@@ -31,6 +31,7 @@ import me.noud02.akatsuki.annotations.Alias
 import me.noud02.akatsuki.annotations.Argument
 import me.noud02.akatsuki.annotations.Load
 import me.noud02.akatsuki.entities.*
+import me.noud02.akatsuki.utils.Http
 import me.noud02.akatsuki.utils.I18n
 import me.noud02.akatsuki.utils.ItemPicker
 import net.dv8tion.jda.core.entities.Guild
@@ -48,76 +49,76 @@ class Youtube : ThreadedCommand() {
     override val guildOnly = true
 
     override fun threadedRun(ctx: Context) {
-        val picker = ItemPicker(EventListener.instance.waiter, ctx.member as Member, ctx.guild as Guild)
+        val picker = ItemPicker(EventListener.waiter, ctx.member as Member, ctx.guild as Guild)
         val search = ctx.args["query"] as String
 
-        val res = Akatsuki.instance.okhttp.newCall(Request.Builder().apply {
-            url(HttpUrl.Builder().apply {
-                scheme("https")
-                host("www.googleapis.com")
-                addPathSegment("youtube")
-                addPathSegment("v3")
-                addPathSegment("search")
-                addQueryParameter("key", Akatsuki.instance.config.api.google)
-                addQueryParameter("part", "snippet")
-                addQueryParameter("maxResults", "10")
-                addQueryParameter("type", "video")
-                addQueryParameter("q", search)
-            }.build())
-        }.build()).execute()
+        Http.get(HttpUrl.Builder().apply {
+            scheme("https")
+            host("www.googleapis.com")
+            addPathSegment("youtube")
+            addPathSegment("v3")
+            addPathSegment("search")
+            addQueryParameter("key", Akatsuki.config.api.google)
+            addQueryParameter("part", "snippet")
+            addQueryParameter("maxResults", "10")
+            addQueryParameter("type", "video")
+            addQueryParameter("q", search)
+        }.build()).thenAccept { res ->
+            val body = res.body()!!.string()
 
-        val body = res.body()!!.string()
+            val obj = JSONObject(body)
 
-        val obj = JSONObject(body)
+            if (!obj.has("items")) {
+                return@thenAccept ctx.send(
+                        I18n.parse(
+                                ctx.lang.getString("video_search_fail"),
+                                mapOf(
+                                        "user" to ctx.author.name,
+                                        "search" to search
+                                )
+                        )
+                )
+            }
 
-        if (!obj.has("items"))
-            return ctx.send(
-                    I18n.parse(
-                            ctx.lang.getString("video_search_fail"),
-                            mapOf(
-                                    "user" to ctx.author.name,
-                                    "search" to search
-                            )
-                    )
-            )
+            val items = obj.getJSONArray("items")
 
-        val items = obj.getJSONArray("items")
+            if (items.length() == 0) {
+                return@thenAccept ctx.send(
+                        I18n.parse(
+                                ctx.lang.getString("video_search_fail"),
+                                mapOf(
+                                        "user" to ctx.author.name,
+                                        "search" to search
+                                )
+                        )
+                )
+            }
 
-        if (items.length() == 0)
-            return ctx.send(
-                    I18n.parse(
-                            ctx.lang.getString("video_search_fail"),
-                            mapOf(
-                                    "user" to ctx.author.name,
-                                    "search" to search
-                            )
-                    )
-            )
+            for (i in 0 until items.length()) {
+                val item = items.getJSONObject(i)
 
-        for (i in 0 until items.length()) {
-            val item = items.getJSONObject(i)
+                val id = item
+                        .getJSONObject("id")
+                        .getString("videoId")
 
-            val id = item
-                    .getJSONObject("id")
-                    .getString("videoId")
+                val snippet = item.getJSONObject("snippet")
 
-            val snippet = item.getJSONObject("snippet")
+                val title = snippet.getString("title")
+                val thumb = snippet
+                        .getJSONObject("thumbnails")
+                        .getJSONObject("medium")
+                        .getString("url")
 
-            val title = snippet.getString("title")
-            val thumb = snippet
-                    .getJSONObject("thumbnails")
-                    .getJSONObject("medium")
-                    .getString("url")
+                val desc = snippet.getString("description")
+                val channel = snippet.getString("channelTitle")
 
-            val desc = snippet.getString("description")
-            val channel = snippet.getString("channelTitle")
+                picker.addItem(PickerItem(id, title, desc, channel, thumb, url = "https://youtu.be/$id"))
+            }
 
-            picker.addItem(PickerItem(id, title, desc, channel, thumb, url = "https://youtu.be/$id"))
+            picker.color = Color(255, 0, 0)
+
+            picker.build(ctx.channel)
+            res.close()
         }
-
-        picker.color = Color(255, 0, 0)
-
-        picker.build(ctx.channel)
-        res.close()
     }
 }

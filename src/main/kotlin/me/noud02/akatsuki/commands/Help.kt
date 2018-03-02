@@ -40,7 +40,7 @@ class Help : Command() {
 
     override fun run(ctx: Context) {
         if (ctx.args.contains("command"))
-            if (!EventListener.instance.cmdHandler.commands.containsKey(ctx.args["command"] as String))
+            if (!EventListener.cmdHandler.commands.containsKey(ctx.args["command"] as String))
                 ctx.send(
                         I18n.parse(
                                 ctx.lang.getString("command_not_found"),
@@ -48,9 +48,9 @@ class Help : Command() {
                         )
                 )
             else
-                ctx.send(EventListener.instance.cmdHandler.help(ctx.args["command"] as String))
+                ctx.send(EventListener.cmdHandler.help(ctx.args["command"] as String))
         else {
-            val commands = EventListener.instance.cmdHandler.commands
+            val commands = EventListener.cmdHandler.commands
                     .toSortedMap()
                     .map {
                         "\t${it.key}" + " ".repeat(20 - it.key.length) + it.value.desc

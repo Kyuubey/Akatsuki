@@ -30,28 +30,25 @@ import me.noud02.akatsuki.annotations.Argument
 import me.noud02.akatsuki.annotations.Load
 import me.noud02.akatsuki.entities.Command
 import me.noud02.akatsuki.entities.Context
-import me.noud02.akatsuki.entities.ThreadedCommand
+import me.noud02.akatsuki.utils.Http
 import okhttp3.HttpUrl
-import okhttp3.Request
 
 @Load
 @Argument("text", "string")
-class ILikeThat : ThreadedCommand() {
+class ILikeThat : Command() {
     override val desc = "It's OK, I like that..."
 
-    override fun threadedRun(ctx: Context) {
-        val res = Akatsuki.instance.okhttp.newCall(Request.Builder().apply {
-            url(HttpUrl.Builder().apply {
-                scheme(if (Akatsuki.instance.config.backend.ssl) "https" else "http")
-                host(Akatsuki.instance.config.backend.host)
-                port(Akatsuki.instance.config.backend.port)
-                addPathSegment("api")
-                addPathSegment("ilikethat")
-                addQueryParameter("text", ctx.args["text"] as String)
-            }.build())
-        }.build()).execute()
-
-        ctx.event.channel.sendFile(res.body()!!.byteStream(), "ilikethat.png", null).queue {
+    override fun run(ctx: Context) {
+        Http.get(HttpUrl.Builder().apply {
+            scheme(if (Akatsuki.config.backend.ssl) "https" else "http")
+            host(Akatsuki.config.backend.host)
+            port(Akatsuki.config.backend.port)
+            addPathSegment("api")
+            addPathSegment("ilikethat")
+            addQueryParameter("text", ctx.args["text"] as String)
+        }.build()).thenAccept { res ->
+            val bytes = res.body()!!.byteStream()
+            ctx.channel.sendFile(bytes, "ilikethat.png", null).queue()
             res.close()
         }
     }

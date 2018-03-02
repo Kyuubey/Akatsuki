@@ -32,6 +32,7 @@ import me.noud02.akatsuki.annotations.Load
 import me.noud02.akatsuki.entities.Command
 import me.noud02.akatsuki.entities.Context
 import me.noud02.akatsuki.entities.ThreadedCommand
+import me.noud02.akatsuki.utils.Http
 import me.noud02.akatsuki.utils.I18n
 import net.dv8tion.jda.core.entities.Member
 import okhttp3.*
@@ -56,7 +57,7 @@ class Ship : ThreadedCommand() {
         val temp2 = File.createTempFile("image", "png")
         temp2.deleteOnExit()
 
-        Akatsuki.instance.okhttp
+        Http.okhttp // TODO switch to Http.get
                 .newCall(Request.Builder().url(user1.user.avatarUrl).build())
                 .execute()
                 .apply {
@@ -64,7 +65,7 @@ class Ship : ThreadedCommand() {
                 }
                 .close()
 
-        Akatsuki.instance.okhttp
+        Http.okhttp // TODO switch to Http.get
                 .newCall(Request.Builder().url(user2.user.avatarUrl).build())
                 .execute()
                 .apply {
@@ -77,39 +78,36 @@ class Ship : ThreadedCommand() {
 
         val ship = first.substring(0, Math.floor(first.length / 2.0).toInt()) + sec.substring(Math.floor(sec.length / 2.0).toInt())
 
-        val res = Akatsuki.instance.okhttp.newCall(Request.Builder().apply {
-            url(HttpUrl.Builder().apply {
-                scheme(if (Akatsuki.instance.config.backend.ssl) "https" else "http")
-                host(Akatsuki.instance.config.backend.host)
-                port(Akatsuki.instance.config.backend.port)
-                addPathSegment("api")
-                addPathSegment("ship")
-            }.build())
-            post(MultipartBody.Builder().apply {
-                setType(MultipartBody.FORM)
-                addFormDataPart(
-                        "user1",
-                        "avatar.png",
-                        RequestBody.create(MediaType.parse("image/png"), temp1)
-                )
-                addFormDataPart(
-                        "user2",
-                        "avatar2.png",
-                        RequestBody.create(MediaType.parse("image/png"), temp2)
-                )
-            }.build())
-        }.build()).execute()
+        Http.post(HttpUrl.Builder().apply {
+            scheme(if (Akatsuki.config.backend.ssl) "https" else "http")
+            host(Akatsuki.config.backend.host)
+            port(Akatsuki.config.backend.port)
+            addPathSegment("api")
+            addPathSegment("ship")
+        }.build(), MultipartBody.Builder().apply {
+            setType(MultipartBody.FORM)
+            addFormDataPart(
+                    "user1",
+                    "avatar.png",
+                    RequestBody.create(MediaType.parse("image/png"), temp1)
+            )
+            addFormDataPart(
+                    "user2",
+                    "avatar2.png",
+                    RequestBody.create(MediaType.parse("image/png"), temp2)
+            )
+        }.build()).thenAccept { res ->
+            val bytes = res.body()!!.bytes()
 
-        ctx.channel
-                .sendMessage(
-                        I18n.parse(
-                                ctx.lang.getString("happy_shipping"),
-                                mapOf("shipname" to ship)
-                        )
-                )
-                .addFile(res.body()!!.bytes(), "ship.png")
-                .queue {
-                    res.close()
-                }
+            ctx.channel
+                    .sendMessage(
+                            I18n.parse(
+                                    ctx.lang.getString("happy_shipping"),
+                                    mapOf("shipname" to ship)
+                            )
+                    )
+                    .addFile(bytes, "ship.png")
+            res.close()
+        }
     }
 }

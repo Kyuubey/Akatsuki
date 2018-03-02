@@ -25,30 +25,30 @@
 
 package me.noud02.akatsuki.commands
 
-import me.noud02.akatsuki.Akatsuki
 import me.noud02.akatsuki.entities.Command
 import me.noud02.akatsuki.entities.Context
 import me.noud02.akatsuki.annotations.Load
-import me.noud02.akatsuki.entities.ThreadedCommand
-import okhttp3.Request
+import me.noud02.akatsuki.utils.Http
 import org.json.JSONObject
 
 @Load
-class Awwnime : ThreadedCommand() {
+class Awwnime : Command() {
     override val desc = "Get a random post from /r/awwnime"
 
-    override fun threadedRun(ctx: Context) {
-        val res = Akatsuki.instance.okhttp.newCall(Request.Builder().url("https://www.reddit.com/r/awwnime/random.json").build()).execute()
+    override fun run(ctx: Context) {
+        Http.get("https://www.reddit.com/r/awwnime/random.json").thenAccept { res ->
+            val json = JSONObject(res.body()!!.string())
 
-        val json = JSONObject(res.body()!!.string())
+            val posts = json
+                    .getJSONObject("data")
+                    .getJSONArray("children")
 
-        val posts = json
-                .getJSONObject("data")
-                .getJSONArray("children")
+            val post = posts
+                    .getJSONObject(Math.floor(Math.random() * posts.count()).toInt())
+                    .getJSONObject("data")
 
-        val post = posts.getJSONObject(Math.floor(Math.random() * posts.count()).toInt())
-
-        ctx.send(post.getJSONObject("data").getString("url"))
-        res.close()
+            ctx.send(post.getString("url"))
+            res.close()
+        }
     }
 }

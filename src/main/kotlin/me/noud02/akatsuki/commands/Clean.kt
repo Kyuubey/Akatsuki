@@ -40,6 +40,7 @@ import kotlin.math.min
 class Clean : AsyncCommand() {
     override val desc = "Clean the last 10 messages sent by me"
     override val guildOnly = true
+    override val cooldown = 15
 
     override suspend fun asyncRun(ctx: Context) {
         val msgs = ctx.channel.getHistoryAround(ctx.msg, 100).await()

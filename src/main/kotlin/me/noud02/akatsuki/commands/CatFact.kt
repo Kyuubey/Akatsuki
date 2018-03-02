@@ -25,12 +25,10 @@
 
 package me.noud02.akatsuki.commands
 
-import me.noud02.akatsuki.Akatsuki
-import me.noud02.akatsuki.entities.Command
 import me.noud02.akatsuki.entities.Context
 import me.noud02.akatsuki.annotations.Load
 import me.noud02.akatsuki.entities.ThreadedCommand
-import okhttp3.Request
+import me.noud02.akatsuki.utils.Http
 import org.json.JSONObject
 
 @Load
@@ -38,11 +36,11 @@ class CatFact : ThreadedCommand() {
     override val desc = "Get a random fact about cats!"
 
     override fun threadedRun(ctx: Context) {
-        val res = Akatsuki.instance.okhttp.newCall(Request.Builder().apply {
-            url("https://catfact.ninja/fact")
-        }.build()).execute()
+        Http.get("https://catfact.ninja/fact").thenAccept { res ->
+            val json = JSONObject(res.body()!!.string())
 
-        ctx.send(JSONObject(res.body()!!.string()).getString("fact"))
-        res.close()
+            ctx.send(json.getString("fact"))
+            res.close()
+        }
     }
 }
