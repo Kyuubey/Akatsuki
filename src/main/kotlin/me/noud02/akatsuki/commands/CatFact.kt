@@ -27,15 +27,15 @@ package me.noud02.akatsuki.commands
 
 import me.noud02.akatsuki.entities.Context
 import me.noud02.akatsuki.annotations.Load
-import me.noud02.akatsuki.entities.ThreadedCommand
+import me.noud02.akatsuki.entities.Command
 import me.noud02.akatsuki.utils.Http
 import org.json.JSONObject
 
 @Load
-class CatFact : ThreadedCommand() {
+class CatFact : Command() {
     override val desc = "Get a random fact about cats!"
 
-    override fun threadedRun(ctx: Context) {
+    override fun run(ctx: Context) {
         Http.get("https://catfact.ninja/fact").thenAccept { res ->
             val json = JSONObject(res.body()!!.string())
 
