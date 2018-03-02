@@ -2,7 +2,7 @@ group 'me.noud02'
 version '1.0-SNAPSHOT'
 
 buildscript {
-    ext.kotlin_version = '1.2.21'
+    ext.kotlin_version = '1.2.30'
 
     repositories {
         mavenCentral()
@@ -45,23 +45,20 @@ dependencies {
     compile 'org.jetbrains.kotlin:kotlin-script-runtime'
     compile 'org.jetbrains.kotlin:kotlin-script-util'
     compile 'org.jetbrains.kotlin:kotlin-compiler-embeddable'
+    compile 'org.jetbrains.exposed:exposed:0.9.1'
     compile 'org.slf4j:slf4j-api:1.8.0-beta1'
     compile 'org.slf4j:slf4j-simple:1.8.0-beta1'
-    compile 'org.jruby:jruby-complete:9.1.15.0'
     compile 'commons-validator:commons-validator:1.6'
     compile 'org.apache.commons:commons-lang3:3.7'
     compile 'net.dv8tion:JDA:3.5.1_339'
     compile 'com.sedmelluq:lavaplayer:1.2.51'
-    compile 'org.jetbrains.exposed:exposed:0.9.1'
     compile 'org.postgresql:postgresql:42.2.1'
     compile 'org.reflections:reflections:0.9.11'
-    compile 'org.python:jython:2.7.1b3'
     compile 'com.fasterxml.jackson.core:jackson-databind:2.9.0'
     compile 'com.fasterxml.jackson.module:jackson-module-kotlin:2.9.0'
     compile 'com.fasterxml.jackson.dataformat:jackson-dataformat-yaml:2.9.0'
     compile 'com.google.code.gson:gson:2.8.2'
     compile 'io.sentry:sentry:1.6.4'
-    compile 'com.squareup.okio:okio:1.13.0'
     compile 'com.squareup.okhttp3:okhttp:3.9.1'
     compile 'com.joestelmach:natty:0.11'
     compile 'org.luaj:luaj-jse:3.0.1'
