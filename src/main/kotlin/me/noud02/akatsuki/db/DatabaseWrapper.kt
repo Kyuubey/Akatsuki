@@ -249,7 +249,7 @@ object DatabaseWrapper {
                 }.firstOrNull()
 
                 if (log != null) {
-                    EventListener.snipes[event.channel.idLong] = log[Logs.messageId]
+                    EventListener.snipes.put(event.channel.idLong, log[Logs.messageId])
 
                     Logs.insert {
                         it[Logs.event] = "DELETE"

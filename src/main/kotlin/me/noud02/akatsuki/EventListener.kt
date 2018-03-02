@@ -25,6 +25,7 @@
 
 package me.noud02.akatsuki
 
+import gnu.trove.map.hash.TLongLongHashMap
 import me.aurieh.ares.core.entities.EventWaiter
 import me.aurieh.ares.exposed.async.asyncTransaction
 import me.noud02.akatsuki.db.DatabaseWrapper
@@ -384,7 +385,7 @@ class EventListener : ListenerAdapter() {
     }
 
     companion object {
-        val snipes = mutableMapOf<Long, Long>()
+        val snipes = TLongLongHashMap()
         val cmdHandler = CommandHandler()
         val waiter = EventWaiter()
     }
