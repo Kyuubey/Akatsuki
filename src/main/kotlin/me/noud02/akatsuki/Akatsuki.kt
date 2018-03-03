@@ -27,16 +27,10 @@ package me.noud02.akatsuki
 
 import io.sentry.Sentry
 import io.sentry.SentryClientFactory
-import kotlinx.coroutines.experimental.async
-import kotlinx.coroutines.experimental.delay
 import me.aurieh.ares.exposed.async.asyncTransaction
-import me.noud02.akatsuki.db.DatabaseWrapper
 import me.noud02.akatsuki.db.schema.*
 import me.noud02.akatsuki.entities.Config
 import me.noud02.akatsuki.entities.CoroutineDispatcher
-import me.noud02.akatsuki.extensions.UTF8Control
-import me.noud02.akatsuki.utils.Http
-import me.noud02.akatsuki.utils.I18n
 import me.noud02.akatsuki.utils.Logger
 import me.noud02.akatsuki.utils.Wolk
 import net.dv8tion.jda.bot.sharding.DefaultShardManagerBuilder
@@ -44,16 +38,9 @@ import net.dv8tion.jda.bot.sharding.ShardManager
 import net.dv8tion.jda.core.AccountType
 import net.dv8tion.jda.core.JDA
 import net.dv8tion.jda.core.JDABuilder
-import net.dv8tion.jda.core.entities.Game
-import okhttp3.*
 import org.jetbrains.exposed.sql.*
-import org.json.JSONObject
-import java.util.*
-import java.util.Date
 import java.util.concurrent.ExecutorService
 import java.util.concurrent.Executors
-import java.util.concurrent.TimeUnit
-import kotlin.concurrent.timer
 import kotlin.reflect.jvm.jvmName
 
 class Akatsuki(private val config: Config) {

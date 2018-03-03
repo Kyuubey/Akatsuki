@@ -47,7 +47,7 @@ class Mute : Command() {
     override val desc = "Mute people."
 
     override fun run(ctx: Context) {
-        if (ctx.storedGuild!!.mutedRole == null)
+        if (ctx.storedGuild!!.mutedRole == null) {
             return ctx.send(
                     I18n.parse(
                             ctx.lang.getString("no_muted_role"),
@@ -56,6 +56,7 @@ class Mute : Command() {
                             )
                     )
             )
+        }
 
         val user = ctx.args["user"] as Member
         val role = ctx.guild!!.getRoleById(ctx.storedGuild.mutedRole!!)
@@ -81,7 +82,7 @@ class Mute : Command() {
                             )
                     )
                 }) {
-                    if (it is PermissionException)
+                    if (it is PermissionException) {
                         ctx.send(
                                 I18n.parse(
                                         ctx.lang.getString("perm_cant_mute"),
@@ -91,8 +92,9 @@ class Mute : Command() {
                                         )
                                 )
                         )
-                    else
+                    } else {
                         ctx.sendError(it)
+                    }
                 }
     }
 }

@@ -46,11 +46,7 @@ class UserPicker(
     private var index = 0
     private val text
         get() = "Please select a user:\n```asciidoc\n${users.mapIndexed {
-            i, member ->
-            if (i == index)
-                "*${i + 1}. ${member.user.name}#${member.user.discriminator} *"
-            else
-                " ${i + 1}. ${member.user.name}#${member.user.discriminator}"
+            i, member -> "${if (i == index) "*" else " "}${i + 1}. ${member.user.name}#${member.user.discriminator}${if (i == index) " *" else ""}"
         }.joinToString("\n")}```"
     private val inputText = "Please select a user by sending their number:\n```asciidoc\n${users.mapIndexed { i, member -> " ${i + 1}. ${member.user.name}#${member.user.discriminator}" }.joinToString("\n")}```"
 
@@ -71,7 +67,7 @@ class UserPicker(
 
     private fun buildReactions(channel: MessageChannel): CompletableFuture<Member> {
         val fut = CompletableFuture<Member>()
-        channel.sendMessage(text).queue({ msg ->
+        channel.sendMessage(text).queue { msg ->
             msg.addReaction(upEmote).queue()
             msg.addReaction(confirmEmote).queue()
             msg.addReaction(cancelEmote).queue()
@@ -106,10 +102,11 @@ class UserPicker(
                         }
                     }
                     true
-                } else
+                } else {
                     false
+                }
             }
-        })
+        }
 
         return fut
     }
@@ -120,18 +117,19 @@ class UserPicker(
         channel.sendMessage(inputText).queue({ msg ->
             waiter.await<MessageReceivedEvent>(1, timeout) {
                 if (it.channel.id == msg.channel.id && it.author.id == user.user.id) {
-                    if (it.message.contentRaw.toIntOrNull() == null)
+                    if (it.message.contentRaw.toIntOrNull() == null) {
                         msg.channel.sendMessage("Invalid number").queue()
-                    else if (it.message.contentRaw.toInt() - 1 > users.size || it.message.contentRaw.toInt() - 1 < 0)
+                    } else if (it.message.contentRaw.toInt() - 1 > users.size || it.message.contentRaw.toInt() - 1 < 0) {
                         msg.channel.sendMessage("Number out of bounds!").queue()
-                    else {
+                    } else {
                         index = it.message.contentRaw.toInt() - 1
                         msg.delete().queue()
                         fut.complete(users[index])
                     }
                     true
-                } else
+                } else {
                     false
+                }
             }
         })
 

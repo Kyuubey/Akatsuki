@@ -51,23 +51,25 @@ class Reason : Command() {
     override val desc = "Give a reason for a case in modlogs."
 
     override fun run(ctx: Context) {
-        if (ctx.storedGuild!!.modlogChannel == null)
+        if (ctx.storedGuild!!.modlogChannel == null) {
             return ctx.send(
                     I18n.parse(
                             ctx.lang.getString("no_modlog_channel"),
                             mapOf("username" to ctx.author.name)
                     )
             )
+        }
 
         val reasonArg = ctx.args["reason"] as String
 
-        if (reasonArg.length > 512)
+        if (reasonArg.length > 512) {
             return ctx.send(
                     I18n.parse(
                             ctx.lang.getString("reason_too_long"),
                             mapOf("username" to ctx.author.name)
                     )
             )
+        }
 
         val caseArg = (ctx.args["case"] as String).toLowerCase()
 
@@ -77,19 +79,21 @@ class Reason : Command() {
                 "l" -> listOf(cases.count())
                 else -> {
                     if (caseArg.toIntOrNull() == null) {
-                        if (!caseArg.matches("\\d+\\.\\.\\d+".toRegex()))
+                        if (!caseArg.matches("\\d+\\.\\.\\d+".toRegex())) {
                             return@asyncTransaction
+                        }
 
                         val first = caseArg.split("..")[0].toInt()
                         val second = caseArg.split("..")[1].toInt()
 
-                        if (first > second)
+                        if (first > second) {
                             return@asyncTransaction ctx.send(
                                     I18n.parse(
                                             ctx.lang.getString("case_num_err"),
                                             mapOf("username" to ctx.author.name)
                                     )
                             )
+                        }
 
                         var list = listOf<Int>()
 
@@ -107,11 +111,11 @@ class Reason : Command() {
                 Modlogs.update({ Modlogs.guildId.eq(ctx.guild!!.idLong) and Modlogs.caseId.eq(id) }) { it[reason] = reasonArg }
                 val log = cases.firstOrNull { it[Modlogs.caseId] == id }
 
-                if (log != null)
+                if (log != null) {
                     ctx.guild!!
                             .getTextChannelById(ctx.storedGuild.modlogChannel ?: return@asyncTransaction)
                             .getMessageById(log[Modlogs.messageId])
-                            .queue ({
+                            .queue({
                                 it.editMessage(
                                         it.contentRaw.replace(
                                                 "\\*\\*Reason\\*\\*: .+\n\\*\\*Responsible moderator\\*\\*: .+".toRegex(),
@@ -123,6 +127,7 @@ class Reason : Command() {
                                 ctx.sendError(it)
                                 it.printStackTrace()
                             }
+                }
             }
 
             ctx.send("\uD83D\uDC4C")

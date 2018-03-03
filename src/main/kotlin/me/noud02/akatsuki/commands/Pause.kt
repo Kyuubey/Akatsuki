@@ -53,9 +53,10 @@ class Pause : Command() {
 
         manager.player.isPaused = !state
 
-        if (!state)
+        if (!state) {
             ctx.send(ctx.lang.getString("paused"))
-        else
+        } else {
             ctx.send(ctx.lang.getString("resumed"))
+        }
     }
 }

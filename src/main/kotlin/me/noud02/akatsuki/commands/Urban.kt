@@ -25,24 +25,21 @@
 
 package me.noud02.akatsuki.commands
 
-import me.noud02.akatsuki.Akatsuki
 import me.noud02.akatsuki.annotations.Argument
 import me.noud02.akatsuki.annotations.Load
 import me.noud02.akatsuki.entities.Command
 import me.noud02.akatsuki.entities.Context
-import me.noud02.akatsuki.entities.ThreadedCommand
 import me.noud02.akatsuki.utils.Http
 import net.dv8tion.jda.core.EmbedBuilder
 import okhttp3.HttpUrl
-import okhttp3.Request
 import org.json.JSONObject
 
 @Load
 @Argument("term", "string")
-class Urban : ThreadedCommand() {
+class Urban : Command() {
     override val desc = "Search on the urban dictionary!"
 
-    override fun threadedRun(ctx: Context) {
+    override fun run(ctx: Context) {
         Http.get(HttpUrl.Builder().apply {
             scheme("https")
             host("api.urbandictionary.com")

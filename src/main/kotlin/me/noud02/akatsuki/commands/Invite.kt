@@ -33,5 +33,5 @@ import me.noud02.akatsuki.annotations.Load
 class Invite : Command() {
     override val desc = "Get my invite!"
 
-    override fun run(ctx: Context) = ctx.send("https://discordapp.com/oauth2/authorize?client_id=${ctx.jda.selfUser.id}&scope=bot&permissions=3468486")
+    override fun run(ctx: Context) = ctx.send("https://discordapp.com/oauth2/authorize?client_id=${ctx.jda.selfUser.id}&scope=bot&permissions=271969478")
 }

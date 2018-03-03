@@ -39,17 +39,19 @@ class Help : Command() {
     override val desc = "Sends you help!"
 
     override fun run(ctx: Context) {
-        if (ctx.args.contains("command"))
-            if (!EventListener.cmdHandler.commands.containsKey(ctx.args["command"] as String))
+        if ("command" in ctx.args) {
+            val cmd = ctx.args["command"] as String
+            if (cmd !in EventListener.cmdHandler.commands) {
                 ctx.send(
                         I18n.parse(
                                 ctx.lang.getString("command_not_found"),
                                 mapOf("username" to ctx.author.name)
                         )
                 )
-            else
-                ctx.send(EventListener.cmdHandler.help(ctx.args["command"] as String))
-        else {
+            } else {
+                ctx.send(EventListener.cmdHandler.help(cmd))
+            }
+        } else {
             val commands = EventListener.cmdHandler.commands
                     .toSortedMap()
                     .map {
@@ -71,8 +73,9 @@ class Help : Command() {
                 part += "$line\n"
             }
 
-            if (part.isNotBlank() && part.split("\n").size < partSize)
+            if (part.isNotBlank() && part.split("\n").size < partSize) {
                 parts.add(part)
+            }
 
             for (partt in parts) {
                 ctx.author.openPrivateChannel().complete().sendMessage("```$partt```").queue()

@@ -25,12 +25,10 @@
 
 package me.noud02.akatsuki.commands
 
-import me.noud02.akatsuki.Akatsuki
 import me.noud02.akatsuki.entities.Command
 import me.noud02.akatsuki.entities.Context
 import me.noud02.akatsuki.annotations.Load
 import me.noud02.akatsuki.utils.Http
-import okhttp3.Request
 
 @Load
 class Dog: Command() {

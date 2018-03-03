@@ -47,7 +47,7 @@ class Unmute : Command() {
     override val desc = "Unmute people."
 
     override fun run(ctx: Context) {
-        if (ctx.storedGuild!!.mutedRole == null)
+        if (ctx.storedGuild!!.mutedRole == null) {
             return ctx.send(
                     I18n.parse(
                             ctx.lang.getString("no_muted_role"),
@@ -56,6 +56,7 @@ class Unmute : Command() {
                             )
                     )
             )
+        }
 
         val user = ctx.args["user"] as Member
         val role = ctx.guild!!.getRoleById(ctx.storedGuild.mutedRole!!)
@@ -68,13 +69,14 @@ class Unmute : Command() {
                 )
         )
 
-        if (!user.roles.contains(role))
+        if (role !in user.roles) {
             return ctx.send(
                     I18n.parse(
                             ctx.lang.getString("not_muted"),
                             mapOf("username" to ctx.author.name)
                     )
             )
+        }
 
         ctx.guild.controller
                 .removeSingleRoleFromMember(user, role)
@@ -87,7 +89,7 @@ class Unmute : Command() {
                             )
                     )
                 }) {
-                    if (it is PermissionException)
+                    if (it is PermissionException) {
                         ctx.send(
                                 I18n.parse(
                                         ctx.lang.getString("perm_cant_unmute"),
@@ -97,8 +99,9 @@ class Unmute : Command() {
                                         )
                                 )
                         )
-                    else
+                    } else {
                         ctx.sendError(it)
+                    }
                 }
     }
 }

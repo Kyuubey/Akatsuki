@@ -55,13 +55,14 @@ class UnrestrictGlobally : Command() {
         val cmd = ctx.args["command"] as String
         val mem = ctx.args["user"] as Member
 
-        if (cmd !in EventListener.cmdHandler.commands && cmd != "all")
+        if (cmd !in EventListener.cmdHandler.commands && cmd != "all") {
             return ctx.send(
                     I18n.parse(
                             ctx.lang.getString("command_not_found"),
                             mapOf("username" to ctx.author.name)
                     )
             )
+        }
 
         asyncTransaction(Akatsuki.pool) {
             Restrictions.deleteWhere {
@@ -90,13 +91,14 @@ class Unrestrict : Command() {
     override fun run(ctx: Context) {
         val cmd = ctx.args["command"] as String
 
-        if (cmd !in EventListener.cmdHandler.commands && cmd != "all")
+        if (cmd !in EventListener.cmdHandler.commands && cmd != "all") {
             return ctx.send(
                     I18n.parse(
                             ctx.lang.getString("command_not_found"),
                             mapOf("username" to ctx.author.name)
                     )
             )
+        }
 
         asyncTransaction(Akatsuki.pool) {
             if ("user" in ctx.args) {

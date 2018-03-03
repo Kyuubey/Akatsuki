@@ -59,8 +59,9 @@ class AddItem : Command() {
         val itemDesc = ctx.args.getOrDefault("description", "") as String
 
         asyncTransaction(Akatsuki.pool) {
-            if (Items.select { Items.id.eq(itemId) }.firstOrNull() != null)
+            if (Items.select { Items.id.eq(itemId) }.firstOrNull() != null) {
                 return@asyncTransaction ctx.send("Item with that ID already exists!") // TODO add translation
+            }
 
             Items.insert {
                 it[id] = itemId
@@ -94,8 +95,9 @@ class BuyItem : Command() {
 
             val toPay = item[Items.price] * amount
 
-            if (contract[Contracts.balance] < toPay)
+            if (contract[Contracts.balance] < toPay) {
                 return@asyncTransaction ctx.send("Insufficient balance!") // TODO add translation
+            }
 
             val inv = contract[Contracts.inventory].toMutableList()
 
@@ -125,8 +127,9 @@ class SearchItem : Command() {
         asyncTransaction(Akatsuki.pool) {
             val matches = Items.selectAll().filter { it[Items.id].indexOf(search) > -1 }
 
-            if (matches.isEmpty())
+            if (matches.isEmpty()) {
                 return@asyncTransaction ctx.send("Couldn't find any items matching your query!") // TODO add translation
+            }
 
             val items = matches.subList(0, min(matches.size, 50))
 

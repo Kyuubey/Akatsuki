@@ -60,40 +60,49 @@ class ItemPicker(
 
     fun build(msg: Message) = build(msg.channel)
 
-    fun build(channel: MessageChannel)
-            = if (guild.selfMember.hasPermission(Permission.MESSAGE_ADD_REACTION)
-            || guild.selfMember.hasPermission(Permission.ADMINISTRATOR)) buildReactions(channel) else buildInput(channel)
+    fun build(channel: MessageChannel) = if (guild.selfMember.hasPermission(Permission.MESSAGE_ADD_REACTION) || guild.selfMember.hasPermission(Permission.ADMINISTRATOR)) {
+        buildReactions(channel)
+    } else {
+        buildInput(channel)
+    }
 
     private fun buildReactions(channel: MessageChannel): CompletableFuture<PickerItem> {
         val fut = CompletableFuture<PickerItem>()
 
         for (item in items) {
-            val embed = EmbedBuilder()
-                    .setColor(item.color ?: color)
-                    .setFooter("${if (item.footer.isNotBlank()) "${item.footer} | " else ""}Page ${items.indexOf(item) + 1}/${items.size}", null)
+            val embed = EmbedBuilder().apply {
+                setColor(item.color ?: color)
+                setFooter("${if (item.footer.isNotBlank()) "${item.footer} | " else ""}Page ${items.indexOf(item) + 1}/${items.size}", null)
 
-            if (item.author.isNotBlank())
-                embed.setAuthor(item.author, null, null)
+                if (item.author.isNotBlank()) {
+                    setAuthor(item.author, null, null)
+                }
 
-            if (item.title.isNotBlank())
-                embed.setTitle(item.title, if (item.url.isNotBlank()) item.url else null)
+                if (item.title.isNotBlank()) {
+                    setTitle(item.title, if (item.url.isNotBlank()) item.url else null)
+                }
 
-            if (item.description.isNotBlank())
-                embed.descriptionBuilder.append(item.description)
+                if (item.description.isNotBlank()) {
+                    descriptionBuilder.append(item.description)
+                }
 
-            if (item.thumbnail.isNotBlank())
-                embed.setThumbnail(item.thumbnail)
+                if (item.thumbnail.isNotBlank()) {
+                    setThumbnail(item.thumbnail)
+                }
 
-            if (item.image.isNotBlank())
-                embed.setImage(item.image)
+                if (item.image.isNotBlank()) {
+                    setImage(item.image)
+                }
+            }
 
             embeds.add(embed.build())
         }
 
-        channel.sendMessage(embeds[index]).queue({ msg ->
+        channel.sendMessage(embeds[index]).queue { msg ->
             msg.addReaction(leftEmote).queue()
-            if (confirm)
+            if (confirm) {
                 msg.addReaction(confirmEmote).queue()
+            }
             msg.addReaction(cancelEmote).queue()
             msg.addReaction(rightEmote).queue()
 
@@ -102,14 +111,16 @@ class ItemPicker(
                     when (it.reactionEmote.name) {
                         leftEmote -> {
                             it.reaction.removeReaction(it.user).queue()
-                            if (index - 1 >= 0)
+                            if (index - 1 >= 0) {
                                 msg.editMessage(embeds[--index]).queue()
+                            }
                         }
 
                         rightEmote -> {
                             it.reaction.removeReaction(it.user).queue()
-                            if (index + 1 <= items.size - 1)
+                            if (index + 1 <= items.size - 1) {
                                 msg.editMessage(embeds[++index]).queue()
+                            }
                         }
 
                         confirmEmote -> {
@@ -124,36 +135,37 @@ class ItemPicker(
                         }
                     }
                     true
-                } else
+                } else {
                     false
+                }
             }
-        })
+        }
 
         return fut
     }
 
     private fun buildInput(channel: MessageChannel): CompletableFuture<PickerItem> {
         val fut = CompletableFuture<PickerItem>()
-        channel.sendMessage(
-                "Please choose an item from the list by sending its number:\n```\n${items.mapIndexed {
-                    i, item -> " ${i + 1}. ${item.title}"
-                }.joinToString("\n")}```").queue({ msg ->
+        val formatted = items.mapIndexed { i, item -> " ${i + 1}. ${item.title}" }.joinToString("\n")
+
+        channel.sendMessage("Please choose an item from the list by sending its number:\n```\n$formatted```").queue { msg ->
             waiter.await<MessageReceivedEvent>(1, timeout) {
                 if (it.channel.id == msg.channel.id && it.author.id == user.user.id) {
-                    if (it.message.contentRaw.toIntOrNull() == null)
+                    if (it.message.contentRaw.toIntOrNull() == null) {
                         msg.channel.sendMessage("Invalid number").queue()
-                    else if (it.message.contentRaw.toInt() - 1 > items.size || it.message.contentRaw.toInt() - 1 < 0)
+                    } else if (it.message.contentRaw.toInt() - 1 > items.size || it.message.contentRaw.toInt() - 1 < 0) {
                         msg.channel.sendMessage("Number out of bounds!")
-                    else {
+                    } else {
                         index = it.message.contentRaw.toInt() - 1
                         msg.delete().queue()
                         fut.complete(items[index])
                     }
                     true
-                } else
+                } else {
                     false
+                }
             }
-        })
+        }
 
         return fut
     }

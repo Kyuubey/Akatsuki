@@ -66,8 +66,9 @@ class TrackScheduler(private val player: AudioPlayer, private val manager: Guild
         embed.setTitle("Now playing: ${track.info.title}")
         embed.setColor(Color.CYAN)
 
-        if (nextTrack != null)
+        if (nextTrack != null) {
             embed.setFooter("Next: ${nextTrack.info.title}", null)
+        }
 
         manager.textChannel.sendMessage(embed.build()).queue()
     }
@@ -80,8 +81,9 @@ class TrackScheduler(private val player: AudioPlayer, private val manager: Guild
             embed.setTitle("Track finished: ${track.info.title}")
             embed.setColor(Color.CYAN)
 
-            if (nextTrack != null)
+            if (nextTrack != null) {
                 embed.setFooter("Next: ${nextTrack.info.title}", null)
+            }
 
             if (manager.autoplay && track.info.uri.indexOf("youtube") > -1) {
                 val qs = "?key=${Akatsuki.config.api.google}&part=snippet&maxResults=10&type=video&relatedToVideoId=${track.info.identifier}"
@@ -94,9 +96,8 @@ class TrackScheduler(private val player: AudioPlayer, private val manager: Guild
                             .getString("videoId")
 
                     MusicManager.playerManager.loadItem("https://youtube.com/watch?v=$id", object : AudioLoadResultHandler {
-                        override fun loadFailed(exception: FriendlyException) = manager.textChannel.sendMessage(
-                                "[autoplay] Failed to add song to queue: ${exception.message}"
-                        ).queue()
+                        override fun loadFailed(exception: FriendlyException)
+                                = manager.textChannel.sendMessage("[autoplay] Failed to add song to queue: ${exception.message}").queue()
                         override fun noMatches() = manager.textChannel.sendMessage("[autoplay] YouTube url is (probably) invalid!").queue()
                         override fun trackLoaded(track: AudioTrack) = manager.scheduler.add(track)
                         override fun playlistLoaded(playlist: AudioPlaylist) = trackLoaded(playlist.tracks.first())
@@ -104,8 +105,9 @@ class TrackScheduler(private val player: AudioPlayer, private val manager: Guild
                 }
             } else {
                 MusicManager.inactivityScheduler.schedule(timerTask {
-                    if (player.playingTrack != null || !manager.textChannel.guild.audioManager.isConnected)
+                    if (player.playingTrack != null || !manager.textChannel.guild.audioManager.isConnected) {
                         return@timerTask
+                    }
 
                     manager.textChannel.sendMessage("Left voicechannel because of inactivity").queue()
                     MusicManager.leave(manager.textChannel.guild.id)

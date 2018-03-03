@@ -105,7 +105,7 @@ class Marry : Command() {
                                 "username" to ctx.author.name
                         )
                 )
-        ).queue({ msg ->
+        ).queue { msg ->
             msg.addReaction(yesEmote).queue()
             msg.addReaction(noEmote).queue()
 
@@ -151,9 +151,10 @@ class Marry : Command() {
                     }
 
                     true
-                } else
+                } else {
                     false
+                }
             }
-        })
+        }
     }
 }

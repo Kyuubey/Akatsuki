@@ -80,8 +80,9 @@ class RemPrefix : Command() {
         val prefix = ctx.args["prefix"] as String
 
         asyncTransaction(Akatsuki.pool) {
-            if (ctx.storedGuild!!.prefixes.isEmpty())
+            if (ctx.storedGuild!!.prefixes.isEmpty()) {
                 return@asyncTransaction ctx.send(ctx.lang.getString("remove_no_prefix"))
+            }
 
             try {
                 Guilds.update({

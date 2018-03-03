@@ -55,13 +55,14 @@ class DeleteTag : Command() {
                             )
                     )
 
-            if (tag[Tags.ownerId] != ctx.author.idLong && !Akatsuki.config.owners.contains(ctx.author.id))
+            if (tag[Tags.ownerId] != ctx.author.idLong && !Akatsuki.config.owners.contains(ctx.author.id)) {
                 return@asyncTransaction ctx.send(
                         I18n.parse(
                                 ctx.lang.getString("tag_not_owner"),
                                 mapOf("username" to ctx.author.name)
                         )
                 )
+            }
 
             Tags.deleteWhere { Tags.tagName.eq(name) }
 

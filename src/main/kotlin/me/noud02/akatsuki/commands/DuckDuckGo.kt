@@ -25,16 +25,14 @@
 
 package me.noud02.akatsuki.commands
 
-import me.noud02.akatsuki.Akatsuki
 import me.noud02.akatsuki.annotations.Alias
 import me.noud02.akatsuki.annotations.Argument
 import me.noud02.akatsuki.annotations.Load
+import me.noud02.akatsuki.entities.Command
 import me.noud02.akatsuki.entities.Context
-import me.noud02.akatsuki.entities.ThreadedCommand
 import me.noud02.akatsuki.utils.Http
 import net.dv8tion.jda.core.EmbedBuilder
 import okhttp3.HttpUrl
-import okhttp3.Request
 import org.json.JSONObject
 import java.awt.Color
 import kotlin.math.min
@@ -42,10 +40,10 @@ import kotlin.math.min
 @Load
 @Argument("query", "string")
 @Alias("ddg")
-class DuckDuckGo : ThreadedCommand() {
+class DuckDuckGo : Command() {
     override val desc = "Search on DuckDuckGo."
 
-    override fun threadedRun(ctx: Context) {
+    override fun run(ctx: Context) {
         Http.get(HttpUrl.Builder().apply {
             scheme("https")
             host("api.duckduckgo.com")

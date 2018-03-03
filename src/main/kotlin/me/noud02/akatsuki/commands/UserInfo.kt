@@ -55,14 +55,7 @@ class UserInfo : Command() {
                 }
             }
 
-            setTitle(
-                    "$statusEmote ${member.user.name}#${member.user.discriminator}${
-                    if (!member.nickname.isNullOrEmpty())
-                        " (${member.nickname})"
-                    else
-                        ""
-                    }"
-            )
+            setTitle("$statusEmote ${member.user.name}#${member.user.discriminator}${if (!member.nickname.isNullOrEmpty()) " (${member.nickname})" else ""}")
 
             setThumbnail(member.user.avatarUrl)
 

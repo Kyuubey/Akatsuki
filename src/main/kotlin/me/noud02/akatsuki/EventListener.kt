@@ -26,6 +26,7 @@
 package me.noud02.akatsuki
 
 import gnu.trove.map.hash.TLongLongHashMap
+import io.sentry.Sentry
 import me.aurieh.ares.core.entities.EventWaiter
 import me.aurieh.ares.exposed.async.asyncTransaction
 import me.noud02.akatsuki.db.DatabaseWrapper
@@ -89,81 +90,103 @@ class EventListener : ListenerAdapter() {
 
     override fun onMessageReceived(event: MessageReceivedEvent) {
         if (event.guild != null) {
-            val stored = DatabaseWrapper.getGuildSafe(event.guild).get()
-            val user = DatabaseWrapper.getUserSafe(event.member).get()
-            val locale = Locale(user.lang.split("_")[0], user.lang.split("_")[1])
-            val bundle = ResourceBundle.getBundle("i18n.Kyubey", locale, UTF8Control())
+            DatabaseWrapper.getGuildSafe(event.guild).thenAccept { stored ->
+                DatabaseWrapper.getUserSafe(event.member).thenAccept { user ->
+                    val locale = Locale(user.lang.split("_")[0], user.lang.split("_")[1])
+                    val bundle = ResourceBundle.getBundle("i18n.Kyubey", locale, UTF8Control())
 
-            if (stored.logs)
-                event.message.log()
-
-            if (stored.antiInvite) {
-                val regex = "(https?)?:?(//)?discord(app)?.?(gg|io|me|com)?/(\\w+:?\\w*@)?(\\S+)(:[0-9]+)?(/|/([\\w#!:.?+=&%@!-/]))?".toRegex()
-
-                if (event.member.roles.isEmpty() && regex.containsMatchIn(event.message.contentRaw))
-                    event.message.delete().queue({
-                        event.channel.sendMessage(
-                                I18n.parse(
-                                        bundle.getString("no_ads"),
-                                        mapOf("user" to event.author.asMention)
-                                )
-                        ).queue()
-                    }) {
-                        event.channel.sendMessage(
-                                I18n.parse(
-                                        bundle.getString("error"),
-                                        mapOf("error" to it)
-                                )
-                        ).queue()
-                    }
-            }
-
-            asyncTransaction(Akatsuki.pool) {
-                val contract = Contracts.select { Contracts.userId.eq(event.author.idLong) }.firstOrNull() ?: return@asyncTransaction
-                val curLevel = contract[Contracts.level]
-                val xp = contract[Contracts.experience]
-
-                val xpNeeded = curLevel.toFloat() * 500f * (curLevel.toFloat() / 3f)
-
-                if (xp >= xpNeeded) {
-                    Contracts.update({
-                        Contracts.userId.eq(event.author.idLong)
-                    }) {
-                        it[level] = curLevel + 1
-                        it[experience] = 0
-                        it[balance] = contract[Contracts.balance] + 2500
+                    if (stored.logs) {
+                        event.message.log()
                     }
 
-                    if (stored.levelMessages)
-                        event.channel.sendMessage(EmbedBuilder().apply {
-                            setTitle("${event.author.name}, you are now rank ${curLevel+1}!") // TODO translation
-                            setColor(Color.CYAN)
-                            descriptionBuilder.append("+2500$\n")
+                    if (stored.antiInvite) {
+                        val regex = "(https?)?:?(//)?discord(app)?.?(gg|io|me|com)?/(\\w+:?\\w*@)?(\\S+)(:[0-9]+)?(/|/([\\w#!:.?+=&%@!-/]))?".toRegex()
 
-                            // TODO add random items on levelup
-                        }.build()).queue()
+                        if (event.member.roles.isEmpty() && regex.containsMatchIn(event.message.contentRaw)) {
+                            event.message.delete().queue({
+                                event.channel.sendMessage(
+                                        I18n.parse(
+                                                bundle.getString("no_ads"),
+                                                mapOf("user" to event.author.asMention)
+                                        )
+                                ).queue()
+                            }) {
+                                event.channel.sendMessage(
+                                        I18n.parse(
+                                                bundle.getString("error"),
+                                                mapOf("error" to it)
+                                        )
+                                ).queue()
+                                logger.error("Error while trying to delete ad", it)
+                                Sentry.capture(it)
+                            }
+                        }
+                    }
+
+                    asyncTransaction(Akatsuki.pool) {
+                        val contract = Contracts.select { Contracts.userId.eq(event.author.idLong) }.firstOrNull() ?: return@asyncTransaction
+                        val curLevel = contract[Contracts.level]
+                        val xp = contract[Contracts.experience]
+
+                        val xpNeeded = curLevel.toFloat() * 500f * (curLevel.toFloat() / 3f)
+
+                        if (xp >= xpNeeded) {
+                            Contracts.update({
+                                Contracts.userId.eq(event.author.idLong)
+                            }) {
+                                it[level] = curLevel + 1
+                                it[experience] = 0
+                                it[balance] = contract[Contracts.balance] + 2500
+                            }
+
+                            if (stored.levelMessages) {
+                                event.channel.sendMessage(EmbedBuilder().apply {
+                                    setTitle("${event.author.name}, you are now rank ${curLevel + 1}!") // TODO translation
+                                    setColor(Color.CYAN)
+                                    descriptionBuilder.append("+2500$\n")
+
+                                    // TODO add random items on levelup
+                                }.build()).queue()
+                            }
+                        }
+                    }.execute().exceptionally {
+                        logger.error("Error while trying to levelup user ${event.author.name}#${event.author.discriminator} (${event.author.id}", it)
+                        Sentry.capture(it)
+                    }
                 }
-            }.execute()
+            }
         }
 
-        if (event.author.isBot)
+        if (event.author.isBot) {
             return
+        }
 
         try {
             cmdHandler.handleMessage(event)
         } catch (e: Exception) {
             logger.error("Error while trying to handle message", e)
+            Sentry.capture(e)
         }
     }
 
     override fun onMessageDelete(event: MessageDeleteEvent) {
-        if (event.guild != null && DatabaseWrapper.getGuildSafe(event.guild).get().logs)
-            DatabaseWrapper.logEvent(event)
+        if (event.guild != null) {
+            DatabaseWrapper.getGuildSafe(event.guild).thenAccept { guild ->
+                if (guild.logs) {
+                    DatabaseWrapper.logEvent(event)
+                }
+            }
+        }
     }
 
     override fun onMessageUpdate(event: MessageUpdateEvent) {
-        if (event.guild != null && DatabaseWrapper.getGuildSafe(event.guild).get().logs)
-            event.message.log("UPDATE")
+        if (event.guild != null) {
+            DatabaseWrapper.getGuildSafe(event.guild).thenAccept { guild ->
+                if (guild.logs) {
+                    event.message.log("UPDATE")
+                }
+            }
+        }
     }
 
     override fun onGuildJoin(event: GuildJoinEvent) {
@@ -209,195 +232,198 @@ class EventListener : ListenerAdapter() {
     override fun onGuildVoiceLeave(event: GuildVoiceLeaveEvent) {
         if (event.member.user.id == event.jda.selfUser.id
                 || !event.channelLeft.members.any { it.user.id == event.jda.selfUser.id }
-                || event.channelLeft.members.size > 1)
+                || event.channelLeft.members.size > 1) {
             return
+        }
 
         MusicManager.leave(event.guild.id)
     }
 
     override fun onGuildMemberJoin(event: GuildMemberJoinEvent) {
-        val storedGuild = DatabaseWrapper.getGuildSafe(event.guild).get()
-        val channel = event.guild.getTextChannelById(storedGuild.welcomeChannel ?: return) ?: return
+        DatabaseWrapper.getGuildSafe(event.guild).thenAccept { storedGuild ->
+            val channel = event.guild.getTextChannelById(storedGuild.welcomeChannel ?: return@thenAccept) ?: return@thenAccept
 
-        if (storedGuild.welcome && storedGuild.welcomeMessage.isNotBlank())
-            channel.sendMessage(
-                    storedGuild.welcomeMessage
-                            .replace("%USER%", event.user.asMention)
-                            .replace("%USERNAME%", event.user.name)
-                            .replace("%SERVER%", event.guild.name)
-                            .replace("%MEMBERNUM%", (event.guild.members.indexOf(event.member) + 1).toString())
-            ).queue()
-
+            if (storedGuild.welcome && storedGuild.welcomeMessage.isNotBlank()) {
+                channel.sendMessage(
+                        storedGuild.welcomeMessage
+                                .replace("%USER%", event.user.asMention)
+                                .replace("%USERNAME%", event.user.name)
+                                .replace("%SERVER%", event.guild.name)
+                                .replace("%MEMBERNUM%", (event.guild.members.indexOf(event.member) + 1).toString())
+                ).queue()
+            }
+        }
     }
 
     override fun onGuildMemberLeave(event: GuildMemberLeaveEvent) {
-        val storedGuild = DatabaseWrapper.getGuildSafe(event.guild).get()
-        val channel = event.guild.getTextChannelById(storedGuild.welcomeChannel ?: return) ?: return
+        DatabaseWrapper.getGuildSafe(event.guild).thenAccept { storedGuild ->
+            val channel = event.guild.getTextChannelById(storedGuild.welcomeChannel ?: return@thenAccept) ?: return@thenAccept
 
-        if (storedGuild.welcome && storedGuild.leaveMessage.isNotBlank())
-            channel.sendMessage(
-                    storedGuild.leaveMessage
-                            .replace("%USER%", event.user.asMention)
-                            .replace("%USERNAME%", event.user.name)
-                            .replace("%SERVER%", event.guild.name)
-            ).queue()
+            if (storedGuild.welcome && storedGuild.leaveMessage.isNotBlank()) {
+                channel.sendMessage(
+                        storedGuild.leaveMessage
+                                .replace("%USER%", event.user.asMention)
+                                .replace("%USERNAME%", event.user.name)
+                                .replace("%SERVER%", event.guild.name)
+                ).queue()
+            }
 
-        asyncTransaction(Akatsuki.pool) {
-            val guild = Guilds.select { Guilds.id.eq(event.guild.idLong) }.firstOrNull()
+            asyncTransaction(Akatsuki.pool) {
+                if (!storedGuild.modlogs) {
+                    return@asyncTransaction
+                }
 
-            if (guild == null || !guild[Guilds.modlogs])
-                return@asyncTransaction
+                val modlogs = Modlogs.select { Modlogs.guildId.eq(event.guild.idLong) }
+                val modlogChannel = event.guild.getTextChannelById(storedGuild.modlogChannel ?: return@asyncTransaction) ?: return@asyncTransaction
+                val audit = event.guild.auditLogs.type(ActionType.KICK).limit(2).firstOrNull { it.targetId == event.user.id } ?: return@asyncTransaction
+                val case = modlogs.count() + 1
 
-            val modlogs = Modlogs.select { Modlogs.guildId.eq(event.guild.idLong) }
-            val modlogChannel = event.guild.getTextChannelById(guild[Guilds.modlogChannel] ?: return@asyncTransaction) ?: return@asyncTransaction
-            val audit = event.guild.auditLogs.type(ActionType.KICK).limit(2).firstOrNull { it.targetId == event.user.id } ?: return@asyncTransaction
-            val case = modlogs.count() + 1
-
-            val msg = modlogChannel.sendMessage("""
+                val msg = modlogChannel.sendMessage("""
                 **Kick** | Case $case
                 **User**: ${event.user.name}#${event.user.discriminator} (${event.user.id})
                 **Reason**: ${audit.reason ?: "`Responsible moderator, please use the reason command to set this reason`"}
                 **Responsible moderator**: ${audit.user.name}#${audit.user.discriminator} (${audit.user.id})
             """.trimIndent()).complete()
 
-            Modlogs.insert {
-                it[messageId] = msg.idLong
-                it[modId] = audit.user.idLong
-                it[guildId] = event.guild.idLong
-                it[targetId] = audit.targetIdLong
-                it[caseId] = case
-                it[type] = "KICK"
-                it[reason] = audit.reason
-            }
-        }.execute()
+                Modlogs.insert {
+                    it[messageId] = msg.idLong
+                    it[modId] = audit.user.idLong
+                    it[guildId] = event.guild.idLong
+                    it[targetId] = audit.targetIdLong
+                    it[caseId] = case
+                    it[type] = "KICK"
+                    it[reason] = audit.reason
+                }
+            }.execute()
+        }
     }
 
     override fun onGuildUnban(event: GuildUnbanEvent) {
-        asyncTransaction(Akatsuki.pool) {
-            val guild = Guilds.select { Guilds.id.eq(event.guild.idLong) }.firstOrNull()
+        DatabaseWrapper.getGuildSafe(event.guild).thenAccept { storedGuild ->
+            asyncTransaction(Akatsuki.pool) {
+                if (!storedGuild.modlogs) {
+                    return@asyncTransaction
+                }
 
-            if (guild == null || !guild[Guilds.modlogs])
-                return@asyncTransaction
+                val modlogs = Modlogs.select { Modlogs.guildId.eq(event.guild.idLong) }
+                val modlogChannel = event.guild.getTextChannelById(storedGuild.modlogChannel ?: return@asyncTransaction) ?: return@asyncTransaction
+                val audit = event.guild.auditLogs.type(ActionType.UNBAN).first { it.targetId == event.user.id }
+                val case = modlogs.count() + 1
 
-            val modlogs = Modlogs.select { Modlogs.guildId.eq(event.guild.idLong) }
-            val modlogChannel = event.guild.getTextChannelById(guild[Guilds.modlogChannel] ?: return@asyncTransaction) ?: return@asyncTransaction
-            val audit = event.guild.auditLogs.type(ActionType.UNBAN).first { it.targetId == event.user.id }
-            val case = modlogs.count() + 1
-
-            val msg = modlogChannel.sendMessage("""
+                val msg = modlogChannel.sendMessage("""
                 **Unban** | Case $case
                 **User**: ${event.user.name}#${event.user.discriminator} (${event.user.id})
                 **Reason**: ${audit.reason ?: "`Responsible moderator, please use the reason command to set this reason`"}
                 **Responsible moderator**: ${audit.user.name}#${audit.user.discriminator} (${audit.user.id})
             """.trimIndent()).complete()
 
-            Modlogs.insert {
-                it[messageId] = msg.idLong
-                it[modId] = audit.user.idLong
-                it[guildId] = event.guild.idLong
-                it[targetId] = audit.targetIdLong
-                it[caseId] = case
-                it[type] = "UNBAN"
-                it[reason] = audit.reason
-            }
-        }.execute()
+                Modlogs.insert {
+                    it[messageId] = msg.idLong
+                    it[modId] = audit.user.idLong
+                    it[guildId] = event.guild.idLong
+                    it[targetId] = audit.targetIdLong
+                    it[caseId] = case
+                    it[type] = "UNBAN"
+                    it[reason] = audit.reason
+                }
+            }.execute()
+        }
     }
 
     override fun onGuildBan(event: GuildBanEvent) {
-        asyncTransaction(Akatsuki.pool) {
-            val guild = Guilds.select { Guilds.id.eq(event.guild.idLong) }.firstOrNull()
+        DatabaseWrapper.getGuildSafe(event.guild).thenAccept { storedGuild ->
+            asyncTransaction(Akatsuki.pool) {
+                if (!storedGuild.modlogs) {
+                    return@asyncTransaction
+                }
 
-            if (guild == null || !guild[Guilds.modlogs])
-                return@asyncTransaction
+                val modlogs = Modlogs.select { Modlogs.guildId.eq(event.guild.idLong) }
+                val modlogChannel = event.guild.getTextChannelById(storedGuild.modlogChannel ?: return@asyncTransaction) ?: return@asyncTransaction
+                val audit = event.guild.auditLogs.type(ActionType.BAN).first { it.targetId == event.user.id }
+                val case = modlogs.count() + 1
 
-            val modlogs = Modlogs.select { Modlogs.guildId.eq(event.guild.idLong) }
-            val modlogChannel = event.guild.getTextChannelById(guild[Guilds.modlogChannel] ?: return@asyncTransaction) ?: return@asyncTransaction
-            val audit = event.guild.auditLogs.type(ActionType.BAN).first { it.targetId == event.user.id }
-            val case = modlogs.count() + 1
-
-            val msg = modlogChannel.sendMessage("""
+                val msg = modlogChannel.sendMessage("""
                 **Ban** | Case $case
                 **User**: ${event.user.name}#${event.user.discriminator} (${event.user.id})
                 **Reason**: ${audit.reason ?: "`Responsible moderator, please use the reason command to set this reason`"}
                 **Responsible moderator**: ${audit.user.name}#${audit.user.discriminator} (${audit.user.id})
             """.trimIndent()).complete()
 
-            Modlogs.insert {
-                it[messageId] = msg.idLong
-                it[modId] = audit.user.idLong
-                it[guildId] = event.guild.idLong
-                it[targetId] = audit.targetIdLong
-                it[caseId] = case
-                it[type] = "BAN"
-                it[reason] = audit.reason
-            }
-        }.execute()
+                Modlogs.insert {
+                    it[messageId] = msg.idLong
+                    it[modId] = audit.user.idLong
+                    it[guildId] = event.guild.idLong
+                    it[targetId] = audit.targetIdLong
+                    it[caseId] = case
+                    it[type] = "BAN"
+                    it[reason] = audit.reason
+                }
+            }.execute()
+        }
     }
 
     override fun onGuildMemberRoleAdd(event: GuildMemberRoleAddEvent) {
-        asyncTransaction(Akatsuki.pool) {
-            val guild = Guilds.select { Guilds.id.eq(event.guild.idLong) }.firstOrNull()
+        DatabaseWrapper.getGuildSafe(event.guild).thenAccept { storedGuild ->
+            asyncTransaction(Akatsuki.pool) {
+                if (!storedGuild.modlogs
+                        || !event.roles.contains(event.guild.getRoleById(storedGuild.mutedRole ?: return@asyncTransaction) ?: return@asyncTransaction))
+                    return@asyncTransaction
 
-            if (guild == null
-                    || !guild[Guilds.modlogs]
-                    || !event.roles.contains(event.guild.getRoleById(guild[Guilds.mutedRole] ?: return@asyncTransaction) ?: return@asyncTransaction))
-                return@asyncTransaction
+                val modlogs = Modlogs.select { Modlogs.guildId.eq(event.guild.idLong) }
+                val modlogChannel = event.guild.getTextChannelById(storedGuild.modlogChannel ?: return@asyncTransaction) ?: return@asyncTransaction
+                val audit = event.guild.auditLogs.type(ActionType.MEMBER_ROLE_UPDATE).firstOrNull { it.targetId == event.user.id } ?: return@asyncTransaction
+                val case = modlogs.count() + 1
 
-            val modlogs = Modlogs.select { Modlogs.guildId.eq(event.guild.idLong) }
-            val modlogChannel = event.guild.getTextChannelById(guild[Guilds.modlogChannel] ?: return@asyncTransaction) ?: return@asyncTransaction
-            val audit = event.guild.auditLogs.type(ActionType.MEMBER_ROLE_UPDATE).firstOrNull { it.targetId == event.user.id } ?: return@asyncTransaction
-            val case = modlogs.count() + 1
-
-            val msg = modlogChannel.sendMessage("""
+                val msg = modlogChannel.sendMessage("""
                 **Mute** | Case $case
                 **User**: ${event.user.name}#${event.user.discriminator} (${event.user.id})
                 **Reason**: ${audit.reason ?: "`Responsible moderator, please use the reason command to set this reason`"}
                 **Responsible moderator**: ${audit.user.name}#${audit.user.discriminator} (${audit.user.id})
             """.trimIndent()).complete()
 
-            Modlogs.insert {
-                it[messageId] = msg.idLong
-                it[modId] = audit.user.idLong
-                it[guildId] = event.guild.idLong
-                it[targetId] = audit.targetIdLong
-                it[caseId] = case
-                it[type] = "MUTE"
-                it[reason] = audit.reason
-            }
-        }.execute()
+                Modlogs.insert {
+                    it[messageId] = msg.idLong
+                    it[modId] = audit.user.idLong
+                    it[guildId] = event.guild.idLong
+                    it[targetId] = audit.targetIdLong
+                    it[caseId] = case
+                    it[type] = "MUTE"
+                    it[reason] = audit.reason
+                }
+            }.execute()
+        }
     }
 
     override fun onGuildMemberRoleRemove(event: GuildMemberRoleRemoveEvent) {
-        asyncTransaction(Akatsuki.pool) {
-            val guild = Guilds.select { Guilds.id.eq(event.guild.idLong) }.firstOrNull()
+        DatabaseWrapper.getGuildSafe(event.guild).thenAccept { storedGuild ->
+            asyncTransaction(Akatsuki.pool) {
+                if (!storedGuild.modlogs
+                        || !event.roles.contains(event.guild.getRoleById(storedGuild.mutedRole ?: return@asyncTransaction) ?: return@asyncTransaction))
+                    return@asyncTransaction
 
-            if (guild == null
-                    || !guild[Guilds.modlogs]
-                    || !event.roles.contains(event.guild.getRoleById(guild[Guilds.mutedRole] ?: return@asyncTransaction) ?: return@asyncTransaction))
-                return@asyncTransaction
+                val modlogs = Modlogs.select { Modlogs.guildId.eq(event.guild.idLong) }
+                val modlogChannel = event.guild.getTextChannelById(storedGuild.modlogChannel ?: return@asyncTransaction) ?: return@asyncTransaction
+                val audit = event.guild.auditLogs.type(ActionType.MEMBER_ROLE_UPDATE).firstOrNull { it.targetId == event.user.id } ?: return@asyncTransaction
+                val case = modlogs.count() + 1
 
-            val modlogs = Modlogs.select { Modlogs.guildId.eq(event.guild.idLong) }
-            val modlogChannel = event.guild.getTextChannelById(guild[Guilds.modlogChannel] ?: return@asyncTransaction) ?: return@asyncTransaction
-            val audit = event.guild.auditLogs.type(ActionType.MEMBER_ROLE_UPDATE).firstOrNull { it.targetId == event.user.id } ?: return@asyncTransaction
-            val case = modlogs.count() + 1
-
-            val msg = modlogChannel.sendMessage("""
+                val msg = modlogChannel.sendMessage("""
                 **Unmute** | Case $case
                 **User**: ${event.user.name}#${event.user.discriminator} (${event.user.id})
                 **Reason**: ${audit.reason ?: "`Responsible moderator, please use the reason command to set this reason`"}
                 **Responsible moderator**: ${audit.user.name}#${audit.user.discriminator} (${audit.user.id})
             """.trimIndent()).complete()
 
-            Modlogs.insert {
-                it[messageId] = msg.idLong
-                it[modId] = audit.user.idLong
-                it[guildId] = event.guild.idLong
-                it[targetId] = audit.targetIdLong
-                it[caseId] = case
-                it[type] = "UNMUTE"
-                it[reason] = audit.reason
-            }
-        }.execute()
+                Modlogs.insert {
+                    it[messageId] = msg.idLong
+                    it[modId] = audit.user.idLong
+                    it[guildId] = event.guild.idLong
+                    it[targetId] = audit.targetIdLong
+                    it[caseId] = case
+                    it[type] = "UNMUTE"
+                    it[reason] = audit.reason
+                }
+            }.execute()
+        }
     }
 
     private fun startPresenceTimer() {

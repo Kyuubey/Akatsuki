@@ -61,13 +61,7 @@ class CommandHandler {
 
     val commands = mutableMapOf<String, Command>()
 
-    init {
-        loadAll()
-    }
-
-    private fun addCommand(cmd: Command, name: String) {
-        commands[name] = cmd
-    }
+    init { loadAll() }
 
     private fun loadAll() {
         Reflections(ConfigurationBuilder().setUrls(ClasspathHelper.forPackage("me.noud02.akatsuki.commands")))
@@ -79,241 +73,232 @@ class CommandHandler {
                         if (ann.isNotEmpty() && ann.first().bool) {
                             val cmd = it.newInstance() as Command
                             val name = (if (cmd.name.isEmpty()) cmd::class.simpleName ?: return else cmd.name).toLowerCase()
-                            addCommand(cmd, name)
+                            commands[name] = cmd
 
                             logger.info("Loaded command $name")
-                            if (aliases.isNotEmpty())
+                            if (aliases.isNotEmpty()) {
                                 for (alias in aliases.first().aliases) {
                                     logger.info("Added alias for command $name: $alias")
                                     this.aliases[alias] = name
                                 }
+                            }
                         }
                     }
                 }
     }
 
     fun handleMessage(event: MessageReceivedEvent) {
-        val guild = if (event.guild != null) DatabaseWrapper.getGuildSafe(event.guild).get() else null
-        val user = DatabaseWrapper.getUserSafe(event.author).get()
+        DatabaseWrapper.getUserSafe(event.author).thenAccept { user ->
+            val guild = if (event.guild != null) DatabaseWrapper.getGuildSafe(event.guild).get() else null
 
-        val locale = if (guild != null && guild.forceLang)
-            Locale(guild.lang.split("_")[0], guild.lang.split("_")[1])
-        else
-            Locale(user.lang.split("_")[0], user.lang.split("_")[1])
+            val locale = if (guild != null && guild.forceLang) {
+                Locale(guild.lang.split("_")[0], guild.lang.split("_")[1])
+            } else {
+                Locale(user.lang.split("_")[0], user.lang.split("_")[1])
+            }
 
-        val guildPrefixes = guild?.prefixes ?: listOf()
+            val guildPrefixes = guild?.prefixes ?: listOf()
 
-        val lang = ResourceBundle.getBundle("i18n.Kyubey", locale, UTF8Control())
+            val lang = ResourceBundle.getBundle("i18n.Kyubey", locale, UTF8Control())
 
-        val usedPrefix = Akatsuki.config.prefixes.firstOrNull {
-            event.message.contentRaw.startsWith(it.toLowerCase())
-        } ?: guildPrefixes.lastOrNull {
-            event.message.contentRaw.startsWith(it.toLowerCase())
-        } ?: return
+            val usedPrefix = Akatsuki.config.prefixes.firstOrNull {
+                event.message.contentRaw.startsWith(it.toLowerCase())
+            } ?: guildPrefixes.lastOrNull {
+                event.message.contentRaw.startsWith(it.toLowerCase())
+            } ?: return@thenAccept
 
-        var cmd = event.message.contentRaw.substring(usedPrefix.length).split(" ")[0]
-        var args = event.message.contentRaw.substring(usedPrefix.length).split(" ")
+            var cmd = event.message.contentRaw.substring(usedPrefix.length).split(" ")[0]
+            var args = event.message.contentRaw.substring(usedPrefix.length).split(" ")
 
-        if (args.isNotEmpty())
-            args = args.drop(1)
+            if (args.isNotEmpty()) {
+                args = args.drop(1)
+            }
 
-        val newPerms: MutableMap<String, Boolean>
+            val newPerms: MutableMap<String, Boolean>
 
-        if (!commands.contains(cmd))
-            if (aliases.contains(cmd))
-                cmd = aliases[cmd] as String
-            else
-                return
+            if (!commands.contains(cmd)) {
+                if (aliases.contains(cmd)) {
+                    cmd = aliases[cmd] as String
+                } else {
+                    return@thenAccept
+                }
+            }
 
-        if (event.guild != null) {
-            if (guild!!.ignoredChannels.contains(event.channel.idLong) && cmd != "unignore")
-                return
+            if (event.guild != null) {
+                if (guild!!.ignoredChannels.contains(event.channel.idLong) && cmd != "unignore")
+                    return@thenAccept
+
+                val restricted = asyncTransaction(Akatsuki.pool) {
+                    val restrictions = Restrictions.select {
+                        Restrictions.guildId.eq(event.guild!!.idLong) and Restrictions.userId.eq(event.author.idLong)
+                    }
+
+                    restrictions.any {
+                        it[Restrictions.command] == "all" || it[Restrictions.command] == cmd
+                    } || Restrictions.select {
+                        Restrictions.guildId.eq(event.guild.idLong) and Restrictions.everyone.eq(true)
+                    }.toList().isNotEmpty()
+                }.execute().get()
+
+                if (restricted && cmd != "unrestrict")
+                    return@thenAccept
+            }
 
             val restricted = asyncTransaction(Akatsuki.pool) {
                 val restrictions = Restrictions.select {
-                    Restrictions.guildId.eq(event.guild!!.idLong) and Restrictions.userId.eq(event.author.idLong)
+                    Restrictions.userId.eq(event.author.idLong) and Restrictions.global.eq(true)
                 }
 
                 restrictions.any {
                     it[Restrictions.command] == "all" || it[Restrictions.command] == cmd
-                } || Restrictions.select {
-                    Restrictions.guildId.eq(event.guild.idLong) and Restrictions.everyone.eq(true)
-                }.toList().isNotEmpty()
+                }
             }.execute().get()
 
             if (restricted && cmd != "unrestrict")
-                return
-        }
+                return@thenAccept
 
-        val restricted = asyncTransaction(Akatsuki.pool) {
-            val restrictions = Restrictions.select {
-                Restrictions.userId.eq(event.author.idLong) and Restrictions.global.eq(true)
+            logger.command(event)
+
+            Sentry.getContext().apply {
+                recordBreadcrumb(
+                        BreadcrumbBuilder().apply {
+                            setMessage("Command executed")
+                            setData(mapOf(
+                                    "command" to cmd
+                            ))
+                        }.build()
+                )
+                setUser(
+                        UserBuilder().apply {
+                            setUsername(event.author.name)
+                            setData(mapOf(
+                                    Pair("guildId", event.guild?.id ?: ""),
+                                    Pair("userId", event.author.id),
+                                    Pair("channelId", event.channel.id)
+                            ))
+                        }.build()
+                )
             }
 
-            restrictions.any {
-                it[Restrictions.command] == "all" || it[Restrictions.command] == cmd
-            }
-        }.execute().get()
+            var command = commands[cmd] as Command
 
-        if (restricted && cmd != "unrestrict")
-            return
+            if (command.ownerOnly && !Akatsuki.config.owners.contains(event.author.id))
+                return@thenAccept
 
-        logger.command(event)
-
-        Sentry.getContext().apply {
-            recordBreadcrumb(
-                    BreadcrumbBuilder().apply {
-                        setMessage("Command executed")
-                        setData(mapOf(
-                                "command" to cmd
-                        ))
-                    }.build()
-            )
-            setUser(
-                    UserBuilder().apply {
-                        setUsername(event.author.name)
-                        setData(mapOf(
-                                Pair("guildId", event.guild?.id ?: ""),
-                                Pair("userId", event.author.id),
-                                Pair("channelId", event.channel.id)
-                        ))
-                    }.build()
-            )
-        }
-
-        var command = commands[cmd] as Command
-
-        if (command.ownerOnly && !Akatsuki.config.owners.contains(event.author.id))
-            return
-
-        if (command.guildOnly && event.guild == null)
-            return event.channel.sendMessage(
-                    I18n.parse(
-                            lang.getString("server_only_command"),
-                            mapOf("username" to event.author.name)
-                    )
-            ).queue()
-
-        if (command.nsfw && !event.textChannel.isNSFW)
-            return event.channel.sendMessage(
-                    I18n.parse(
-                            lang.getString("nsfw_only_command"),
-                            mapOf("username" to event.author.name)
-                    )
-            ).queue()
-
-        if (!Akatsuki.config.owners.contains(event.author.id)) {
-            val lastMsg = cooldowns[event.author.idLong]
-
-            if (lastMsg != null && lastMsg.until(event.message.creationTime, ChronoUnit.SECONDS) < command.cooldown)
-                return
-
-            cooldowns[event.author.idLong] = event.message.creationTime
-        }
-
-        if (args.isNotEmpty() && commands[cmd]?.subcommands?.get(args[0]) is Command) {
-            val subcmd = args[0]
-            command = commands[cmd]?.subcommands?.get(subcmd) as Command
-            args = args.drop(1)
-
-            val raw = args
-
-            val flags = ArgParser.untypedParseSplit(ArgParser.tokenize(args.joinToString(" ")))
-
-            args = flags.unmatched
-
-            if (!command.noHelp && (flags.argMap.contains("h") || flags.argMap.contains("help")))
-                return event.channel.sendMessage(help(command)).queue()
-
-            try {
-                newPerms = checkPermissions(event, command, lang)
-                checkArguments(event, command, args, lang).thenAccept {
-                    try {
-                        command.run(Context(event, command, it, raw, flags, newPerms, lang, user, guild))
-                    } catch (e: Exception) {
-                        event.channel.sendMessage(
-                                I18n.parse(
-                                        lang.getString("error"),
-                                        mapOf(
-                                                "error" to "$e"
-                                                /*"error" to "$e\n${e.stackTrace.joinToString("\n") {
-                                                    "\tat ${it.className}(${it.fileName ?: "Unknown Source"})"
-                                                }}"*/
-                                        )
-                                )
-                        ).queue()
-
-                        logger.error(
-                                "Error while handling command $cmd, executed by user ${
-                                event.author.name
-                                }#${
-                                event.author.discriminator
-                                } (${
-                                event.author.id
-                                } in ${
-                                if (event.guild != null)
-                                    "guild ${event.guild.name} (${event.guild.id}) with channel ${event.channel.name} (${event.channel.id}"
-                                else
-                                    "DMs"
-                                }",
-                                e
+            if (command.guildOnly && event.guild == null) {
+                return@thenAccept event.channel.sendMessage(
+                        I18n.parse(
+                                lang.getString("server_only_command"),
+                                mapOf("username" to event.author.name)
                         )
-
-                        Sentry.capture(e)
-                    }
-                }
-            } catch (err: Exception) {
-                return event.channel.sendMessage(err.message).queue()
+                ).queue()
             }
-        } else {
-            val raw = args
 
-            val flags = ArgParser.untypedParseSplit(ArgParser.tokenize(args.joinToString(" ")))
-
-            args = flags.unmatched
-
-            if (!command.noHelp && (flags.argMap.contains("h") || flags.argMap.contains("help")))
-                return event.channel.sendMessage(help(cmd)).queue()
-
-            try {
-                newPerms = checkPermissions(event, commands[cmd] as Command, lang)
-                checkArguments(event, commands[cmd] as Command, args, lang).thenAccept {
-                    try {
-                        command.run(Context(event, command, it, raw, flags, newPerms, lang, user, guild))
-                    } catch (e: Exception) {
-                        event.channel.sendMessage(
-                                I18n.parse(
-                                        lang.getString("error"),
-                                        mapOf(
-                                                "error" to "$e"
-                                                /*"error" to "$e\n${e.stackTrace.joinToString("\n") {
-                                                    "\tat ${it.className}(${it.fileName ?: "Unknown Source"})"
-                                                }}"*/
-                                        )
-                                )
-                        ).queue()
-
-                        logger.error(
-                                "Error while handling command $cmd, executed by user ${
-                                event.author.name
-                                }#${
-                                event.author.discriminator
-                                } (${
-                                event.author.id
-                                } in ${
-                                if (event.guild != null)
-                                    "guild ${event.guild.name} (${event.guild.id}) with channel ${event.channel.name} (${event.channel.id}"
-                                else
-                                    "DMs"
-                                }",
-                                e
+            if (command.nsfw && !event.textChannel.isNSFW) {
+                return@thenAccept event.channel.sendMessage(
+                        I18n.parse(
+                                lang.getString("nsfw_only_command"),
+                                mapOf("username" to event.author.name)
                         )
+                ).queue()
+            }
 
-                        Sentry.capture(e)
-                    }
+            if (!Akatsuki.config.owners.contains(event.author.id)) {
+                val lastMsg = cooldowns[event.author.idLong]
+
+                if (lastMsg != null && lastMsg.until(event.message.creationTime, ChronoUnit.SECONDS) < command.cooldown)
+                    return@thenAccept
+
+                cooldowns[event.author.idLong] = event.message.creationTime
+            }
+
+            if (args.isNotEmpty() && commands[cmd]?.subcommands?.get(args[0]) is Command) {
+                val subcmd = args[0]
+                command = commands[cmd]?.subcommands?.get(subcmd) as Command
+                args = args.drop(1)
+
+                val raw = args
+
+                val flags = ArgParser.untypedParseSplit(ArgParser.tokenize(args.joinToString(" ")))
+
+                args = flags.unmatched
+
+                if (!command.noHelp && (flags.argMap.contains("h") || flags.argMap.contains("help"))) {
+                    return@thenAccept event.channel.sendMessage(help(command)).queue()
                 }
-            } catch (err: Exception) {
-                return event.channel.sendMessage(err.message).queue()
+
+                try {
+                    newPerms = checkPermissions(event, command, lang)
+                    checkArguments(event, command, args, lang).thenAccept { arg ->
+                        try {
+                            command.run(Context(event, command, arg, raw, flags, newPerms, lang, user, guild))
+                        } catch (e: Exception) {
+                            event.channel.sendMessage(
+                                    I18n.parse(
+                                            lang.getString("error"),
+                                            mapOf("error" to "$e")
+                                    )
+                            ).queue()
+
+                            val name = "${event.author.name}#${event.author.discriminator}"
+                            val where = if (event.guild != null) {
+                                "guild ${event.guild.name} (${event.guild.id}) with channel ${event.channel.name} (${event.channel.id}"
+                            } else {
+                                "DMs"
+                            }
+
+                            logger.error("Error while handling command $cmd, executed by user $name (${event.author.id} in $where", e)
+
+                            Sentry.capture(e)
+                        }
+                    }.thenApply {}.exceptionally {
+                        event.channel.sendMessage(it.message).queue({}) { err ->
+                            logger.error("Error while trying to send error", err)
+                            Sentry.capture(err)
+                        }
+                    }
+                } catch (err: Exception) {
+                    return@thenAccept event.channel.sendMessage(err.message).queue()
+                }
+            } else {
+                val raw = args
+
+                val flags = ArgParser.untypedParseSplit(ArgParser.tokenize(args.joinToString(" ")))
+
+                args = flags.unmatched
+
+                if (!command.noHelp && (flags.argMap.contains("h") || flags.argMap.contains("help"))) {
+                    return@thenAccept event.channel.sendMessage(help(cmd)).queue()
+                }
+
+                try {
+                    newPerms = checkPermissions(event, commands[cmd] as Command, lang)
+                    checkArguments(event, commands[cmd] as Command, args, lang).thenAccept { arg ->
+                        try {
+                            command.run(Context(event, command, arg, raw, flags, newPerms, lang, user, guild))
+                        } catch (e: Exception) {
+                            event.channel.sendMessage(
+                                    I18n.parse(
+                                            lang.getString("error"),
+                                            mapOf("error" to "$e")
+                                    )
+                            ).queue()
+
+                            val name = "${event.author.name}#${event.author.discriminator}"
+                            val where = if (event.guild != null) {
+                                "guild ${event.guild.name} (${event.guild.id}) with channel ${event.channel.name} (${event.channel.id}"
+                            } else {
+                                "DMs"
+                            }
+
+                            logger.error("Error while handling command $cmd, executed by user $name (${event.author.id} in $where", e)
+
+                            Sentry.capture(e)
+                        }
+                    }
+                } catch (err: Exception) {
+                    return@thenAccept event.channel.sendMessage(err.message).queue()
+                }
             }
         }
     }
