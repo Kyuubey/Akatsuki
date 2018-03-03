@@ -60,12 +60,20 @@ class NowPlaying : ThreadedCommand() {
             setAuthor(ctx.lang.getString("now_playing"), null, null)
             setTitle(manager.player.playingTrack.info.title)
 
-            val formatter = SimpleDateFormat("HH:mm:ss")
-            val durationTime = Date(manager.player.playingTrack.duration).toInstant().minus(1L, ChronoUnit.HOURS).toEpochMilli()
-            val positionTime = Date(manager.player.playingTrack.position).toInstant().minus(1L, ChronoUnit.HOURS).toEpochMilli()
+            val durMillis = manager.player.playingTrack.duration
+            val durSecs = (durMillis / 1000) % 60
+            val durMins = (durMillis / 60000) % 60
+            val durHours = (durMillis / 3600000) % 24
 
-            val duration = formatter.format(durationTime)
-            val position = formatter.format(positionTime)
+            val duration = "%02d:%02d:%02d".format(durHours, durMins, durSecs)
+
+            val posMillis = manager.player.playingTrack.position
+            val posSecs = (posMillis / 1000) % 60
+            val posMins = (posMillis / 60000) % 60
+            val posHours = (posMillis / 3600000) % 24
+
+            val position = "%02d:%02d:%02d".format(posHours, posMins, posSecs)
+
             val emote = if (manager.player.isPaused) "\u23F8" else "\u25B6"
 
             descriptionBuilder.append("$position/$duration $emote")
