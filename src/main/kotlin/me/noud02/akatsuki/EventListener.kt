@@ -42,6 +42,7 @@ import me.noud02.akatsuki.utils.Http
 import me.noud02.akatsuki.utils.I18n
 import me.noud02.akatsuki.utils.Logger
 import net.dv8tion.jda.core.EmbedBuilder
+import net.dv8tion.jda.core.JDA
 import net.dv8tion.jda.core.audit.ActionType
 import net.dv8tion.jda.core.entities.Game
 import net.dv8tion.jda.core.events.Event
@@ -68,21 +69,22 @@ import org.json.JSONObject
 import java.awt.Color
 import java.util.*
 import java.util.Date
-import kotlin.concurrent.timer
+import kotlin.concurrent.scheduleAtFixedRate
 import kotlin.reflect.jvm.jvmName
 
 class EventListener : ListenerAdapter() {
-    private lateinit var presenceUpdateTimer: Timer
-    private lateinit var reminderCheckerTimer: Timer
+    private val timer = Timer(true)
 
     override fun onGenericEvent(event: Event) = waiter.emit(event)
 
     override fun onReady(event: ReadyEvent) {
         logger.info("Ready!")
 
-        startPresenceTimer()
-        startReminderChecker()
-        updateStats()
+        if (Akatsuki.shardManager.shards.all { it.status == JDA.Status.CONNECTED || it.status == JDA.Status.LOADING_SUBSYSTEMS }) {
+            startPresenceTimer()
+            startReminderChecker()
+            updateStats()
+        }
     }
 
     override fun onMessageReceived(event: MessageReceivedEvent) {
@@ -399,7 +401,7 @@ class EventListener : ListenerAdapter() {
     }
 
     private fun startPresenceTimer() {
-        presenceUpdateTimer = timer("presenceTimer", true, Date(), 120000L) {
+        timer.scheduleAtFixedRate(Date(), 120000L) {
             val presence = Akatsuki.config.presences[Math.floor(Math.random() * Akatsuki.config.presences.size).toInt()]
             val gameType = when(presence.type) {
                 "streaming" -> Game.GameType.STREAMING
@@ -422,7 +424,7 @@ class EventListener : ListenerAdapter() {
     }
 
     private fun startReminderChecker(checkDelay: Long = 1000L) {
-        reminderCheckerTimer = timer("reminderChecker", true, Date(), checkDelay) {
+        timer.scheduleAtFixedRate(Date(), checkDelay) {
             val now = System.currentTimeMillis()
 
             asyncTransaction(Akatsuki.pool) {
