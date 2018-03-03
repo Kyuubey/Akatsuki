@@ -31,7 +31,9 @@ import me.noud02.akatsuki.entities.Context
 import me.noud02.akatsuki.music.MusicManager
 import net.dv8tion.jda.core.EmbedBuilder
 import java.lang.management.ManagementFactory
-import java.util.concurrent.TimeUnit
+import java.text.SimpleDateFormat
+import java.time.temporal.ChronoUnit
+import java.util.*
 
 @Load
 class Stats : Command() {
@@ -46,11 +48,11 @@ class Stats : Command() {
                 setTitle("Shard [${ctx.jda.shardInfo.shardId + 1} / ${ctx.jda.shardInfo.shardTotal}]")
             }
 
-            val uptimeHours = TimeUnit.MILLISECONDS.toHours(rb.uptime)
-            val uptimeMins = TimeUnit.MILLISECONDS.toMinutes(rb.uptime) - TimeUnit.HOURS.toMinutes(TimeUnit.MILLISECONDS.toHours(rb.uptime))
-            val uptimeSecs = TimeUnit.MILLISECONDS.toSeconds(rb.uptime) - TimeUnit.MINUTES.toSeconds(TimeUnit.MILLISECONDS.toMinutes(rb.uptime)) - TimeUnit.HOURS.toSeconds(TimeUnit.MILLISECONDS.toHours(rb.uptime))
+            val formatter = SimpleDateFormat("HH:mm:ss")
+            val time = Date(rb.uptime).toInstant().minus(1L, ChronoUnit.HOURS).toEpochMilli()
+            val uptime = formatter.format(time)
 
-            descriptionBuilder.append("**Uptime:** ${"%02d:%02d:%02d".format(uptimeHours, uptimeMins, uptimeSecs)}\n")
+            descriptionBuilder.append("**Uptime:** $uptime\n")
             descriptionBuilder.append("**Guilds:** ${ctx.jda.guilds.size}\n")
             descriptionBuilder.append("**Users:** ${ctx.jda.users.size}\n")
             descriptionBuilder.append("**Voice connections:** ${MusicManager.musicManagers.size}\n")
