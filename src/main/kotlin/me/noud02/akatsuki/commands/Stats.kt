@@ -48,9 +48,12 @@ class Stats : Command() {
                 setTitle("Shard [${ctx.jda.shardInfo.shardId + 1} / ${ctx.jda.shardInfo.shardTotal}]")
             }
 
-            val formatter = SimpleDateFormat("HH:mm:ss")
-            val time = Date(rb.uptime).toInstant().minus(1L, ChronoUnit.HOURS).toEpochMilli()
-            val uptime = formatter.format(time)
+            val millis = rb.uptime
+            val secs = (millis / 1000) % 60
+            val mins = (millis / 60000) % 60
+            val hours = (millis / 3600000) % 24
+
+            val uptime = "%02d:%02d:%02d".format(hours, mins, secs)
 
             descriptionBuilder.append("**Uptime:** $uptime\n")
             descriptionBuilder.append("**Guilds:** ${ctx.jda.guilds.size}\n")
