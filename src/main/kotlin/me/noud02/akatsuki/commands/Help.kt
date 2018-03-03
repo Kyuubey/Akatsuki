@@ -77,11 +77,34 @@ class Help : Command() {
                 parts.add(part)
             }
 
-            for (partt in parts) {
-                ctx.author.openPrivateChannel().complete().sendMessage("```$partt```").queue()
-            }
+            ctx.author.openPrivateChannel().queue({ channel ->
+                channel.sendMessage("Join my support server! https://kyubey.moe/support").queue({
+                    for (partt in parts) {
+                        channel.sendMessage("```$partt```").queue()
+                    }
 
-            ctx.send(I18n.parse(ctx.lang.getString("help_message"), mapOf("username" to ctx.author.name)))
+                    ctx.send(
+                            I18n.parse(
+                                    ctx.lang.getString("help_message"),
+                                    mapOf("username" to ctx.author.name)
+                            )
+                    )
+                }) { err ->
+                    ctx.send(
+                            I18n.parse(
+                                    ctx.lang.getString("error"),
+                                    mapOf("error" to err)
+                            )
+                    )
+                }
+            }) { err ->
+                ctx.send(
+                        I18n.parse(
+                                ctx.lang.getString("error"),
+                                mapOf("error" to err)
+                        )
+                )
+            }
         }
     }
 }
