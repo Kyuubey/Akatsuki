@@ -32,15 +32,18 @@ import me.noud02.akatsuki.db.DatabaseWrapper
 import me.noud02.akatsuki.db.schema.Contracts
 import me.noud02.akatsuki.db.schema.Guilds
 import me.noud02.akatsuki.db.schema.Modlogs
+import me.noud02.akatsuki.db.schema.Reminders
 import me.noud02.akatsuki.extensions.UTF8Control
 import me.noud02.akatsuki.extensions.addStar
 import me.noud02.akatsuki.extensions.log
 import me.noud02.akatsuki.extensions.removeStar
 import me.noud02.akatsuki.music.MusicManager
+import me.noud02.akatsuki.utils.Http
 import me.noud02.akatsuki.utils.I18n
 import me.noud02.akatsuki.utils.Logger
 import net.dv8tion.jda.core.EmbedBuilder
 import net.dv8tion.jda.core.audit.ActionType
+import net.dv8tion.jda.core.entities.Game
 import net.dv8tion.jda.core.events.Event
 import net.dv8tion.jda.core.events.ReadyEvent
 import net.dv8tion.jda.core.events.guild.GuildBanEvent
@@ -58,18 +61,29 @@ import net.dv8tion.jda.core.events.message.MessageUpdateEvent
 import net.dv8tion.jda.core.events.message.react.MessageReactionAddEvent
 import net.dv8tion.jda.core.events.message.react.MessageReactionRemoveEvent
 import net.dv8tion.jda.core.hooks.ListenerAdapter
-import org.jetbrains.exposed.sql.insert
-import org.jetbrains.exposed.sql.select
-import org.jetbrains.exposed.sql.update
+import okhttp3.MediaType
+import okhttp3.RequestBody
+import org.jetbrains.exposed.sql.*
+import org.json.JSONObject
 import java.awt.Color
 import java.util.*
-import java.util.concurrent.ExecutorService
+import java.util.Date
+import kotlin.concurrent.timer
 import kotlin.reflect.jvm.jvmName
 
 class EventListener : ListenerAdapter() {
-    private val logger = Logger(this::class.jvmName)
+    private lateinit var presenceUpdateTimer: Timer
+    private lateinit var reminderCheckerTimer: Timer
 
     override fun onGenericEvent(event: Event) = waiter.emit(event)
+
+    override fun onReady(event: ReadyEvent) {
+        logger.info("Ready!")
+
+        startPresenceTimer()
+        startReminderChecker()
+        updateStats()
+    }
 
     override fun onMessageReceived(event: MessageReceivedEvent) {
         if (event.guild != null) {
@@ -150,18 +164,18 @@ class EventListener : ListenerAdapter() {
             event.message.log("UPDATE")
     }
 
-    override fun onReady(event: ReadyEvent) = logger.info("Ready!")
-
     override fun onGuildJoin(event: GuildJoinEvent) {
         logger.info("New guild: ${event.guild.name} (${event.guild.id})")
 
         DatabaseWrapper.newGuild(event.guild)
+        updateStats()
     }
 
     override fun onGuildLeave(event: GuildLeaveEvent) {
         logger.info("Left guild: ${event.guild.name} (${event.guild.id}")
 
         DatabaseWrapper.remGuild(event.guild)
+        updateStats()
     }
 
     override fun onMessageReactionAdd(event: MessageReactionAddEvent) {
@@ -384,9 +398,140 @@ class EventListener : ListenerAdapter() {
         }.execute()
     }
 
+    private fun startPresenceTimer() {
+        if (Akatsuki.shardManager.shardsRunning != Akatsuki.shardManager.shardsTotal)
+            return
+
+        presenceUpdateTimer = timer("presenceTimer", true, Date(), 60000L) {
+            val presence = Akatsuki.config.presences[Math.floor(Math.random() * Akatsuki.config.presences.size).toInt()]
+            val gameType = when(presence.type) {
+                "streaming" -> Game.GameType.STREAMING
+
+                "listening" -> Game.GameType.LISTENING
+
+                "watching" -> Game.GameType.WATCHING
+
+                "default" -> Game.GameType.DEFAULT
+                "playing" -> Game.GameType.DEFAULT
+                else -> Game.GameType.DEFAULT
+            }
+
+            if (Akatsuki.jda != null) {
+                Akatsuki.jda!!.presence.setPresence(Game.of(gameType, presence.text), false)
+            } else {
+                Akatsuki.shardManager.setGame(Game.of(gameType, presence.text))
+            }
+        }
+    }
+
+    private fun startReminderChecker(checkDelay: Long = 1000L) {
+        if (Akatsuki.shardManager.shardsRunning != Akatsuki.shardManager.shardsTotal)
+            return
+
+        reminderCheckerTimer = timer("reminderChecker", true, Date(), checkDelay) {
+            val now = System.currentTimeMillis()
+            val results = Reminders.select {
+                Reminders.timestamp.less(now) or Reminders.timestamp.eq(now)
+            }
+
+            results.forEach {
+                val user = DatabaseWrapper.getUser(it[Reminders.userId]).get()
+                val locale = Locale(user.lang.split("_")[0], user.lang.split("_")[1])
+                val bundle = ResourceBundle.getBundle("i18n.Kyubey", locale, UTF8Control())
+                val channel = if (Akatsuki.jda != null) {
+                    Akatsuki.jda!!.getTextChannelById(it[Reminders.channelId])
+                } else {
+                    Akatsuki.shardManager.getTextChannelById(it[Reminders.channelId])
+                }
+
+                channel?.sendMessage(
+                        I18n.parse(
+                                bundle.getString("reminder"),
+                                mapOf(
+                                        "user" to "<@${it[Reminders.userId]}>",
+                                        "reminder" to it[Reminders.reminder]
+                                )
+                        )
+                )
+
+                Reminders.deleteWhere {
+                    Reminders.userId
+                            .eq(it[Reminders.userId])
+                            .and(Reminders.reminder.eq(it[Reminders.reminder]))
+                            .and(Reminders.timestamp.eq(it[Reminders.timestamp]))
+                }
+            }
+        }
+    }
+
     companion object {
+        val logger = Logger(EventListener::class.jvmName)
         val snipes = TLongLongHashMap()
         val cmdHandler = CommandHandler()
         val waiter = EventWaiter()
+
+        fun updateStats() {
+            val jsonType = MediaType.parse("application/json")
+
+            if (Akatsuki.jda != null) {
+                val json = mutableMapOf(
+                        "server_count" to Akatsuki.jda!!.guilds.size
+                )
+                val body = RequestBody.create(jsonType, JSONObject(json).toString())
+
+                if (Akatsuki.config.api.discordbots.isNotEmpty()) {
+                    Http.post("https://bots.discord.pw/api/bots/${Akatsuki.jda!!.selfUser.id}/stats", body) {
+                        addHeader("Authorization", Akatsuki.config.api.discordbots)
+                    }.thenAccept {
+                        logger.info("Updated stats on bots.discord.pw")
+                        it.close()
+                    }.thenApply {}.exceptionally {
+                        logger.error("Error while trying to update stats on bots.discord.pw", it)
+                    }
+                }
+
+                if (Akatsuki.config.api.discordbotsorg.isNotEmpty()) {
+                    Http.post("https://discordbots.org/api/bots/${Akatsuki.jda!!.selfUser.id}/stats", body) {
+                        addHeader("Authorization", Akatsuki.config.api.discordbotsorg)
+                    }.thenAccept {
+                        logger.info("Updated stats on discordbots.org")
+                        it.close()
+                    }.thenApply {}.exceptionally {
+                        logger.error("Error while trying to update stats on discordbots.org", it)
+                    }
+                }
+            } else {
+                for (shard in Akatsuki.shardManager.shards) {
+                    val json = mapOf(
+                            "server_count" to shard.guilds.size,
+                            "shard_id" to shard.shardInfo.shardId,
+                            "shard_count" to Akatsuki.shardManager.shardsTotal
+                    )
+                    val body = RequestBody.create(jsonType, JSONObject(json).toString())
+
+                    if (Akatsuki.config.api.discordbots.isNotEmpty()) {
+                        Http.post("https://bots.discord.pw/api/bots/${shard.selfUser.id}/stats", body) {
+                            addHeader("Authorization", Akatsuki.config.api.discordbots)
+                        }.thenAccept {
+                            logger.info("Updated stats on bots.discord.pw")
+                            it.close()
+                        }.thenApply {}.exceptionally {
+                            logger.error("Error while trying to update stats on bots.discord.pw", it)
+                        }
+                    }
+
+                    if (Akatsuki.config.api.discordbotsorg.isNotEmpty()) {
+                        Http.post("https://discordbots.org/api/bots/${shard.selfUser.id}/stats", body) {
+                            addHeader("Authorization", Akatsuki.config.api.discordbotsorg)
+                        }.thenAccept {
+                            logger.info("Updated stats on discordbots.org")
+                            it.close()
+                        }.thenApply {}.exceptionally {
+                            logger.error("Error while trying to update stats on discordbots.org", it)
+                        }
+                    }
+                }
+            }
+        }
     }
 }
