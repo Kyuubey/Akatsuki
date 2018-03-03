@@ -399,10 +399,7 @@ class EventListener : ListenerAdapter() {
     }
 
     private fun startPresenceTimer() {
-        if (Akatsuki.shardManager.shardsRunning != Akatsuki.shardManager.shardsTotal)
-            return
-
-        presenceUpdateTimer = timer("presenceTimer", true, Date(), 60000L) {
+        presenceUpdateTimer = timer("presenceTimer", true, Date(), 120000L) {
             val presence = Akatsuki.config.presences[Math.floor(Math.random() * Akatsuki.config.presences.size).toInt()]
             val gameType = when(presence.type) {
                 "streaming" -> Game.GameType.STREAMING
@@ -425,42 +422,42 @@ class EventListener : ListenerAdapter() {
     }
 
     private fun startReminderChecker(checkDelay: Long = 1000L) {
-        if (Akatsuki.shardManager.shardsRunning != Akatsuki.shardManager.shardsTotal)
-            return
-
         reminderCheckerTimer = timer("reminderChecker", true, Date(), checkDelay) {
             val now = System.currentTimeMillis()
-            val results = Reminders.select {
-                Reminders.timestamp.less(now) or Reminders.timestamp.eq(now)
-            }
 
-            results.forEach {
-                val user = DatabaseWrapper.getUser(it[Reminders.userId]).get()
-                val locale = Locale(user.lang.split("_")[0], user.lang.split("_")[1])
-                val bundle = ResourceBundle.getBundle("i18n.Kyubey", locale, UTF8Control())
-                val channel = if (Akatsuki.jda != null) {
-                    Akatsuki.jda!!.getTextChannelById(it[Reminders.channelId])
-                } else {
-                    Akatsuki.shardManager.getTextChannelById(it[Reminders.channelId])
+            asyncTransaction(Akatsuki.pool) {
+                val results = Reminders.select {
+                    Reminders.timestamp.less(now) or Reminders.timestamp.eq(now)
                 }
 
-                channel?.sendMessage(
-                        I18n.parse(
-                                bundle.getString("reminder"),
-                                mapOf(
-                                        "user" to "<@${it[Reminders.userId]}>",
-                                        "reminder" to it[Reminders.reminder]
-                                )
-                        )
-                )
+                results.forEach {
+                    val user = DatabaseWrapper.getUser(it[Reminders.userId]).get()
+                    val locale = Locale(user.lang.split("_")[0], user.lang.split("_")[1])
+                    val bundle = ResourceBundle.getBundle("i18n.Kyubey", locale, UTF8Control())
+                    val channel = if (Akatsuki.jda != null) {
+                        Akatsuki.jda!!.getTextChannelById(it[Reminders.channelId])
+                    } else {
+                        Akatsuki.shardManager.getTextChannelById(it[Reminders.channelId])
+                    }
 
-                Reminders.deleteWhere {
-                    Reminders.userId
-                            .eq(it[Reminders.userId])
-                            .and(Reminders.reminder.eq(it[Reminders.reminder]))
-                            .and(Reminders.timestamp.eq(it[Reminders.timestamp]))
+                    channel?.sendMessage(
+                            I18n.parse(
+                                    bundle.getString("reminder"),
+                                    mapOf(
+                                            "user" to "<@${it[Reminders.userId]}>",
+                                            "reminder" to it[Reminders.reminder]
+                                    )
+                            )
+                    )?.queue()
+
+                    Reminders.deleteWhere {
+                        Reminders.userId
+                                .eq(it[Reminders.userId])
+                                .and(Reminders.reminder.eq(it[Reminders.reminder]))
+                                .and(Reminders.timestamp.eq(it[Reminders.timestamp]))
+                    }
                 }
-            }
+            }.execute()
         }
     }
 
