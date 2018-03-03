@@ -28,8 +28,6 @@ package me.noud02.akatsuki.utils
 import net.dv8tion.jda.core.events.message.MessageReceivedEvent
 import java.text.SimpleDateFormat
 import java.util.*
-import kotlin.reflect.KClass
-import kotlin.reflect.jvm.jvmName
 
 class Logger(loggerName: String) {
     val ANSI_RESET = "\u001B[0m"
@@ -76,7 +74,7 @@ class Logger(loggerName: String) {
     fun error(vararg args: String)
             = println("$name $timeText $ANSI_RED_BACKGROUND$ANSI_WHITE ERR $ANSI_RESET ${args.joinToString(" ")}")
 
-    fun error(text: String, e: Exception)
+    fun error(text: String, e: Throwable)
             = error("$text\n$e\n${e.stackTrace.joinToString("\n") {
         "\tat ${it.className}(${it.fileName ?: "Unknown Source"})"
     }}")

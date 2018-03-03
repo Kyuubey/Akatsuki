@@ -37,6 +37,7 @@ import me.noud02.akatsuki.entities.CoroutineDispatcher
 import me.noud02.akatsuki.extensions.UTF8Control
 import me.noud02.akatsuki.utils.Http
 import me.noud02.akatsuki.utils.I18n
+import me.noud02.akatsuki.utils.Logger
 import me.noud02.akatsuki.utils.Wolk
 import net.dv8tion.jda.bot.sharding.DefaultShardManagerBuilder
 import net.dv8tion.jda.bot.sharding.ShardManager
@@ -53,17 +54,16 @@ import java.util.concurrent.ExecutorService
 import java.util.concurrent.Executors
 import java.util.concurrent.TimeUnit
 import kotlin.concurrent.timer
+import kotlin.reflect.jvm.jvmName
 
 class Akatsuki(private val config: Config) {
-    private lateinit var presenceTimer: Timer
-    private lateinit var shardManager: ShardManager
     private val sentry = SentryClientFactory.sentryClient()
-    private var jda: JDA? = null
 
     init {
         Akatsuki.config = config
 
         Sentry.init(config.api.sentry)
+
         Database.connect(
                 "jdbc:postgresql://${config.database.host}/${config.database.name}",
                 "org.postgresql.Driver",
@@ -72,6 +72,7 @@ class Akatsuki(private val config: Config) {
         )
 
         Wolk.setToken(config.api.weebsh)
+
         asyncTransaction(pool) {
             SchemaUtils.create(
                     Guilds,
@@ -89,111 +90,6 @@ class Akatsuki(private val config: Config) {
         }.execute()
     }
 
-    private fun startReminderChecker(checkDelay: Long = 1) {
-        async(coroutineDispatcher) {
-            while (isActive) {
-                delay(checkDelay, TimeUnit.SECONDS)
-                asyncTransaction(pool) {
-                    val now = System.currentTimeMillis()
-                    val results = Reminders.select { Reminders.timestamp.less(now).or(Reminders.timestamp.eq(now)) }
-
-                    results.forEach {
-                        val user = DatabaseWrapper.getUser(it[Reminders.userId]).get()
-                        val locale = Locale(user.lang.split("_")[0], user.lang.split("_")[1])
-                        val bundle = ResourceBundle.getBundle("i18n.Kyubey", locale, UTF8Control())
-
-                        (if (jda != null)
-                            jda!!.getTextChannelById(it[Reminders.channelId])
-                        else
-                            shardManager.getTextChannelById(it[Reminders.channelId]))?.sendMessage(
-                                I18n.parse(
-                                        bundle.getString("reminder"),
-                                        mapOf(
-                                                "user" to "<@${it[Reminders.userId]}>",
-                                                "reminder" to it[Reminders.reminder]
-                                        )
-                                )
-                        )?.queue()
-
-                        Reminders.deleteWhere {
-                            Reminders.userId
-                                    .eq(it[Reminders.userId])
-                                    .and(Reminders.reminder.eq(it[Reminders.reminder]))
-                                    .and(Reminders.timestamp.eq(it[Reminders.timestamp]))
-                        }
-                    }
-                }.await()
-            }
-        }
-    }
-
-    private fun startPresenceTimer() {
-        presenceTimer = timer("presenceTimer", true, Date(), 60000L) {
-            val presence = config.presences[Math.floor(Math.random() * config.presences.size).toInt()]
-            val gameType = when(presence.type) {
-                "streaming" -> Game.GameType.STREAMING
-
-                "listening" -> Game.GameType.LISTENING
-
-                "watching" -> Game.GameType.WATCHING
-
-                "default" -> Game.GameType.DEFAULT
-                "playing" -> Game.GameType.DEFAULT
-                else -> Game.GameType.DEFAULT
-            }
-
-            if (jda != null)
-                jda!!.presence.setPresence(Game.of(gameType, presence.text), false)
-            else
-                shardManager.setGame(Game.of(gameType, presence.text))
-
-        }
-    }
-
-    fun updateStats() {
-        val jsonType = MediaType.parse("application/json")
-
-        if (jda != null) {
-            val json = mutableMapOf(
-                    "server_count" to jda!!.guilds.size
-            )
-            val body = RequestBody.create(jsonType, JSONObject(json).toString())
-
-            if (config.api.discordbots.isNotEmpty()) {
-                Http.post("https://bots.discord.pw/api/bots/${jda!!.selfUser.id}/stats", body) {
-                    addHeader("Authorization", config.api.discordbots)
-                }.thenAccept { it.close() }
-            }
-
-            if (config.api.discordbotsorg.isNotEmpty()) {
-                Http.post("https://discordbots.org/api/bots/${jda!!.selfUser.id}/stats", body) {
-                    addHeader("Authorization", config.api.discordbotsorg)
-                }.thenAccept { it.close() }
-            }
-        } else {
-            for (shard in shardManager.shards) {
-                val json = mapOf(
-                        "server_count" to shard.guilds.size,
-                        "shard_id" to shard.shardInfo.shardId,
-                        "shard_count" to shardManager.shardsTotal
-                )
-                val body = RequestBody.create(jsonType, JSONObject(json).toString())
-
-                if (config.api.discordbots.isNotEmpty()) {
-                    Http.post("https://bots.discord.pw/api/bots/${shard.selfUser.id}/stats", body) {
-                        addHeader("Authorization", config.api.discordbots)
-                    }.thenAccept { it.close() }
-                }
-
-                if (config.api.discordbotsorg.isNotEmpty()) {
-                    Http.post("https://discordbots.org/api/bots/${shard.selfUser.id}/stats", body) {
-                        addHeader("Authorization", config.api.discordbotsorg)
-                    }.thenAccept { it.close() }
-                }
-            }
-        }
-    }
-
     fun build() {
         jda = JDABuilder(AccountType.BOT).apply {
             setToken(config.token)
@@ -201,9 +97,6 @@ class Akatsuki(private val config: Config) {
         }.buildAsync()
 
         Akatsuki.jda = jda
-
-        startPresenceTimer()
-        startReminderChecker()
     }
 
     fun build(firstShard: Int, lastShard: Int, total: Int) {
@@ -214,17 +107,14 @@ class Akatsuki(private val config: Config) {
             setShardsTotal(total)
             setShards(firstShard, lastShard)
         }.build()
-
-        Akatsuki.shardManager = shardManager
-
-        startPresenceTimer()
-        startReminderChecker()
     }
 
     companion object {
         lateinit var config: Config
         lateinit var shardManager: ShardManager
         var jda: JDA? = null
+
+        val logger = Logger(Akatsuki::class.jvmName)
         val pool: ExecutorService by lazy {
             Executors.newCachedThreadPool {
                 Thread(it, "Akatsuki-Main-Pool-Thread").apply {
