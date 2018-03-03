@@ -70,8 +70,9 @@ class Context(
 
             if (history.isEmpty()) {
                 fut.complete(null)
-            } else
+            } else {
                 fut.complete(history[0].attachments[0].inputStream)
+            }
         }) {
             fut.complete(null)
         }

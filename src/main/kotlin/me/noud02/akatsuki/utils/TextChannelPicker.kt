@@ -53,20 +53,20 @@ class TextChannelPicker(
     private val confirmEmote = "\u2705"
     private val cancelEmote = "\u23F9"
 
-    init {
-        channels = channels.subList(0, min(channels.size, 5))
-    }
+    init { channels = channels.subList(0, min(channels.size, 5)) }
 
     fun build(msg: Message) = build(msg.channel)
 
-    fun build(channel: MessageChannel)
-            = if (guild.selfMember.hasPermission(Permission.MESSAGE_ADD_REACTION)
-            || guild.selfMember.hasPermission(Permission.ADMINISTRATOR)) buildReactions(channel) else buildInput(channel)
+    fun build(channel: MessageChannel) = if (guild.selfMember.hasPermission(Permission.MESSAGE_ADD_REACTION) || guild.selfMember.hasPermission(Permission.ADMINISTRATOR)) {
+        buildReactions(channel)
+    } else {
+        buildInput(channel)
+    }
 
     private fun buildReactions(channel: MessageChannel): CompletableFuture<TextChannel> {
         val fut = CompletableFuture<TextChannel>()
 
-        channel.sendMessage(text).queue({ msg ->
+        channel.sendMessage(text).queue { msg ->
             msg.addReaction(upEmote).queue()
             msg.addReaction(confirmEmote).queue()
             msg.addReaction(cancelEmote).queue()
@@ -101,33 +101,35 @@ class TextChannelPicker(
                         }
                     }
                     true
-                } else
+                } else {
                     false
+                }
             }
-        })
+        }
 
         return fut
     }
 
     private fun buildInput(channel: MessageChannel): CompletableFuture<TextChannel> {
         val fut = CompletableFuture<TextChannel>()
-        channel.sendMessage(inputText).queue({ msg ->
+        channel.sendMessage(inputText).queue { msg ->
             waiter.await<MessageReceivedEvent>(1, timeout) {
                 if (it.channel.id == msg.channel.id && it.author.id == user.user.id) {
-                    if (it.message.contentRaw.toIntOrNull() == null)
+                    if (it.message.contentRaw.toIntOrNull() == null) {
                         msg.channel.sendMessage("Invalid number").queue()
-                    else if (it.message.contentRaw.toInt() - 1 > channels.size || it.message.contentRaw.toInt() - 1 < 0)
+                    } else if (it.message.contentRaw.toInt() - 1 > channels.size || it.message.contentRaw.toInt() - 1 < 0) {
                         msg.channel.sendMessage("Number out of bounds!").queue()
-                    else {
+                    } else {
                         index = it.message.contentRaw.toInt() - 1
                         msg.delete().queue()
                         fut.complete(channels[index])
                     }
                     true
-                } else
+                } else {
                     false
+                }
             }
-        })
+        }
 
         return fut
     }

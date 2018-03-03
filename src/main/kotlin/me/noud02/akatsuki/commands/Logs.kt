@@ -52,8 +52,9 @@ class Logs : Command() {
         val url = URIBuilder().apply {
             scheme = if (Akatsuki.config.site.ssl) "https" else "http"
             host = Akatsuki.config.site.host
-            if (Akatsuki.config.site.port != 80)
+            if (Akatsuki.config.site.port != 80) {
                 port = Akatsuki.config.site.port
+            }
             path = "/logs/${ctx.channel.id}/${ctx.msg.creationTime.toInstant().toEpochMilli()}"
 
             when {

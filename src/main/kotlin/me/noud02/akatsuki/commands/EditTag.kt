@@ -61,13 +61,14 @@ class EditTag : Command() {
                             )
                     )
 
-            if (tag[Tags.ownerId] != ctx.author.idLong)
+            if (tag[Tags.ownerId] != ctx.author.idLong) {
                 return@asyncTransaction ctx.send(
                         I18n.parse(
                                 ctx.lang.getString("tag_not_owner"),
                                 mapOf("username" to ctx.author.name)
                         )
                 )
+            }
 
             Tags.update({
                 Tags.tagName.eq(name)

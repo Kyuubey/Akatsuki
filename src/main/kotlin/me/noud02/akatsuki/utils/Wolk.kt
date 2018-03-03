@@ -126,8 +126,9 @@ object Wolk {
                     val json = JSONObject(res.body()!!.string())
                     val tags = mutableListOf<WolkTag>()
 
-                    if (res.code() != 200)
+                    if (res.code() != 200) {
                         throw Exception("Expected status code 200, got ${res.code()}")
+                    }
 
                     (0 until json.getJSONArray("tags").length())
                             .map {

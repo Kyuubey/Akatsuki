@@ -35,8 +35,9 @@ object I18n {
         while (regex.containsMatchIn(new)) {
             val match = regex.find(new)?.groupValues
 
-            if (values.contains(match?.get(1)) && match != null)
+            if (values.contains(match?.get(1)) && match != null) {
                 new = new.replace(match[0], values[match[1]].toString())
+            }
         }
 
         return new

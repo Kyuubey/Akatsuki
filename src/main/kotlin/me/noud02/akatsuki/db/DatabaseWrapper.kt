@@ -25,6 +25,7 @@
 
 package me.noud02.akatsuki.db
 
+import io.sentry.Sentry
 import me.aurieh.ares.exposed.async.asyncTransaction
 import me.noud02.akatsuki.Akatsuki
 import me.noud02.akatsuki.EventListener
@@ -32,6 +33,7 @@ import me.noud02.akatsuki.db.schema.Guilds
 import me.noud02.akatsuki.db.schema.Logs
 import me.noud02.akatsuki.db.schema.Users
 import me.noud02.akatsuki.extensions.log
+import me.noud02.akatsuki.utils.Logger
 import net.dv8tion.jda.core.entities.Guild
 import net.dv8tion.jda.core.entities.Member
 import net.dv8tion.jda.core.entities.User
@@ -43,10 +45,9 @@ import org.jetbrains.exposed.sql.deleteWhere
 import org.jetbrains.exposed.sql.insert
 import org.jetbrains.exposed.sql.select
 import org.joda.time.DateTime
-import org.json.JSONArray
-import org.json.JSONObject
 import java.util.concurrent.CompletableFuture
 import java.util.concurrent.ExecutorService
+import kotlin.reflect.jvm.jvmName
 
 data class DBGuild(
         val id: Long,
@@ -95,6 +96,7 @@ data class DBContract(
 )
 
 object DatabaseWrapper {
+    private val logger = Logger(this::class.jvmName)
     private val pool: ExecutorService = Akatsuki.pool
 
     fun getGuild(guild: Guild) = getGuild(guild.idLong)
@@ -102,9 +104,9 @@ object DatabaseWrapper {
     fun getGuild(id: Long) = asyncTransaction(pool) {
         val guild = Guilds.select { Guilds.id.eq(id) }.firstOrNull()
 
-        if (guild == null)
+        if (guild == null) {
             throw Exception("Guild not found")
-        else
+        } else {
             return@asyncTransaction DBGuild(
                     guild[Guilds.id],
                     guild[Guilds.name],
@@ -126,14 +128,20 @@ object DatabaseWrapper {
                     guild[Guilds.mutedRole],
                     guild[Guilds.antiInvite]
             )
-    }.execute()
+        }
+    }.execute().apply {
+        thenApply {}.exceptionally {
+            logger.error("Error while trying to get guild with ID $id", it)
+            Sentry.capture(it)
+        }
+    }
 
     fun newGuild(guild: Guild) = asyncTransaction(pool) {
         val selection = Guilds.select {
             Guilds.id.eq(guild.idLong)
         }
 
-        if (selection.empty())
+        if (selection.empty()) {
             Guilds.insert {
                 it[id] = guild.idLong
                 it[lang] = "en_US"
@@ -155,15 +163,18 @@ object DatabaseWrapper {
                 it[mutedRole] = guild.roles.firstOrNull { it.name.toLowerCase() == "muted" }?.idLong
                 it[antiInvite] = false
             }
-    }.execute()
+        }
+    }.execute().exceptionally {
+        logger.error("Error while trying to insert guild with ID ${guild.id}", it)
+        Sentry.capture(it)
+    }
 
     fun remGuild(guild: Guild) = remGuild(guild.idLong)
 
-    fun remGuild(id: Long) = asyncTransaction(pool) {
-        Guilds.deleteWhere {
-            Guilds.id.eq(id)
-        }
-    }.execute()
+    fun remGuild(id: Long) = asyncTransaction(pool) { Guilds.deleteWhere { Guilds.id.eq(id) } }.execute().thenApply {}.exceptionally {
+        logger.error("Error while trying to delete guild with ID $id", it)
+        Sentry.capture(it)
+    }
 
     fun getUser(user: User) = getUser(user.idLong)
 
@@ -172,9 +183,9 @@ object DatabaseWrapper {
     fun getUser(id: Long) = asyncTransaction(pool) {
         val user = Users.select { Users.id.eq(id) }.firstOrNull()
 
-        if (user == null)
+        if (user == null) {
             throw Exception("User not found")
-        else
+        } else {
             return@asyncTransaction DBUser(
                     user[Users.id],
                     user[Users.username],
@@ -182,7 +193,13 @@ object DatabaseWrapper {
                     user[Users.lang],
                     user[Users.marriedUserId]
             )
-    }.execute()
+        }
+    }.execute().apply {
+        thenApply {}.exceptionally {
+            logger.error("Error while trying to get user with ID $id", it)
+            Sentry.capture(it)
+        }
+    }
 
     fun newUser(member: Member) = newUser(member.user)
 
@@ -191,7 +208,7 @@ object DatabaseWrapper {
             Users.id.eq(user.idLong)
         }
 
-        if (selection.empty())
+        if (selection.empty()) {
             Users.insert {
                 it[id] = user.idLong
                 it[username] = user.name
@@ -199,7 +216,11 @@ object DatabaseWrapper {
                 it[lang] = "en_US"
                 it[marriedUserId] = null
             }
-    }.execute()
+        }
+    }.execute().exceptionally {
+        logger.error("Error while trying to insert user with ID ${user.id}", it)
+        Sentry.capture(it)
+    }
 
     fun getGuildSafe(guild: Guild): CompletableFuture<DBGuild> {
         val fut = CompletableFuture<DBGuild>()
@@ -274,5 +295,8 @@ object DatabaseWrapper {
             is MessageUpdateEvent -> event.message.log("UPDATE")
             else -> throw Exception("Not a valid event to log")
         }
-    }.execute().get()
+    }.execute().exceptionally {
+        logger.error("Error while trying to insert message in db with ID ${event.messageId}", it)
+        Sentry.capture(it)
+    }
 }

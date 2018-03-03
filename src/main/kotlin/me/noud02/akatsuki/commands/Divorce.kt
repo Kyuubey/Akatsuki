@@ -40,13 +40,14 @@ class Divorce : Command() {
     override val desc = "\uD83D\uDC94"
 
     override fun run(ctx: Context) {
-        if (ctx.storedUser.marriedUserId == null)
+        if (ctx.storedUser.marriedUserId == null) {
             return ctx.send(
                     I18n.parse(
                             ctx.lang.getString("not_married"),
                             mapOf("username" to ctx.author.name)
                     )
             )
+        }
 
         asyncTransaction(Akatsuki.pool) {
             Users.update({

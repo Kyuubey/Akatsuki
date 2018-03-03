@@ -62,33 +62,39 @@ object LuaSandbox {
 
         discordLib["add_role"] = object : TwoArgFunction() {
             override fun call(arg1: LuaValue?, arg2: LuaValue?): LuaValue {
-                if (arg1 == null)
+                if (arg1 == null) {
                     throw Exception("Member argument wasn't given!")
+                }
 
-                if (arg2 == null)
+                if (arg2 == null) {
                     throw Exception("Role argument wasn't given!")
+                }
 
-                if (!arg1.islong() && !arg1.isstring())
+                if (!arg1.islong() && !arg1.isstring()) {
                     throw Exception("Invalid member argument type!")
+                }
 
-                if (!arg2.islong() && !arg1.isstring())
+                if (!arg2.islong() && !arg1.isstring()) {
                     throw Exception("Invalid role argument type!")
+                }
 
                 val member =
-                        if (arg1.islong())
+                        if (arg1.islong()) {
                             ctx.guild!!.getMemberById(arg1.tolong())
                                     ?: throw Exception("Invalid member!")
-                        else
+                        } else {
                             ctx.guild!!.searchMembers(arg1.tojstring()).firstOrNull()
                                     ?: throw Exception("Couldn't find that member!")
+                        }
 
                 val role =
-                        if (arg2.islong())
+                        if (arg2.islong()) {
                             ctx.guild.getRoleById(arg2.tolong())
                                     ?: throw Exception("Invalid role!")
-                        else
+                        } else {
                             ctx.guild.searchRoles(arg2.tojstring()).firstOrNull()
                                     ?: throw Exception("Couldn't find that role!")
+                        }
 
                 ctx.guild.controller.addSingleRoleToMember(member, role)
 
@@ -98,38 +104,45 @@ object LuaSandbox {
 
         discordLib["remove_role"] = object : ThreeArgFunction() {
             override fun call(arg1: LuaValue?, arg2: LuaValue?, arg3: LuaValue?): LuaValue {
-                if (arg1 == null)
+                if (arg1 == null) {
                     throw Exception("Member argument wasn't given!")
+                }
 
-                if (arg2 == null)
+                if (arg2 == null) {
                     throw Exception("Role argument wasn't given!")
+                }
 
-                if (!arg1.islong() && !arg1.isstring())
+                if (!arg1.islong() && !arg1.isstring()) {
                     throw Exception("Invalid member argument type!")
+                }
 
-                if (!arg2.islong() && !arg2.isstring())
+                if (!arg2.islong() && !arg2.isstring()) {
                     throw Exception("Invalid role argument type!")
+                }
 
                 val member =
-                        if (arg1.islong())
+                        if (arg1.islong()) {
                             ctx.guild!!.getMemberById(arg1.tolong())
                                     ?: throw Exception("Invalid member!")
-                        else
+                        } else {
                             ctx.guild!!.searchMembers(arg1.tojstring()).firstOrNull()
                                     ?: throw Exception("Couldn't find that member!")
+                        }
 
                 val role =
-                        if (arg2.islong())
+                        if (arg2.islong()) {
                             ctx.guild.getRoleById(arg2.tolong())
                                     ?: throw Exception("Invalid role!")
-                        else
+                        } else {
                             ctx.guild.searchRoles(arg2.tojstring()).firstOrNull()
                                     ?: throw Exception("Couldn't find that role!")
+                        }
 
                 val rem = ctx.guild.controller.removeSingleRoleFromMember(member, role)
 
-                if (arg3 != null)
+                if (arg3 != null) {
                     rem.reason(arg3.tojstring())
+                }
 
                 rem.queue()
 
@@ -139,11 +152,13 @@ object LuaSandbox {
 
         discordLib["get_user"] = object : OneArgFunction() {
             override fun call(arg: LuaValue?): LuaValue {
-                if (arg == null)
+                if (arg == null) {
                     throw Exception("Query not specified!")
+                }
 
-                if (!arg.islong() && !arg.isstring())
+                if (!arg.islong() && !arg.isstring()) {
                     throw Exception("Invalid query type!")
+                }
 
                 val data = LuaValue.tableOf()
 
@@ -175,8 +190,9 @@ object LuaSandbox {
 
         contextLib["send"] = object : OneArgFunction() {
             override fun call(arg: LuaValue?): LuaValue {
-                if (arg == null)
+                if (arg == null) {
                     throw Exception("Text argument is nil!")
+                }
 
                 ctx.event.channel.sendMessage(arg.tojstring()).queue()
 
@@ -199,8 +215,9 @@ object LuaSandbox {
 
             val result = thread.resume(LuaValue.NIL)
 
-            if (!result.arg(2).isnil())
+            if (!result.arg(2).isnil()) {
                 ctx.send(result.arg(2).tojstring())
+            }
         } catch (e: Exception) {
             ctx.send("```diff\n- $e```")
         }

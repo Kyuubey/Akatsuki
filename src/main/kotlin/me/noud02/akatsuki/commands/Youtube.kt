@@ -37,18 +37,17 @@ import me.noud02.akatsuki.utils.ItemPicker
 import net.dv8tion.jda.core.entities.Guild
 import net.dv8tion.jda.core.entities.Member
 import okhttp3.HttpUrl
-import okhttp3.Request
 import org.json.JSONObject
 import java.awt.Color
 
 @Load
 @Argument("query", "string")
 @Alias("yt")
-class Youtube : ThreadedCommand() {
+class Youtube : Command() {
     override val desc = "Search for videos on YouTube"
     override val guildOnly = true
 
-    override fun threadedRun(ctx: Context) {
+    override fun run(ctx: Context) {
         val picker = ItemPicker(EventListener.waiter, ctx.member as Member, ctx.guild as Guild)
         val search = ctx.args["query"] as String
 

@@ -52,7 +52,7 @@ class Snipe : Command() {
             )
 
         asyncTransaction(Akatsuki.pool) {
-            val snipe = EventListener.snipes.remove(ctx.channel.idLong)
+            val snipe: Long? = EventListener.snipes.remove(ctx.channel.idLong)
 
             if (snipe != null) {
                 val log = Logs.select {

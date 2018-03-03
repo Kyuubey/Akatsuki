@@ -67,8 +67,9 @@ class EnableOption : Command() {
             humanOptions[option.toLowerCase()] = option
         }
 
-        if (opt !in humanOptions)
+        if (opt !in humanOptions) {
             return ctx.send("Option not found!") // TODO translation
+        }
 
         asyncTransaction(Akatsuki.pool) {
             Guilds.update({
@@ -114,8 +115,9 @@ class DisableOption : Command() {
             humanOptions[option.toLowerCase()] = option
         }
 
-        if (opt !in humanOptions)
+        if (opt !in humanOptions) {
             return ctx.send("Option not found!") // TODO translation
+        }
 
         asyncTransaction(Akatsuki.pool) {
             Guilds.update({
@@ -182,8 +184,9 @@ class SetRoleOption : Command() {
         val opt = (ctx.args["option"] as String).toLowerCase()
         val role = ctx.args["role"] as Role
 
-        if (opt !in options.map(String::toLowerCase))
+        if (opt !in options.map(String::toLowerCase)) {
             return ctx.send("Option not found!") // TODO translation
+        }
 
         asyncTransaction(Akatsuki.pool) {
             Guilds.update({
@@ -215,8 +218,9 @@ class SetStringOption : Command() {
         val opt = (ctx.args["option"] as String).toLowerCase()
         val string = ctx.args["string"] as String
 
-        if (opt !in options.map(String::toLowerCase))
+        if (opt !in options.map(String::toLowerCase)) {
             return ctx.send("Option not found!") // TODO translation
+        }
 
         asyncTransaction(Akatsuki.pool) {
             Guilds.update({

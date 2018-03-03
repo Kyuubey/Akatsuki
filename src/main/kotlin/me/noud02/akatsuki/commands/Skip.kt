@@ -83,8 +83,9 @@ class Skip : Command() {
                 return ctx.send(ctx.lang.getString("voteskip_success"))
             }
 
-            if (manager.voteSkip.contains(ctx.author.id))
+            if (manager.voteSkip.contains(ctx.author.id)) {
                 return ctx.send(ctx.lang.getString("already_voted"))
+            }
 
             if (members.size - 1 <= manager.voteSkip.size + 1) {
                 manager.scheduler.next()

@@ -32,23 +32,21 @@ import me.noud02.akatsuki.annotations.Argument
 import me.noud02.akatsuki.annotations.Load
 import me.noud02.akatsuki.entities.Command
 import me.noud02.akatsuki.entities.Context
-import me.noud02.akatsuki.entities.ThreadedCommand
 import me.noud02.akatsuki.utils.Http
 import me.noud02.akatsuki.utils.I18n
 import net.dv8tion.jda.core.EmbedBuilder
 import okhttp3.Credentials
 import okhttp3.HttpUrl
-import okhttp3.Request
 import org.apache.commons.lang3.StringEscapeUtils
 import org.json.XML
 import java.awt.Color
 
 @Load
 @Argument("manga", "string")
-class Manga : ThreadedCommand() {
+class Manga : Command() {
     override val desc = "Search for manga on MyAnimeList"
 
-    override fun threadedRun(ctx: Context) {
+    override fun run(ctx: Context) {
         Http.get(HttpUrl.Builder().apply {
             scheme("https")
             host("myanimelist.net")

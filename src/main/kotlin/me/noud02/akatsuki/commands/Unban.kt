@@ -58,7 +58,7 @@ class Unban : Command() {
                             )
                     )
                 }) { err ->
-                    if (err is PermissionException)
+                    if (err is PermissionException) {
                         ctx.send(
                                 I18n.parse(
                                         ctx.lang.getString("perm_cant_unban"),
@@ -68,8 +68,9 @@ class Unban : Command() {
                                         )
                                 )
                         )
-                    else
+                    } else {
                         ctx.sendError(err)
+                    }
                 }
     }
 }

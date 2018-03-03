@@ -71,5 +71,10 @@ class Locale : Command() {
         addSubcommand(SetLocale())
     }
 
-    override fun run(ctx: Context) = ctx.send(I18n.parse(ctx.lang.getString("language_check"), mapOf("language" to ctx.lang.locale.displayLanguage)))
+    override fun run(ctx: Context) = ctx.send(
+            I18n.parse(
+                    ctx.lang.getString("language_check"),
+                    mapOf("language" to ctx.lang.locale.displayLanguage)
+            )
+    )
 }

@@ -28,21 +28,20 @@ package me.noud02.akatsuki.commands
 import me.noud02.akatsuki.Akatsuki
 import me.noud02.akatsuki.annotations.Argument
 import me.noud02.akatsuki.annotations.Load
+import me.noud02.akatsuki.entities.Command
 import me.noud02.akatsuki.entities.Context
-import me.noud02.akatsuki.entities.ThreadedCommand
 import me.noud02.akatsuki.utils.Http
 import net.dv8tion.jda.core.entities.Member
 import okhttp3.MediaType
-import okhttp3.Request
 import okhttp3.RequestBody
 import org.json.JSONObject
 
 @Load
 @Argument("user", "user")
-class ShitWaifu : ThreadedCommand() {
+class ShitWaifu : Command() {
     override val desc = "Your waifu is shit lol"
 
-    override fun threadedRun(ctx: Context) {
+    override fun run(ctx: Context) {
         val member = ctx.args["user"] as Member
 
         Http.post(

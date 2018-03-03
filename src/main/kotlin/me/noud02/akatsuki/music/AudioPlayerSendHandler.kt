@@ -33,15 +33,17 @@ class AudioPlayerSendHandler(private val audioPlayer: AudioPlayer) : AudioSendHa
     private var lastFrame: AudioFrame? = null
 
     override fun canProvide(): Boolean {
-        if (lastFrame == null)
+        if (lastFrame == null) {
             lastFrame = audioPlayer.provide()
+        }
 
         return lastFrame != null
     }
 
     override fun provide20MsAudio(): ByteArray? {
-        if (lastFrame == null)
+        if (lastFrame == null) {
             lastFrame = audioPlayer.provide()
+        }
 
         val data = lastFrame?.data
         lastFrame = null

@@ -52,13 +52,14 @@ class CreateTag : Command() {
         val content = ctx.args["content"] as String
 
         asyncTransaction(Akatsuki.pool) {
-            if (Tags.select { Tags.tagName.eq(name) }.firstOrNull() != null)
+            if (Tags.select { Tags.tagName.eq(name) }.firstOrNull() != null) {
                 return@asyncTransaction ctx.send(
                         I18n.parse(
                                 ctx.lang.getString("tag_exists"),
                                 mapOf("username" to ctx.author.name)
                         )
                 )
+            }
 
             Tags.insert {
                 it[tagName] = name

@@ -37,10 +37,8 @@ fun main (args: Array<String>) {
 
     mapper.registerModule(KotlinModule())
 
-    val config: Config
-
-    if (System.getenv("USE_ENV") != null || System.getenv("DYNO") != null)
-        config = Config(
+    val config: Config = if (System.getenv("USE_ENV") != null || System.getenv("DYNO") != null) {
+        Config(
                 System.getenv("BOT_TOKEN"),
                 System.getenv("BOT_DESCRIPTION"),
                 System.getenv("BOT_OWNERS").split("::"),
@@ -97,8 +95,9 @@ fun main (args: Array<String>) {
                             System.getenv("BACKEND_PORT").toInt()
                     )
         )
-    else
-        config = mapper.readValue(File("./config.yml"))
+    } else {
+        mapper.readValue(File("./config.yml"))
+    }
 
     val bot = Akatsuki(config)
 

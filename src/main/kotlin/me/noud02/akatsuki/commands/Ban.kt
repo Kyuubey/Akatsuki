@@ -48,21 +48,23 @@ class Ban : Command() {
     override fun run(ctx: Context) {
         val user = ctx.args["user"] as Member
 
-        if (!ctx.member!!.canInteract(user))
+        if (!ctx.member!!.canInteract(user)) {
             return ctx.send(
                     I18n.parse(
                             ctx.lang.getString("user_cant_ban"),
                             mapOf("username" to ctx.author.name)
                     )
             )
+        }
 
-        if (!ctx.selfMember!!.canInteract(user))
+        if (!ctx.selfMember!!.canInteract(user)) {
             return ctx.send(
                     I18n.parse(
                             ctx.lang.getString("bot_cant_ban"),
                             mapOf("username" to ctx.author.name)
                     )
             )
+        }
 
         ctx.guild!!.controller
                 .ban(user, 24)
@@ -75,7 +77,7 @@ class Ban : Command() {
                             )
                     )
                 }) { err ->
-                    if (err is PermissionException)
+                    if (err is PermissionException) {
                         ctx.send(
                                 I18n.parse(
                                         ctx.lang.getString("perm_cant_ban"),
@@ -85,8 +87,9 @@ class Ban : Command() {
                                         )
                                 )
                         )
-                    else
+                    } else {
                         ctx.sendError(err)
+                    }
                 }
     }
 }

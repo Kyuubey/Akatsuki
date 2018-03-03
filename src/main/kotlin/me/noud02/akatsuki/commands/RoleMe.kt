@@ -124,16 +124,21 @@ class RoleMe : Command() {
                     )
             )
 
-        val role = if (Akatsuki.jda != null) Akatsuki.jda!!.getRoleById(roleId) else Akatsuki.shardManager.getRoleById(roleId)
+        val role = if (Akatsuki.jda != null) {
+            Akatsuki.jda!!.getRoleById(roleId)
+        } else {
+            Akatsuki.shardManager.getRoleById(roleId)
+        }
 
         if (ctx.flags.argMap.containsKey("remove") || ctx.flags.argMap.containsKey("r")) {
-            if (!ctx.storedGuild.rolemeRoles.containsKey(roleName))
+            if (roleName !in ctx.storedGuild.rolemeRoles) {
                 return ctx.send(
                         I18n.parse(
                                 ctx.lang.getString("roleme_cant_remove"),
                                 mapOf("username" to ctx.author.name)
                         )
                 )
+            }
 
             ctx.guild!!.controller.removeSingleRoleFromMember(ctx.member!!, role).reason("[ RoleMe ]").queue({
                 ctx.send(
@@ -146,8 +151,9 @@ class RoleMe : Command() {
                 ctx.sendError(it)
             }
         } else {
-            if (!ctx.storedGuild.rolemeRoles.containsKey(roleName))
+            if (roleName !in ctx.storedGuild.rolemeRoles) {
                 return ctx.send("You can't assign that role to yourself!")
+            }
 
             ctx.guild!!.controller.addSingleRoleToMember(ctx.member!!, role).reason("[ RoleMe ]").queue({
                 ctx.send(

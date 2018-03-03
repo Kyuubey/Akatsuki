@@ -25,31 +25,29 @@
 
 package me.noud02.akatsuki.commands
 
-import me.noud02.akatsuki.Akatsuki
 import me.noud02.akatsuki.annotations.Argument
 import me.noud02.akatsuki.annotations.Load
 import me.noud02.akatsuki.entities.Command
 import me.noud02.akatsuki.entities.Context
-import me.noud02.akatsuki.entities.ThreadedCommand
 import me.noud02.akatsuki.utils.Http
 import me.noud02.akatsuki.utils.I18n
 import net.dv8tion.jda.core.EmbedBuilder
 import okhttp3.HttpUrl
-import okhttp3.Request
 import org.json.XML
 import java.awt.Color
 
 @Load
 @Argument("tags", "string")
-class Rule34 : ThreadedCommand() {
+class Rule34 : Command() {
     override val nsfw = true
     override val desc = "Search for (nsfw) images on rule34"
 
-    override fun threadedRun(ctx: Context) {
+    override fun run(ctx: Context) {
         val tags = ctx.args["tags"] as String
 
-        if (tags.indexOf("loli") > -1)
+        if (tags.indexOf("loli") > -1) {
             return ctx.send(I18n.parse(ctx.lang.getString("loli_is_illegal"), mapOf("username" to ctx.author.name)))
+        }
 
         Http.get(HttpUrl.Builder().apply {
             scheme("https")

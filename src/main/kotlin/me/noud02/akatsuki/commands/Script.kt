@@ -67,13 +67,14 @@ class AddCommand : Command() {
         asyncTransaction(Akatsuki.pool) {
             val scriptsMatch = Scripts.select { Scripts.guildId.eq(ctx.guild!!.idLong).and(Scripts.scriptName.eq(name)) }
 
-            if (!scriptsMatch.empty())
+            if (!scriptsMatch.empty()) {
                 return@asyncTransaction ctx.send(
                         I18n.parse(
                                 ctx.lang.getString("script_exists"),
                                 mapOf("username" to ctx.author.name)
                         )
                 )
+            }
 
             Scripts.insert {
                 it[script] = content
@@ -115,13 +116,14 @@ class RemoveCommand : Command() {
                             )
                     )
 
-            if (!hasPerm && match[Scripts.ownerId] != ctx.author.idLong)
+            if (!hasPerm && match[Scripts.ownerId] != ctx.author.idLong) {
                 return@asyncTransaction ctx.send(
                         I18n.parse(
                                 ctx.lang.getString("cant_delete_script"),
                                 mapOf("username" to ctx.author.name)
                         )
                 )
+            }
 
             Scripts.deleteWhere {
                 Scripts.scriptName.eq(name).and(Scripts.guildId.eq(ctx.guild!!.idLong))
@@ -162,13 +164,14 @@ class EditCommand : Command() {
                             )
                     )
 
-            if (!hasPerm && match[Scripts.ownerId] != ctx.author.idLong)
+            if (!hasPerm && match[Scripts.ownerId] != ctx.author.idLong) {
                 return@asyncTransaction ctx.send(
                         I18n.parse(
                                 ctx.lang.getString("cant_edit_script"),
                                 mapOf("username" to ctx.author.name)
                         )
                 )
+            }
 
             Scripts.update({
                 Scripts.scriptName.eq(name).and(Scripts.guildId.eq(ctx.guild!!.idLong))
@@ -217,13 +220,14 @@ class Script : Command() {
                             )
                     )
 
-            if (command[Scripts.ownerOnly] && !hasPerm)
+            if (command[Scripts.ownerOnly] && !hasPerm) {
                 return@asyncTransaction ctx.send(
                         I18n.parse(
                                 ctx.lang.getString("script_owner_only"),
                                 mapOf("username" to ctx.author.name)
                         )
                 )
+            }
 
             LuaSandbox.eval(command[Scripts.script], ctx.rawArgs.slice(1 until ctx.rawArgs.size), ctx)
         }.execute()

@@ -30,8 +30,8 @@ package me.noud02.akatsuki.commands
 import me.noud02.akatsuki.Akatsuki
 import me.noud02.akatsuki.annotations.Argument
 import me.noud02.akatsuki.annotations.Load
+import me.noud02.akatsuki.entities.Command
 import me.noud02.akatsuki.entities.Context
-import me.noud02.akatsuki.entities.ThreadedCommand
 import me.noud02.akatsuki.utils.Http
 import me.noud02.akatsuki.utils.I18n
 import net.dv8tion.jda.core.EmbedBuilder
@@ -42,10 +42,10 @@ import java.awt.Color
 
 @Load
 @Argument("anime", "string")
-class Anime : ThreadedCommand() {
+class Anime : Command() {
     override val desc = "Search for anime on MyAnimeList"
 
-    override fun threadedRun(ctx: Context) {
+    override fun run(ctx: Context) {
         Http.get(HttpUrl.Builder().apply {
             scheme("https")
             host("myanimelist.net")

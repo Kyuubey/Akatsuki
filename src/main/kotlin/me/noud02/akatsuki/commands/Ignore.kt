@@ -48,8 +48,9 @@ class Ignore : Command() {
     override fun run(ctx: Context) {
         val channel = ctx.args.getOrDefault("channel", ctx.channel) as TextChannel
 
-        if (ctx.storedGuild!!.ignoredChannels.contains(channel.idLong))
+        if (ctx.storedGuild!!.ignoredChannels.contains(channel.idLong)) {
             return ctx.send(ctx.lang.getString("channel_already_ignored"))
+        }
 
         asyncTransaction(Akatsuki.pool) {
             Guilds.update({

@@ -57,27 +57,30 @@ class Play : Command() {
     override val guildOnly = true
 
     override fun run(ctx: Context) {
-        if (!ctx.member!!.voiceState.inVoiceChannel())
-            return ctx.send(I18n.parse(ctx.lang.getString("join_voice_channel_fail"), mapOf("username" to ctx.author.name)))
+        if (!ctx.member!!.voiceState.inVoiceChannel()) {
+            return ctx.send(
+                    I18n.parse(
+                            ctx.lang.getString("join_voice_channel_fail"),
+                            mapOf("username" to ctx.author.name)
+                    )
+            )
+        }
 
         if (MusicManager.musicManagers[ctx.guild!!.id] == null) {
             val manager = MusicManager.join(ctx)
+
             ctx.guild.audioManager.connectionListener = object : ConnectionListener {
                 override fun onStatusChange(status: ConnectionStatus) {
                     if (status == ConnectionStatus.CONNECTED)
                         play(ctx, manager)
                 }
 
-                override fun onUserSpeaking(user: User, speaking: Boolean) {
-                    return
-                }
-
-                override fun onPing(ping: Long) {
-                    return
-                }
+                override fun onUserSpeaking(user: User, speaking: Boolean) { return }
+                override fun onPing(ping: Long) { return }
             }
-        } else
+        } else {
             play(ctx, MusicManager.musicManagers[ctx.guild.id]!!)
+        }
     }
 
     fun play(ctx: Context, manager: GuildMusicManager) {

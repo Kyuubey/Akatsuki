@@ -51,16 +51,18 @@ class GuildInfo : Command() {
             descriptionBuilder.append("**Region:** ${ctx.guild.region.getName()}\n")
             descriptionBuilder.append("**Language:** ${ctx.storedGuild!!.lang}\n")
 
-            if (ctx.storedGuild.prefixes.isNotEmpty())
+            if (ctx.storedGuild.prefixes.isNotEmpty()) {
                 descriptionBuilder.append("**Prefixes:** ${ctx.storedGuild.prefixes.joinToString(", ")}\n")
+            }
 
-            if (ctx.jda.shardInfo != null)
-                descriptionBuilder.append("**Shard:** ${(ctx.guild.idLong shr 22) % ctx.jda.shardInfo.shardTotal}\n")
+            if (ctx.jda.shardInfo != null) {
+                descriptionBuilder.append("**Shard:** ${((ctx.guild.idLong shr 22) % ctx.jda.shardInfo.shardTotal) + 1}\n")
+            }
             descriptionBuilder.append("**Emotes:** ${ctx.guild.emotes.joinToString(" ") { it.asMention }}\n")
             descriptionBuilder.append("**Mods:**\n${ctx.guild.members.filter {
                 !it.user.isBot && (it.isOwner || it.hasPermission(Permission.BAN_MEMBERS) || it.hasPermission(Permission.KICK_MEMBERS) || it.hasPermission(Permission.ADMINISTRATOR))
             }.joinToString("\n") {
-                "${it.user.name}#${it.user.discriminator}${if (!it.nickname.isNullOrEmpty()) "(${it.nickname})" else ""}"
+                "${it.user.name}#${it.user.discriminator}${if (!it.nickname.isNullOrEmpty()) " (${it.nickname})" else ""}"
             }}")
         }.build())
     }
