@@ -27,7 +27,6 @@ package me.noud02.akatsuki.commands
 
 import me.noud02.akatsuki.Akatsuki
 import me.noud02.akatsuki.annotations.Alias
-import me.noud02.akatsuki.entities.Command
 import me.noud02.akatsuki.entities.Context
 import me.noud02.akatsuki.annotations.Load
 import me.noud02.akatsuki.entities.ThreadedCommand
@@ -39,7 +38,9 @@ import okhttp3.HttpUrl
 import okhttp3.Request
 import org.json.JSONObject
 import java.awt.Color
-import java.util.concurrent.TimeUnit
+import java.text.SimpleDateFormat
+import java.time.temporal.ChronoUnit
+import java.util.*
 
 @Load
 @Alias("np")
@@ -59,18 +60,15 @@ class NowPlaying : ThreadedCommand() {
             setAuthor(ctx.lang.getString("now_playing"), null, null)
             setTitle(manager.player.playingTrack.info.title)
 
-            val durationMins = TimeUnit.MILLISECONDS.toMinutes(manager.player.playingTrack.duration)
-            val durationSecs = TimeUnit.MILLISECONDS.toSeconds(manager.player.playingTrack.duration) - TimeUnit.MINUTES.toSeconds(TimeUnit.MILLISECONDS.toMinutes(manager.player.playingTrack.duration))
+            val formatter = SimpleDateFormat("HH:mm:ss")
+            val durationTime = Date(manager.player.playingTrack.duration).toInstant().minus(1L, ChronoUnit.HOURS).toEpochMilli()
+            val positionTime = Date(manager.player.playingTrack.position).toInstant().minus(1L, ChronoUnit.HOURS).toEpochMilli()
 
-            val positionMins = TimeUnit.MILLISECONDS.toMinutes(manager.player.playingTrack.position)
-            val positionSecs = TimeUnit.MILLISECONDS.toSeconds(manager.player.playingTrack.position) - TimeUnit.MINUTES.toSeconds(TimeUnit.MILLISECONDS.toMinutes(manager.player.playingTrack.position))
+            val duration = formatter.format(durationTime)
+            val position = formatter.format(positionTime)
+            val emote = if (manager.player.isPaused) "\u23F8" else "\u25B6"
 
-            descriptionBuilder.append(
-                    "%02d:%02d/%02d:%02d ${if (manager.player.isPaused) "\u23F8" else "\u25B6"}".format(
-                            positionMins, positionSecs,
-                            durationMins, durationSecs
-                    )
-            )
+            descriptionBuilder.append("$position/$duration $emote")
             setColor(Color.CYAN)
         }
 
@@ -83,7 +81,7 @@ class NowPlaying : ThreadedCommand() {
                     null
             )
         } else if (manager.autoplay && manager.player.playingTrack.info.uri.indexOf("youtube") > -1) {
-            val res = Http.okhttp.newCall(Request.Builder().apply { // TODO use Http.get here
+            val res = Http.okhttp.newCall(Request.Builder().apply { // TODO change this to use Http.get
                 url(HttpUrl.Builder().apply {
                     scheme("https")
                     host("www.googleapis.com")
