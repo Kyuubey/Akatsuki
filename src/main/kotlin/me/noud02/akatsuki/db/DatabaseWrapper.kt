@@ -129,12 +129,7 @@ object DatabaseWrapper {
                     guild[Guilds.antiInvite]
             )
         }
-    }.execute().apply {
-        thenApply {}.exceptionally {
-            logger.error("Error while trying to get guild with ID $id", it)
-            Sentry.capture(it)
-        }
-    }
+    }.execute()
 
     fun newGuild(guild: Guild) = asyncTransaction(pool) {
         val selection = Guilds.select {
@@ -194,12 +189,7 @@ object DatabaseWrapper {
                     user[Users.marriedUserId]
             )
         }
-    }.execute().apply {
-        thenApply {}.exceptionally {
-            logger.error("Error while trying to get user with ID $id", it)
-            Sentry.capture(it)
-        }
-    }
+    }.execute()
 
     fun newUser(member: Member) = newUser(member.user)
 
