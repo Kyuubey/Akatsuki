@@ -44,8 +44,6 @@ import java.util.concurrent.Executors
 import kotlin.reflect.jvm.jvmName
 
 class Akatsuki(private val config: Config) {
-    private val sentry = SentryClientFactory.sentryClient()
-
     init {
         Akatsuki.config = config
 
