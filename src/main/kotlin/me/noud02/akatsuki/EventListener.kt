@@ -29,6 +29,8 @@ import gnu.trove.map.hash.TLongLongHashMap
 import io.sentry.Sentry
 import me.aurieh.ares.core.entities.EventWaiter
 import me.aurieh.ares.exposed.async.asyncTransaction
+import me.noud02.akatsuki.db.DBGuild
+import me.noud02.akatsuki.db.DBUser
 import me.noud02.akatsuki.db.DatabaseWrapper
 import me.noud02.akatsuki.db.schema.Contracts
 import me.noud02.akatsuki.db.schema.Guilds
@@ -46,6 +48,7 @@ import net.dv8tion.jda.core.EmbedBuilder
 import net.dv8tion.jda.core.JDA
 import net.dv8tion.jda.core.audit.ActionType
 import net.dv8tion.jda.core.entities.Game
+import net.dv8tion.jda.core.entities.Guild
 import net.dv8tion.jda.core.events.Event
 import net.dv8tion.jda.core.events.ReadyEvent
 import net.dv8tion.jda.core.events.guild.GuildBanEvent
@@ -91,13 +94,24 @@ class EventListener : ListenerAdapter() {
     override fun onMessageReceived(event: MessageReceivedEvent) {
         if (event.guild != null) {
             DatabaseWrapper.getGuildSafe(event.guild).thenAccept { stored ->
+                if (stored.logs) {
+                    event.message.log()
+                }
+
+                if (event.author.isBot) {
+                    return@thenAccept
+                }
+
                 DatabaseWrapper.getUserSafe(event.member).thenAccept { user ->
+                    try {
+                        cmdHandler.handleMessage(event, user, stored)
+                    } catch (e: Exception) {
+                        logger.error("Error while trying to handle message", e)
+                        Sentry.capture(e)
+                    }
+
                     val locale = Locale(user.lang.split("_")[0], user.lang.split("_")[1])
                     val bundle = ResourceBundle.getBundle("i18n.Kyubey", locale, UTF8Control())
-
-                    if (stored.logs) {
-                        event.message.log()
-                    }
 
                     if (stored.antiInvite) {
                         val regex = "(https?)?:?(//)?discord(app)?.?(gg|io|me|com)?/(\\w+:?\\w*@)?(\\S+)(:[0-9]+)?(/|/([\\w#!:.?+=&%@!-/]))?".toRegex()
@@ -155,17 +169,19 @@ class EventListener : ListenerAdapter() {
                     }
                 }
             }
-        }
+        } else {
+            if (event.author.isBot) {
+                return
+            }
 
-        if (event.author.isBot) {
-            return
-        }
-
-        try {
-            cmdHandler.handleMessage(event)
-        } catch (e: Exception) {
-            logger.error("Error while trying to handle message", e)
-            Sentry.capture(e)
+            DatabaseWrapper.getUserSafe(event.author).thenAccept { user ->
+                try {
+                    cmdHandler.handleMessage(event, user)
+                } catch (e: Exception) {
+                    logger.error("Error while trying to handle message", e)
+                    Sentry.capture(e)
+                }
+            }
         }
     }
 
