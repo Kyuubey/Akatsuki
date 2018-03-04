@@ -40,7 +40,7 @@ class NumFact : Command() {
     override val desc = "Get a random fact about a number!"
 
     override fun run(ctx: Context) {
-        Http.get("https://numbersapi.com/${if ("number" in ctx.args) ctx.args["number"].toString() else "random"}").thenAccept { res ->
+        Http.get("http://numbersapi.com/${if ("number" in ctx.args) ctx.args["number"].toString() else "random"}").thenAccept { res ->
             ctx.send(res.body()!!.string())
             res.close()
         }.thenApply {}.exceptionally {
