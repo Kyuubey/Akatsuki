@@ -25,6 +25,7 @@
 
 package me.noud02.akatsuki.entities
 
+import io.sentry.Sentry
 import kotlinx.coroutines.experimental.async
 import me.noud02.akatsuki.Akatsuki
 
@@ -36,8 +37,9 @@ abstract class AsyncCommand : Command() {
             try {
                 asyncRun(ctx)
             } catch (e: Throwable) {
-                e.printStackTrace()
+                ctx.logger.error("Error while trying to execute asynchronous command", e)
                 ctx.sendError(e)
+                Sentry.capture(e)
             }
         }
     }
