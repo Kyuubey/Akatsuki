@@ -25,6 +25,7 @@
 
 package me.noud02.akatsuki.commands
 
+import io.sentry.Sentry
 import me.noud02.akatsuki.entities.Command
 import me.noud02.akatsuki.entities.Context
 import me.noud02.akatsuki.annotations.Load
@@ -39,6 +40,10 @@ class Birb : Command() {
         Http.get("https://random.birb.pw/tweet").thenAccept { res ->
             ctx.send("https://random.birb.pw/img/${res.body()!!.string()}")
             res.close()
+        }.thenApply {}.exceptionally {
+            ctx.logger.error("Error while trying to get random bird from birb.pw", it)
+            ctx.sendError(it)
+            Sentry.capture(it)
         }
     }
 }

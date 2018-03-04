@@ -25,6 +25,7 @@
 
 package me.noud02.akatsuki.commands
 
+import io.sentry.Sentry
 import me.noud02.akatsuki.entities.Command
 import me.noud02.akatsuki.entities.Context
 import me.noud02.akatsuki.annotations.Load
@@ -38,6 +39,10 @@ class Dog: Command() {
         Http.get("https://random.dog/woof").thenAccept { res ->
             ctx.send("https://random.dog/${res.body()!!.string()}")
             res.close()
+        }.thenApply {}.exceptionally {
+            ctx.logger.error("Error while trying to get random dog from random.dog", it)
+            ctx.sendError(it)
+            Sentry.capture(it)
         }
     }
 }

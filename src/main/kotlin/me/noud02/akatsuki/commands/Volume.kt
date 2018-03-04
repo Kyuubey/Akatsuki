@@ -50,7 +50,7 @@ class Volume : Command() {
                 )
         )
 
-        if (ctx.args["volume"] != null) {
+        if ("volume" in ctx.args) {
             val vol = ctx.args["volume"] as Int
 
             if (vol > 100) {

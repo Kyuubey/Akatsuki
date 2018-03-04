@@ -27,6 +27,7 @@
 
 package me.noud02.akatsuki.commands
 
+import io.sentry.Sentry
 import me.noud02.akatsuki.Akatsuki
 import me.noud02.akatsuki.annotations.Argument
 import me.noud02.akatsuki.annotations.Load
@@ -121,6 +122,10 @@ class Manga : Command() {
 
             ctx.send(embed.build())
             res.close()
+        }.thenApply {}.exceptionally {
+            ctx.logger.error("Error while trying to get manga info from MAL", it)
+            ctx.sendError(it)
+            Sentry.capture(it)
         }
     }
 }

@@ -43,13 +43,14 @@ class Snipe : Command() {
     override val guildOnly = true
 
     override fun run(ctx: Context) {
-        if (!ctx.storedGuild!!.logs)
+        if (!ctx.storedGuild!!.logs) {
             return ctx.send(
                     I18n.parse(
                             ctx.lang.getString("logs_not_enabled"),
                             mapOf("username" to ctx.author.name)
                     )
             )
+        }
 
         asyncTransaction(Akatsuki.pool) {
             val snipe: Long? = EventListener.snipes.remove(ctx.channel.idLong)

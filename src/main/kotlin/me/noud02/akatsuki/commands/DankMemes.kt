@@ -25,6 +25,7 @@
 
 package me.noud02.akatsuki.commands
 
+import io.sentry.Sentry
 import me.noud02.akatsuki.annotations.Load
 import me.noud02.akatsuki.entities.Command
 import me.noud02.akatsuki.entities.Context
@@ -47,6 +48,10 @@ class DankMemes : Command() {
 
             ctx.send(post.getString("url"))
             res.close()
+        }.thenApply {}.exceptionally {
+            ctx.logger.error("Error while trying to get a random dankmemes post from reddit", it)
+            ctx.sendError(it)
+            Sentry.capture(it)
         }
     }
 }

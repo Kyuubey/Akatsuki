@@ -25,6 +25,7 @@
 
 package me.noud02.akatsuki.commands
 
+import io.sentry.Sentry
 import me.noud02.akatsuki.Akatsuki
 import me.noud02.akatsuki.annotations.Argument
 import me.noud02.akatsuki.annotations.Arguments
@@ -108,6 +109,10 @@ class Ship : ThreadedCommand() {
                     )
                     .addFile(bytes, "ship.png")
             res.close()
+        }.thenApply {}.exceptionally {
+            ctx.logger.error("Error while trying to generate ship image", it)
+            ctx.sendError(it)
+            Sentry.capture(it)
         }
     }
 }

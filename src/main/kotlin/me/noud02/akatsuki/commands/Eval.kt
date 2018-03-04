@@ -52,6 +52,5 @@ class Eval : Command() {
         } catch (e: Throwable) {
             ctx.sendCode("diff", "- $e")
         }
-
     }
 }

@@ -25,6 +25,7 @@
 
 package me.noud02.akatsuki.commands
 
+import io.sentry.Sentry
 import me.noud02.akatsuki.annotations.Alias
 import me.noud02.akatsuki.annotations.Argument
 import me.noud02.akatsuki.annotations.Load
@@ -111,6 +112,10 @@ class DuckDuckGo : Command() {
 
             ctx.channel.sendMessage(embed.build()).queue()
             res.close()
+        }.thenApply {}.exceptionally {
+            ctx.logger.error("Error while trying to search DuckDuckGo", it)
+            ctx.sendError(it)
+            Sentry.capture(it)
         }
     }
 }

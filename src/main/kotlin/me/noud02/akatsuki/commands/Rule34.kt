@@ -25,6 +25,7 @@
 
 package me.noud02.akatsuki.commands
 
+import io.sentry.Sentry
 import me.noud02.akatsuki.annotations.Argument
 import me.noud02.akatsuki.annotations.Load
 import me.noud02.akatsuki.entities.Command
@@ -81,6 +82,10 @@ class Rule34 : Command() {
 
             ctx.send(embed.build())
             res.close()
+        }.thenApply {}.exceptionally {
+            ctx.logger.error("Error while trying to get post from rule34", it)
+            ctx.sendError(it)
+            Sentry.capture(it)
         }
     }
 }

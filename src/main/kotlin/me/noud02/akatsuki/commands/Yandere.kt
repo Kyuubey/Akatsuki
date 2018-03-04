@@ -25,6 +25,7 @@
 
 package me.noud02.akatsuki.commands
 
+import io.sentry.Sentry
 import me.noud02.akatsuki.annotations.Argument
 import me.noud02.akatsuki.annotations.Load
 import me.noud02.akatsuki.entities.Command
@@ -45,8 +46,14 @@ class Yandere : Command() {
     override fun run(ctx: Context) {
         val query = ctx.args["tags"] as String
 
-        if (query.indexOf("loli") > -1)
-            return ctx.send(I18n.parse(ctx.lang.getString("loli_is_illegal"), mapOf("username" to ctx.author.name)))
+        if (query.indexOf("loli") > -1) {
+            return ctx.send(
+                    I18n.parse(
+                            ctx.lang.getString("loli_is_illegal"),
+                            mapOf("username" to ctx.author.name)
+                    )
+            )
+        }
 
         Http.get(HttpUrl.Builder().apply {
             scheme("https")
@@ -72,6 +79,10 @@ class Yandere : Command() {
 
             ctx.send(embed.build())
             res.close()
+        }.thenApply {}.exceptionally {
+            ctx.logger.error("Error while trying to get post from yande.re", it)
+            ctx.sendError(it)
+            Sentry.capture(it)
         }
     }
 }

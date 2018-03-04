@@ -25,6 +25,7 @@
 
 package me.noud02.akatsuki.commands
 
+import io.sentry.Sentry
 import me.noud02.akatsuki.Akatsuki
 import me.noud02.akatsuki.annotations.Argument
 import me.noud02.akatsuki.annotations.Flag
@@ -143,7 +144,15 @@ class Osu : ThreadedCommand() {
                 ctx.send(embed)
                 res.close()
                 bestRes.close()
+            }.thenApply {}.exceptionally {
+                ctx.logger.error("Error while trying to get osu best plays", it)
+                ctx.sendError(it)
+                Sentry.capture(it)
             }
+        }.thenApply {}.exceptionally {
+            ctx.logger.error("Error while trying to get osu user info", it)
+            ctx.sendError(it)
+            Sentry.capture(it)
         }
     }
 }
