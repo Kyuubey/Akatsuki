@@ -101,5 +101,5 @@ fun main (args: Array<String>) {
 
     val bot = Akatsuki(config)
 
-    bot.build(0, 2, 3)
+    bot.build(0, 3, 4)
 }
