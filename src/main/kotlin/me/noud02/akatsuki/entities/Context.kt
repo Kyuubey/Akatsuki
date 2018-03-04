@@ -30,12 +30,14 @@ import me.noud02.akatsuki.Akatsuki
 import me.noud02.akatsuki.db.DBGuild
 import me.noud02.akatsuki.db.DBUser
 import me.noud02.akatsuki.utils.I18n
+import me.noud02.akatsuki.utils.Logger
 import net.dv8tion.jda.core.JDA
 import net.dv8tion.jda.core.entities.*
 import net.dv8tion.jda.core.events.message.MessageReceivedEvent
 import java.io.InputStream
 import java.util.*
 import java.util.concurrent.CompletableFuture
+import kotlin.reflect.jvm.jvmName
 
 class Context(
         val event: MessageReceivedEvent,
@@ -48,6 +50,8 @@ class Context(
         val storedUser: DBUser,
         val storedGuild: DBGuild?
 ) {
+    val logger = Logger(cmd::class.jvmName)
+
     val jda: JDA = event.jda
     val guild: Guild? = event.guild
     val author: User = event.author
