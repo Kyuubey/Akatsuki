@@ -50,7 +50,7 @@ class Anime : Command() {
         Http.get(HttpUrl.Builder().apply {
             scheme("https")
             host("myanimelist.net")
-            addPathSegments("/api/anime/search.xml")
+            addPathSegments("api/anime/search.xml")
             addQueryParameter("q", ctx.args["anime"] as String)
         }.build()) {
             val mal = Akatsuki.config.api.myanimelist

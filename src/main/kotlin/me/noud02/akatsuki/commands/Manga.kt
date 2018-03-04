@@ -51,7 +51,7 @@ class Manga : Command() {
         Http.get(HttpUrl.Builder().apply {
             scheme("https")
             host("myanimelist.net")
-            addPathSegments("/api/manga/search.xml")
+            addPathSegments("api/manga/search.xml")
             addQueryParameter("q", ctx.args["manga"] as String)
         }.build()) {
             val mal = Akatsuki.config.api.myanimelist
