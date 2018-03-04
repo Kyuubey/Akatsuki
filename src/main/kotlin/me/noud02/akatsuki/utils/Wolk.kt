@@ -30,6 +30,7 @@ import okhttp3.HttpUrl
 import okhttp3.Request
 import org.json.JSONObject
 import java.util.concurrent.CompletableFuture
+import kotlin.reflect.jvm.jvmName
 
 enum class WolkType(val str: String) {
     AWOO("awoo"),
@@ -99,6 +100,7 @@ data class WolkResponse(
 )
 
 object Wolk {
+    private val logger = Logger(this::class.jvmName)
     private var token: String? = null
     private var wolkeToken = true
 
@@ -121,45 +123,44 @@ object Wolk {
         Http.get("https://api.weeb.sh/images/random?type=$type") {
             addHeader("User-Agent", "Akatsuki (https://github.com/noud02/Akatsuki)")
             addHeader("Authorization", if (wolkeToken) "Wolke $token" else "Bearer $token")
-        }
-                .thenAccept { res ->
-                    val json = JSONObject(res.body()!!.string())
-                    val tags = mutableListOf<WolkTag>()
+        }.thenAccept { res ->
+            val json = JSONObject(res.body()!!.string())
+            val tags = mutableListOf<WolkTag>()
 
-                    if (res.code() != 200) {
-                        throw Exception("Expected status code 200, got ${res.code()}")
+            if (res.code() != 200) {
+                throw Exception("Expected status code 200, got ${res.code()}")
+            }
+
+            (0 until json.getJSONArray("tags").length())
+                    .map {
+                        json
+                                .getJSONArray("tags")
+                                .getJSONObject(it)
+                    }
+                    .forEach {
+                        tags += WolkTag(
+                                it.getString("name"),
+                                it.getBoolean("hidden"),
+                                it.getString("user")
+                        )
                     }
 
-                    (0 until json.getJSONArray("tags").length())
-                            .map {
-                                json
-                                        .getJSONArray("tags")
-                                        .getJSONObject(it)
-                            }
-                            .forEach {
-                                tags += WolkTag(
-                                        it.getString("name"),
-                                        it.getBoolean("hidden"),
-                                        it.getString("user")
-                                )
-                            }
+            res.close()
 
-                    res.close()
-
-                    fut.complete(
-                            WolkResponse(
-                                    json.getString("id"),
-                                    json.getString("baseType"),
-                                    json.getString("fileType"),
-                                    json.getString("mimeType"),
-                                    json.getString("account"),
-                                    json.getBoolean("hidden"),
-                                    json.getBoolean("nsfw"),
-                                    tags,
-                                    json.getString("url")
-                            )
+            fut.complete(
+                    WolkResponse(
+                            json.getString("id"),
+                            json.getString("baseType"),
+                            json.getString("fileType"),
+                            json.getString("mimeType"),
+                            json.getString("account"),
+                            json.getBoolean("hidden"),
+                            json.getBoolean("nsfw"),
+                            tags,
+                            json.getString("url")
                     )
-                }
+            )
+        }.thenApply {}.exceptionally { fut.completeExceptionally(it) }
 
         return fut
     }
