@@ -25,6 +25,7 @@
 
 package me.noud02.akatsuki
 
+import gnu.trove.map.hash.TLongObjectHashMap
 import io.sentry.Sentry
 import io.sentry.event.BreadcrumbBuilder
 import io.sentry.event.UserBuilder
@@ -57,7 +58,7 @@ import kotlin.reflect.jvm.jvmName
 class CommandHandler {
     private val logger = Logger(this::class.jvmName)
     private val aliases = mutableMapOf<String, String>()
-    private val cooldowns = mutableMapOf<Long, OffsetDateTime>()
+    private val cooldowns = TLongObjectHashMap<OffsetDateTime>()
 
     val commands = mutableMapOf<String, Command>()
 
@@ -209,7 +210,7 @@ class CommandHandler {
                 if (lastMsg != null && lastMsg.until(event.message.creationTime, ChronoUnit.SECONDS) < command.cooldown)
                     return@thenAccept
 
-                cooldowns[event.author.idLong] = event.message.creationTime
+                cooldowns.put(event.author.idLong, event.message.creationTime)
             }
 
             if (args.isNotEmpty() && commands[cmd]?.subcommands?.get(args[0]) is Command) {
