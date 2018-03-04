@@ -499,7 +499,7 @@ class EventListener : ListenerAdapter() {
             val jsonType = MediaType.parse("application/json")
 
             if (Akatsuki.jda != null) {
-                val json = mutableMapOf(
+                val json = mapOf(
                         "server_count" to Akatsuki.jda!!.guilds.size
                 )
                 val body = RequestBody.create(jsonType, JSONObject(json).toString())
