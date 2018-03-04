@@ -25,6 +25,7 @@
 
 package me.noud02.akatsuki.entities
 
+import io.sentry.Sentry
 import me.noud02.akatsuki.utils.Wolk
 import me.noud02.akatsuki.utils.WolkType
 import net.dv8tion.jda.core.EmbedBuilder
@@ -40,6 +41,10 @@ abstract class WolkCommand : Command() {
                 setColor(Color.CYAN)
                 setFooter("Powered by weeb.sh", null)
             }.build())
+        }.thenApply {}.exceptionally {
+            ctx.logger.error("Error while trying to get weebsh image", it)
+            ctx.sendError(it)
+            Sentry.capture(it)
         }
     }
 }
