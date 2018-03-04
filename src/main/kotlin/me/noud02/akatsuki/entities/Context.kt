@@ -29,6 +29,7 @@ import me.aurieh.ares.utils.ArgParser
 import me.noud02.akatsuki.Akatsuki
 import me.noud02.akatsuki.db.DBGuild
 import me.noud02.akatsuki.db.DBUser
+import me.noud02.akatsuki.utils.I18n
 import net.dv8tion.jda.core.JDA
 import net.dv8tion.jda.core.entities.*
 import net.dv8tion.jda.core.events.message.MessageReceivedEvent
@@ -60,7 +61,12 @@ class Context(
 
     fun sendCode(lang: String, arg: Any) = event.channel.sendMessage("```$lang\n$arg```").queue()
 
-    fun sendError(e: Throwable) = event.channel.sendMessage("```diff\n- ${e.stackTrace}```").queue()
+    fun sendError(e: Throwable) = event.channel.sendMessage(
+            I18n.parse(
+                    lang.getString("error"),
+                    mapOf("error" to e)
+            )
+    ).queue()
 
     fun getLastImage(): CompletableFuture<InputStream?> {
         val fut = CompletableFuture<InputStream?>()
