@@ -39,13 +39,14 @@ class Stop : Command() {
     override val desc = "Stop the music!"
 
     override fun run(ctx: Context) {
-        if (MusicManager.musicManagers[ctx.guild!!.id] == null)
+        if (MusicManager.musicManagers[ctx.guild!!.id] == null) {
             return ctx.send(
                     I18n.parse(
                             ctx.lang.getString("not_connected"),
                             mapOf("username" to ctx.author.name)
                     )
             )
+        }
 
         MusicManager.leave(ctx.guild.id)
 

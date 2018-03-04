@@ -25,6 +25,7 @@
 
 package me.noud02.akatsuki.commands
 
+import io.sentry.Sentry
 import me.noud02.akatsuki.annotations.Argument
 import me.noud02.akatsuki.annotations.Load
 import me.noud02.akatsuki.entities.Command
@@ -73,6 +74,10 @@ class Danbooru : Command() {
 
             ctx.send(embed.build())
             res.close()
+        }.thenApply {}.exceptionally {
+            ctx.logger.error("Error while trying to get post from danbooru", it)
+            ctx.sendError(it)
+            Sentry.capture(it)
         }
     }
 }

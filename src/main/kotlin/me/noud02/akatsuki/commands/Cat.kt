@@ -25,6 +25,7 @@
 
 package me.noud02.akatsuki.commands
 
+import io.sentry.Sentry
 import me.noud02.akatsuki.entities.Command
 import me.noud02.akatsuki.entities.Context
 import me.noud02.akatsuki.annotations.Load
@@ -41,6 +42,10 @@ class Cat : Command() {
 
             ctx.send(json.getString("file"))
             res.close()
+        }.thenApply {}.exceptionally {
+            ctx.logger.error("Error while trying to get a random cat from random.cat", it)
+            ctx.sendError(it)
+            Sentry.capture(it)
         }
     }
 }

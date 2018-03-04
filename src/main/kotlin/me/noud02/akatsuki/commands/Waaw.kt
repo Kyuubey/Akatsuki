@@ -25,6 +25,7 @@
 
 package me.noud02.akatsuki.commands
 
+import io.sentry.Sentry
 import me.noud02.akatsuki.Akatsuki
 import me.noud02.akatsuki.annotations.Argument
 import me.noud02.akatsuki.annotations.Load
@@ -60,6 +61,10 @@ class Waaw : ImageCommand() {
             ctx.channel.sendFile(bytes, "waaw.${file.extension}", null).queue()
             res.close()
             file.delete()
+        }.thenApply {}.exceptionally {
+            ctx.logger.error("Error while trying to generate waaw'd image", it)
+            ctx.sendError(it)
+            Sentry.capture(it)
         }
     }
 }

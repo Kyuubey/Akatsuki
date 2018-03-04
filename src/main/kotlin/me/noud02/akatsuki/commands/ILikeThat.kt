@@ -25,6 +25,7 @@
 
 package me.noud02.akatsuki.commands
 
+import io.sentry.Sentry
 import me.noud02.akatsuki.Akatsuki
 import me.noud02.akatsuki.annotations.Argument
 import me.noud02.akatsuki.annotations.Load
@@ -50,6 +51,10 @@ class ILikeThat : Command() {
             val bytes = res.body()!!.byteStream()
             ctx.channel.sendFile(bytes, "ilikethat.png", null).queue()
             res.close()
+        }.thenApply {}.exceptionally {
+            ctx.logger.error("Error while trying to generate ilikethat meme", it)
+            ctx.sendError(it)
+            Sentry.capture(it)
         }
     }
 }

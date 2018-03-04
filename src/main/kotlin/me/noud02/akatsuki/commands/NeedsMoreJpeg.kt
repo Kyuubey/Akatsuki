@@ -25,6 +25,7 @@
 
 package me.noud02.akatsuki.commands
 
+import io.sentry.Sentry
 import me.noud02.akatsuki.Akatsuki
 import me.noud02.akatsuki.annotations.Argument
 import me.noud02.akatsuki.annotations.Load
@@ -60,6 +61,10 @@ class NeedsMoreJpeg : ImageCommand() {
             ctx.channel.sendFile(bytes, "needsmore.jpg", null).queue()
             res.close()
             file.delete()
+        }.thenApply {}.exceptionally {
+            ctx.logger.error("Error while trying to generate jpegified image", it)
+            ctx.sendError(it)
+            Sentry.capture(it)
         }
     }
 }

@@ -25,6 +25,7 @@
 
 package me.noud02.akatsuki.commands
 
+import io.sentry.Sentry
 import me.noud02.akatsuki.annotations.Argument
 import me.noud02.akatsuki.entities.Command
 import me.noud02.akatsuki.entities.Context
@@ -50,6 +51,10 @@ class Hug : Command() {
                 setColor(Color.CYAN)
                 setFooter("Powered by weeb.sh", null)
             }.build())
+        }.thenApply {}.exceptionally {
+            ctx.logger.error("Error while trying to get hug image from weebsh", it)
+            ctx.sendError(it)
+            Sentry.capture(it)
         }
     }
 }

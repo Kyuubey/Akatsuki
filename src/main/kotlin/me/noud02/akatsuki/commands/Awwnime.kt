@@ -25,6 +25,7 @@
 
 package me.noud02.akatsuki.commands
 
+import io.sentry.Sentry
 import me.noud02.akatsuki.entities.Command
 import me.noud02.akatsuki.entities.Context
 import me.noud02.akatsuki.annotations.Load
@@ -49,6 +50,10 @@ class Awwnime : Command() {
 
             ctx.send(post.getString("url"))
             res.close()
+        }.thenApply {}.exceptionally {
+            ctx.logger.error("Error while trying to get random awwnime post from reddit", it)
+            ctx.sendError(it)
+            Sentry.capture(it)
         }
     }
 }
