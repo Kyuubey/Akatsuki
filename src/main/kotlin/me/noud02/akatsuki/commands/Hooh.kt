@@ -57,10 +57,13 @@ class Hooh : ImageCommand() {
             addPathSegment("api")
             addPathSegment("hooh")
         }.build(), body).thenAccept { res ->
-            val bytes = res.body()!!.byteStream()
-            ctx.channel.sendFile(bytes, "hooh.${file.extension}", null).queue()
-            res.close()
-            file.delete()
+            ctx.channel.sendFile(res.body()!!.byteStream(), "hooh.${file.extension}", null).queue({
+                res.close()
+                file.delete()
+            }) {
+                res.close()
+                file.delete()
+            }
         }.thenApply {}.exceptionally {
             ctx.logger.error("Error while trying to generate hooh'd image", it)
             ctx.sendError(it)
