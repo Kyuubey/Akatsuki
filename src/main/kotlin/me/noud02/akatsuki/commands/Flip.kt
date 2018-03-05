@@ -57,8 +57,7 @@ class Flip : ImageCommand() {
             addPathSegment("api")
             addPathSegment("flip")
         }.build(), body).thenAccept { res ->
-            val bytes = res.body()!!.byteStream()
-            ctx.channel.sendFile(bytes, "flip.${file.extension}", null).queue()
+            ctx.channel.sendFile(res.body()!!.bytes(), "flip.${file.extension}", null).queue()
             res.close()
             file.delete()
         }.thenApply {}.exceptionally {

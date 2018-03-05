@@ -51,13 +51,8 @@ class ShitWaifu : Command() {
         ) {
             addHeader("Authorization", "Wolke ${Akatsuki.config.api.weebsh}")
         }.thenAccept { res ->
-            val bytes = res.body()!!.bytes()
-
-            ctx.channel.sendFile(bytes, "shitwaifu.png").queue({
-                res.close()
-            }) {
-                res.close()
-            }
+            ctx.channel.sendFile(res.body()!!.bytes(), "shitwaifu.png").queue()
+            res.close()
         }.thenApply {}.exceptionally {
             ctx.logger.error("Error while trying to generate shitwaifu image", it)
             ctx.sendError(it)

@@ -57,13 +57,9 @@ class NeedsMoreJpeg : ImageCommand() {
             addPathSegment("api")
             addPathSegment("needsmorejpeg")
         }.build(), body).thenAccept { res ->
-            ctx.channel.sendFile(res.body()!!.byteStream(), "needsmore.jpg", null).queue({
-                res.close()
-                file.delete()
-            }) {
-                res.close()
-                file.delete()
-            }
+            ctx.channel.sendFile(res.body()!!.bytes(), "needsmore.jpg", null).queue()
+            res.close()
+            file.delete()
         }.thenApply {}.exceptionally {
             ctx.logger.error("Error while trying to generate jpegified image", it)
             ctx.sendError(it)

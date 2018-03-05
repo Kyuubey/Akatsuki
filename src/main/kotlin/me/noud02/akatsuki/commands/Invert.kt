@@ -57,8 +57,7 @@ class Invert : ImageCommand() {
             addPathSegment("api")
             addPathSegment("invert")
         }.build(), body).thenAccept { res ->
-            val bytes = res.body()!!.byteStream()
-            ctx.channel.sendFile(bytes, "invert.png", null).queue()
+            ctx.channel.sendFile(res.body()!!.bytes(), "invert.png", null).queue()
             res.close()
             file.delete()
         }.thenApply {}.exceptionally {

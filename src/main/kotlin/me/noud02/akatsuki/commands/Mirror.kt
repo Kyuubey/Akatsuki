@@ -57,8 +57,7 @@ class Mirror : ImageCommand() {
             addPathSegment("api")
             addPathSegment("mirror")
         }.build(), body).thenAccept { res ->
-            val bytes = res.body()!!.byteStream()
-            ctx.channel.sendFile(bytes, "mirror.${file.extension}", null).queue()
+            ctx.channel.sendFile(res.body()!!.bytes(), "mirror.${file.extension}", null).queue()
             res.close()
             file.delete()
         }.thenApply {}.exceptionally {
