@@ -62,7 +62,21 @@ class Rule34 : Command() {
             val posts = XML
                     .toJSONObject(res.body()!!.string())
                     .getJSONObject("posts")
-                    .getJSONArray("post")
+                    .optJSONArray("post") ?: return@thenAccept ctx.send(
+                    I18n.parse(
+                            ctx.lang.getString("no_images_found"),
+                            mapOf("username" to ctx.author.name)
+                    )
+            )
+
+            if (posts.count() == 0) {
+                return@thenAccept ctx.send(
+                        I18n.parse(
+                                ctx.lang.getString("no_images_found"),
+                                mapOf("username" to ctx.author.name)
+                        )
+                )
+            }
 
             val post = posts.getJSONObject(Math.floor(Math.random() * posts.length()).toInt())
 
