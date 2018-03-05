@@ -29,11 +29,8 @@ import gnu.trove.map.hash.TLongLongHashMap
 import io.sentry.Sentry
 import me.aurieh.ares.core.entities.EventWaiter
 import me.aurieh.ares.exposed.async.asyncTransaction
-import me.noud02.akatsuki.db.DBGuild
-import me.noud02.akatsuki.db.DBUser
 import me.noud02.akatsuki.db.DatabaseWrapper
 import me.noud02.akatsuki.db.schema.Contracts
-import me.noud02.akatsuki.db.schema.Guilds
 import me.noud02.akatsuki.db.schema.Modlogs
 import me.noud02.akatsuki.db.schema.Reminders
 import me.noud02.akatsuki.extensions.UTF8Control
@@ -48,7 +45,6 @@ import net.dv8tion.jda.core.EmbedBuilder
 import net.dv8tion.jda.core.JDA
 import net.dv8tion.jda.core.audit.ActionType
 import net.dv8tion.jda.core.entities.Game
-import net.dv8tion.jda.core.entities.Guild
 import net.dv8tion.jda.core.events.Event
 import net.dv8tion.jda.core.events.ReadyEvent
 import net.dv8tion.jda.core.events.guild.GuildBanEvent
@@ -86,7 +82,7 @@ class EventListener : ListenerAdapter() {
 
         if (Akatsuki.shardManager.shards.all { it.status == JDA.Status.CONNECTED || it.status == JDA.Status.LOADING_SUBSYSTEMS }) {
             startPresenceTimer()
-            startReminderChecker()
+            // startReminderChecker()
             updateStats()
         }
     }
@@ -208,22 +204,26 @@ class EventListener : ListenerAdapter() {
     override fun onGuildJoin(event: GuildJoinEvent) {
         logger.info("New guild: ${event.guild.name} (${event.guild.id})")
 
-        DatabaseWrapper.newGuild(event.guild)
+        DatabaseWrapper.getGuildSafe(event.guild).thenApply {}.exceptionally {
+            logger.error("Error while trying to insert guild ${event.guild.name} (${event.guild.id}) in the database!", it)
+            Sentry.capture(it)
+        }
         updateStats()
     }
 
     override fun onGuildLeave(event: GuildLeaveEvent) {
         logger.info("Left guild: ${event.guild.name} (${event.guild.id}")
 
-        DatabaseWrapper.remGuild(event.guild)
+        DatabaseWrapper.remGuild(event.guild.idLong)
         updateStats()
     }
 
     override fun onMessageReactionAdd(event: MessageReactionAddEvent) {
         if (event.guild != null && event.reaction.reactionEmote.name == "\u2b50") {
             DatabaseWrapper.getGuildSafe(event.guild).thenAccept { guild ->
-                if (!guild.starboard)
+                if (!guild.starboard) {
                     return@thenAccept
+                }
 
                 event.channel.getMessageById(event.messageId).queue { msg ->
                     event.guild.addStar(msg, event.user)
@@ -235,8 +235,9 @@ class EventListener : ListenerAdapter() {
     override fun onMessageReactionRemove(event: MessageReactionRemoveEvent) {
         if (event.guild != null && event.reaction.reactionEmote.name == "\u2b50") {
             DatabaseWrapper.getGuildSafe(event.guild).thenAccept { guild ->
-                if (!guild.starboard)
+                if (!guild.starboard) {
                     return@thenAccept
+                }
 
                 event.channel.getMessageById(event.messageId).queue { msg ->
                     event.guild.removeStar(msg, event.user)

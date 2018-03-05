@@ -212,45 +212,109 @@ object DatabaseWrapper {
         Sentry.capture(it)
     }
 
-    fun getGuildSafe(guild: Guild): CompletableFuture<DBGuild> {
-        val fut = CompletableFuture<DBGuild>()
+    fun getGuildSafe(guild: Guild): CompletableFuture<DBGuild> = asyncTransaction(pool) {
+        val stored = Guilds.select { Guilds.id.eq(guild.idLong) }.firstOrNull()
 
-        getGuild(guild)
-                .thenAccept { fut.complete(it) }
-                .thenApply {}
-                .exceptionally {
-                    newGuild(guild)
-                            .thenAccept {
-                                getGuild(guild)
-                                        .thenAccept {
-                                            fut.complete(it)
-                                        }
-                            }
-                }
+        if (stored == null) {
+            Guilds.insert {
+                it[id] = guild.idLong
+                it[lang] = "en_US"
+                it[forceLang] = false
+                it[prefixes] = arrayOf()
+                it[name] = guild.name
+                it[starboard] = false
+                it[starboardChannel] = guild.textChannels.firstOrNull { it.name.toLowerCase() == "starboard" }?.idLong
+                it[logs] = false
+                it[modlogs] = false
+                it[modlogChannel] = guild.textChannels.firstOrNull { it.name.toLowerCase() == "modlogs" }?.idLong
+                it[rolemeRoles] = mapOf()
+                it[welcome] = false
+                it[welcomeChannel] = guild.textChannels.firstOrNull { it.name.toLowerCase() == "welcome" }?.idLong
+                it[welcomeMessage] = "Welcome %USER% to %SERVER%!"
+                it[leaveMessage] = "%USER% \uD83D\uDC4B"
+                it[ignoredChannels] = arrayOf()
+                it[levelMessages] = false
+                it[mutedRole] = guild.roles.firstOrNull { it.name.toLowerCase() == "muted" }?.idLong
+                it[antiInvite] = false
+            }
 
-        return fut
-    }
+            DBGuild(
+                    guild.idLong,
+                    guild.name,
+                    "en_US",
+                    listOf(),
+                    false,
+                    false,
+                    null,
+                    false,
+                    false,
+                    null,
+                    mapOf(),
+                    false,
+                    null,
+                    "Welcome %USER% to %SERVER%!",
+                    "%USER% \uD83D\uDC4B",
+                    listOf(),
+                    false,
+                    null,
+                    false
+            )
+        } else {
+            DBGuild(
+                    stored[Guilds.id],
+                    stored[Guilds.name],
+                    stored[Guilds.lang],
+                    stored[Guilds.prefixes].toList(),
+                    stored[Guilds.forceLang],
+                    stored[Guilds.starboard],
+                    stored[Guilds.starboardChannel],
+                    stored[Guilds.logs],
+                    stored[Guilds.modlogs],
+                    stored[Guilds.modlogChannel],
+                    stored[Guilds.rolemeRoles],
+                    stored[Guilds.welcome],
+                    stored[Guilds.welcomeChannel],
+                    stored[Guilds.welcomeMessage],
+                    stored[Guilds.leaveMessage],
+                    stored[Guilds.ignoredChannels].toList(),
+                    stored[Guilds.levelMessages],
+                    stored[Guilds.mutedRole],
+                    stored[Guilds.antiInvite]
+            )
+        }
+    }.execute()
 
     fun getUserSafe(member: Member) = getUserSafe(member.user)
 
-    fun getUserSafe(user: User): CompletableFuture<DBUser> {
-        val fut = CompletableFuture<DBUser>()
+    fun getUserSafe(user: User): CompletableFuture<DBUser> = asyncTransaction(pool) {
+        val stored = Users.select { Users.id.eq(user.idLong) }.firstOrNull()
 
-        getUser(user)
-                .thenAccept { fut.complete(it) }
-                .thenApply {}
-                .exceptionally {
-                    newUser(user)
-                            .thenAccept {
-                                getUser(user)
-                                        .thenAccept {
-                                            fut.complete(it)
-                                        }
-                            }
-                }
+        if (stored == null) {
+            Users.insert {
+                it[id] = user.idLong
+                it[username] = user.name
+                it[discriminator] = user.discriminator
+                it[lang] = "en_US"
+                it[marriedUserId] = null
+            }
 
-        return fut
-    }
+            DBUser(
+                    user.idLong,
+                    user.name,
+                    user.discriminator,
+                    "en_US",
+                    null
+            )
+        } else {
+            DBUser(
+                    stored[Users.id],
+                    stored[Users.username],
+                    stored[Users.discriminator],
+                    stored[Users.lang],
+                    stored[Users.marriedUserId]
+            )
+        }
+    }.execute()
 
     fun logEvent(event: GenericMessageEvent) = asyncTransaction(pool) {
         when (event) {
