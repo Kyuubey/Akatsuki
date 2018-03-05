@@ -98,8 +98,6 @@ class Ship : ThreadedCommand() {
                     RequestBody.create(MediaType.parse("image/png"), temp2)
             )
         }.build()).thenAccept { res ->
-            val bytes = res.body()!!.bytes()
-
             ctx.channel
                     .sendMessage(
                             I18n.parse(
@@ -107,8 +105,10 @@ class Ship : ThreadedCommand() {
                                     mapOf("shipname" to ship)
                             )
                     )
-                    .addFile(bytes, "ship.png")
+                    .addFile(res.body()!!.bytes(), "ship.png")
             res.close()
+            temp1.delete()
+            temp2.delete()
         }.thenApply {}.exceptionally {
             ctx.logger.error("Error while trying to generate ship image", it)
             ctx.sendError(it)

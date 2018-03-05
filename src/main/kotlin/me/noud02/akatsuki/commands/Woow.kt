@@ -62,13 +62,9 @@ class Woow : ImageCommand() {
             addPathSegment("api")
             addPathSegment("woow")
         }.build(), body).thenAccept { res ->
-            ctx.channel.sendFile(res.body()!!.byteStream(), "woow.${file.extension}", null).queue({
-                res.close()
-                file.delete()
-            }) {
-                res.close()
-                file.delete()
-            }
+            ctx.channel.sendFile(res.body()!!.bytes(), "woow.${file.extension}", null).queue()
+            res.close()
+            file.delete()
         }.thenApply {}.exceptionally {
             ctx.logger.error("Error while trying to generate woow'd image", it)
             ctx.sendError(it)

@@ -56,8 +56,7 @@ class Floor : Command() {
             addQueryParameter("text", "the floor is ${ctx.args["text"]}")
             addQueryParameter("image", member.user.avatarUrl)
         }.build()).thenAccept { res ->
-            val bytes = res.body()!!.byteStream()
-            ctx.event.channel.sendFile(bytes, "floorislava.png", null).queue()
+            ctx.event.channel.sendFile(res.body()!!.bytes(), "floorislava.png", null).queue()
             res.close()
         }.thenApply {}.exceptionally {
             ctx.logger.error("Error while trying to generate floor meme", it)
