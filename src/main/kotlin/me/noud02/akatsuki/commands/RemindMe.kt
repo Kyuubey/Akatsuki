@@ -37,7 +37,7 @@ import me.noud02.akatsuki.entities.Context
 import me.noud02.akatsuki.utils.I18n
 import org.jetbrains.exposed.sql.insert
 
-@Load
+// @Load
 @Argument("reminder", "string")
 @Alias("remind")
 class RemindMe : Command() {
