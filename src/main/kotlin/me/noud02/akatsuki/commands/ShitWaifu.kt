@@ -53,8 +53,11 @@ class ShitWaifu : Command() {
         }.thenAccept { res ->
             val bytes = res.body()!!.bytes()
 
-            ctx.channel.sendFile(bytes, "shitwaifu.png").queue()
-            res.close()
+            ctx.channel.sendFile(bytes, "shitwaifu.png").queue({
+                res.close()
+            }) {
+                res.close()
+            }
         }.thenApply {}.exceptionally {
             ctx.logger.error("Error while trying to generate shitwaifu image", it)
             ctx.sendError(it)

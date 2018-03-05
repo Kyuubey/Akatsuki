@@ -48,9 +48,11 @@ class ILikeThat : Command() {
             addPathSegment("ilikethat")
             addQueryParameter("text", ctx.args["text"] as String)
         }.build()).thenAccept { res ->
-            val bytes = res.body()!!.byteStream()
-            ctx.channel.sendFile(bytes, "ilikethat.png", null).queue()
-            res.close()
+            ctx.channel.sendFile(res.body()!!.byteStream(), "ilikethat.png", null).queue({
+                res.close()
+            }) {
+                res.close()
+            }
         }.thenApply {}.exceptionally {
             ctx.logger.error("Error while trying to generate ilikethat meme", it)
             ctx.sendError(it)
