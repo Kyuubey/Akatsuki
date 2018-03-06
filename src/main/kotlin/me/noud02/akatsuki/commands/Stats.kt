@@ -25,6 +25,7 @@
 
 package me.noud02.akatsuki.commands
 
+import me.noud02.akatsuki.Akatsuki
 import me.noud02.akatsuki.annotations.Load
 import me.noud02.akatsuki.entities.Command
 import me.noud02.akatsuki.entities.Context
@@ -56,11 +57,32 @@ class Stats : Command() {
             val uptime = "%02d:%02d:%02d".format(hours, mins, secs)
 
             descriptionBuilder.append("**Uptime:** $uptime\n")
-            descriptionBuilder.append("**Guilds:** ${ctx.jda.guilds.size}\n")
-            descriptionBuilder.append("**Users:** ${ctx.jda.users.size}\n")
-            descriptionBuilder.append("**Voice connections:** ${MusicManager.musicManagers.size}\n")
-            descriptionBuilder.append("**Ping:** ${ctx.jda.ping}ms\n")
-            descriptionBuilder.append("**Memory Usage:** ${rtime.totalMemory() / (1024 * 1024)}MB")
+            descriptionBuilder.append("**Memory Usage:** ${rtime.totalMemory() / (1024 * 1024)}MB\n")
+
+            if (Akatsuki.jda != null) {
+                descriptionBuilder.append("**Guilds:** ${ctx.jda.guilds.size}\n")
+                descriptionBuilder.append("**Users:** ${ctx.jda.users.size}\n")
+                descriptionBuilder.append("**Ping:** `${ctx.jda.ping}ms`\n")
+                descriptionBuilder.append("**Voice connections:** ${MusicManager.musicManagers.size}\n")
+            } else {
+                descriptionBuilder.append("**Total Guilds:** ${Akatsuki.shardManager.guilds.size}\n")
+                descriptionBuilder.append("**Total Users:** ${Akatsuki.shardManager.users.size}\n")
+                descriptionBuilder.append("**Total Voice Connections:** ${MusicManager.musicManagers.size}\n")
+                descriptionBuilder.append("**Average Ping:** `${Akatsuki.shardManager.averagePing}ms`\n")
+
+                for (shard in Akatsuki.shardManager.shards.sortedBy { it.shardInfo.shardId }) {
+                    val voiceConns = MusicManager.musicManagers.filter { shard.guilds.any { g -> g.id == it.key } }.size
+
+                    addField(
+                            "Shard ${shard.shardInfo.shardId + 1}",
+                            "**Guilds:** ${shard.guilds.size}\n" +
+                                    "**Users:** ${shard.users.size}\n" +
+                                    "**Voice Connections:** $voiceConns\n" +
+                                    "**Ping:** `${shard.ping}ms`",
+                            true
+                    )
+                }
+            }
         }
 
         ctx.send(embed.build())
