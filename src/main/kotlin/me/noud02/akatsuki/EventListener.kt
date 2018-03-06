@@ -204,10 +204,10 @@ class EventListener : ListenerAdapter() {
     override fun onGuildJoin(event: GuildJoinEvent) {
         logger.info("New guild: ${event.guild.name} (${event.guild.id})")
 
-        DatabaseWrapper.getGuildSafe(event.guild).thenApply {}.exceptionally {
+        /*DatabaseWrapper.getGuildSafe(event.guild).thenApply {}.exceptionally {
             logger.error("Error while trying to insert guild ${event.guild.name} (${event.guild.id}) in the database!", it)
             Sentry.capture(it)
-        }
+        }*/
         updateStats()
     }
 
