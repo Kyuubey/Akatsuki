@@ -32,23 +32,14 @@ import java.io.File
 import java.io.FileOutputStream
 
 abstract class ImageCommand : Command() {
-    abstract fun imageRun(ctx: Context, file: File)
+    abstract fun imageRun(ctx: Context, file: ByteArray)
 
     override fun run(ctx: Context) {
-        val temp = File.createTempFile("image", "png")
-        temp.deleteOnExit()
-        val out = FileOutputStream(temp)
-
         when {
-            ctx.msg.attachments.isNotEmpty() -> {
-                IOUtils.copy(ctx.msg.attachments[0].inputStream, out)
-                imageRun(ctx, temp)
-            }
+            ctx.msg.attachments.isNotEmpty() -> imageRun(ctx, ctx.msg.attachments[0].inputStream.readBytes())
 
             ctx.args.containsKey("image") -> Http.get(ctx.args["image"] as String).thenAccept { res ->
-                val bytes = res.body()!!.bytes()
-                temp.writeBytes(bytes)
-                imageRun(ctx, temp)
+                imageRun(ctx, res.body()!!.bytes())
                 res.close()
             }
 
@@ -62,8 +53,7 @@ abstract class ImageCommand : Command() {
                     )
                 }
 
-                IOUtils.copy(img, out)
-                imageRun(ctx, temp)
+                imageRun(ctx, img.readBytes())
             }
         }
     }

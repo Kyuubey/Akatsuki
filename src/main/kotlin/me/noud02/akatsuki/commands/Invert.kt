@@ -40,13 +40,13 @@ import java.io.File
 class Invert : ImageCommand() {
     override val desc = "Invert images"
 
-    override fun imageRun(ctx: Context, file: File) {
+    override fun imageRun(ctx: Context, file: ByteArray) {
         val body = MultipartBody.Builder().apply {
             setType(MultipartBody.FORM)
             addFormDataPart(
                     "image",
                     "image",
-                    RequestBody.create(MediaType.parse("image/${file.extension}"), file)
+                    RequestBody.create(MediaType.parse("image/png"), file)
             )
         }.build()
 
@@ -59,7 +59,6 @@ class Invert : ImageCommand() {
         }.build(), body).thenAccept { res ->
             ctx.channel.sendFile(res.body()!!.bytes(), "invert.png", null).queue()
             res.close()
-            file.delete()
         }.thenApply {}.exceptionally {
             ctx.logger.error("Error while trying to generate inverted image", it)
             ctx.sendError(it)

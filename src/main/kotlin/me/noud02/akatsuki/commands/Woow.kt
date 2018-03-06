@@ -45,13 +45,13 @@ import java.io.FileOutputStream
 class Woow : ImageCommand() {
     override val desc = "Woow images."
 
-    override fun imageRun(ctx: Context, file: File) {
+    override fun imageRun(ctx: Context, file: ByteArray) {
         val body = MultipartBody.Builder().apply {
             setType(MultipartBody.FORM)
             addFormDataPart(
                     "image",
                     "image",
-                    RequestBody.create(MediaType.parse("image/${file.extension}"), file)
+                    RequestBody.create(MediaType.parse("image/png"), file)
             )
         }.build()
 
@@ -62,9 +62,8 @@ class Woow : ImageCommand() {
             addPathSegment("api")
             addPathSegment("woow")
         }.build(), body).thenAccept { res ->
-            ctx.channel.sendFile(res.body()!!.bytes(), "woow.${file.extension}", null).queue()
+            ctx.channel.sendFile(res.body()!!.bytes(), "woow.png", null).queue()
             res.close()
-            file.delete()
         }.thenApply {}.exceptionally {
             ctx.logger.error("Error while trying to generate woow'd image", it)
             ctx.sendError(it)
