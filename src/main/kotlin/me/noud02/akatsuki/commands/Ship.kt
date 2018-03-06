@@ -52,67 +52,50 @@ class Ship : ThreadedCommand() {
         val user1 = ctx.args["user1"] as Member
         val user2 = ctx.args["user2"] as Member
 
-        val temp1 = File.createTempFile("image", "png")
-        temp1.deleteOnExit()
-
-        val temp2 = File.createTempFile("image", "png")
-        temp2.deleteOnExit()
-
-        Http.okhttp // TODO switch to Http.get
-                .newCall(Request.Builder().url(user1.user.avatarUrl).build())
-                .execute()
-                .apply {
-                    temp1.writeBytes(body()!!.bytes())
-                }
-                .close()
-
-        Http.okhttp // TODO switch to Http.get
-                .newCall(Request.Builder().url(user2.user.avatarUrl).build())
-                .execute()
-                .apply {
-                    temp2.writeBytes(body()!!.bytes())
-                }
-                .close()
-
         val first = user1.user.name
         val sec = user2.user.name
 
         val ship = first.substring(0, Math.floor(first.length / 2.0).toInt()) + sec.substring(Math.floor(sec.length / 2.0).toInt())
 
-        Http.post(HttpUrl.Builder().apply {
-            scheme(if (Akatsuki.config.backend.ssl) "https" else "http")
-            host(Akatsuki.config.backend.host)
-            port(Akatsuki.config.backend.port)
-            addPathSegment("api")
-            addPathSegment("ship")
-        }.build(), MultipartBody.Builder().apply {
-            setType(MultipartBody.FORM)
-            addFormDataPart(
-                    "user1",
-                    "avatar.png",
-                    RequestBody.create(MediaType.parse("image/png"), temp1)
-            )
-            addFormDataPart(
-                    "user2",
-                    "avatar2.png",
-                    RequestBody.create(MediaType.parse("image/png"), temp2)
-            )
-        }.build()).thenAccept { res ->
-            ctx.channel
-                    .sendMessage(
-                            I18n.parse(
-                                    ctx.lang.getString("happy_shipping"),
-                                    mapOf("shipname" to ship)
-                            )
+        Http.get(user1.user.avatarUrl).thenAccept { res1 ->
+            Http.get(user2.user.avatarUrl).thenAccept { res2 ->
+                Http.post(HttpUrl.Builder().apply {
+                    scheme(if (Akatsuki.config.backend.ssl) "https" else "http")
+                    host(Akatsuki.config.backend.host)
+                    port(Akatsuki.config.backend.port)
+                    addPathSegment("api")
+                    addPathSegment("ship")
+                }.build(), MultipartBody.Builder().apply {
+                    setType(MultipartBody.FORM)
+                    addFormDataPart(
+                            "user1",
+                            "avatar.png",
+                            RequestBody.create(MediaType.parse("image/png"), res1.body()!!.bytes())
                     )
-                    .addFile(res.body()!!.bytes(), "ship.png")
-            res.close()
-            temp1.delete()
-            temp2.delete()
-        }.thenApply {}.exceptionally {
-            ctx.logger.error("Error while trying to generate ship image", it)
-            ctx.sendError(it)
-            Sentry.capture(it)
+                    addFormDataPart(
+                            "user2",
+                            "avatar2.png",
+                            RequestBody.create(MediaType.parse("image/png"), res2.body()!!.bytes())
+                    )
+                }.build()).thenAccept { res ->
+                    ctx.channel
+                            .sendMessage(
+                                    I18n.parse(
+                                            ctx.lang.getString("happy_shipping"),
+                                            mapOf("shipname" to ship)
+                                    )
+                            )
+                            .addFile(res.body()!!.bytes(), "ship.png")
+                            .queue()
+                    res.close()
+                }.thenApply {}.exceptionally {
+                    ctx.logger.error("Error while trying to generate ship image", it)
+                    ctx.sendError(it)
+                    Sentry.capture(it)
+                }
+                res1.close()
+                res2.close()
+            }
         }
     }
 }
