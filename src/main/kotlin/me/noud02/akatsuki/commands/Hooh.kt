@@ -40,13 +40,13 @@ import java.io.File
 class Hooh : ImageCommand() {
     override val desc = "Hooh images"
 
-    override fun imageRun(ctx: Context, file: File) {
+    override fun imageRun(ctx: Context, file: ByteArray) {
         val body = MultipartBody.Builder().apply {
             setType(MultipartBody.FORM)
             addFormDataPart(
                     "image",
                     "image",
-                    RequestBody.create(MediaType.parse("image/${file.extension}"), file)
+                    RequestBody.create(MediaType.parse("image/png"), file)
             )
         }.build()
 
@@ -57,9 +57,8 @@ class Hooh : ImageCommand() {
             addPathSegment("api")
             addPathSegment("hooh")
         }.build(), body).thenAccept { res ->
-            ctx.channel.sendFile(res.body()!!.bytes(), "hooh.${file.extension}", null).queue()
+            ctx.channel.sendFile(res.body()!!.bytes(), "hooh.png", null).queue()
             res.close()
-            file.delete()
         }.thenApply {}.exceptionally {
             ctx.logger.error("Error while trying to generate hooh'd image", it)
             ctx.sendError(it)
