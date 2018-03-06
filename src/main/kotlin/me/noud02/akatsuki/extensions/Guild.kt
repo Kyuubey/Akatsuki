@@ -38,7 +38,7 @@ import org.jetbrains.exposed.sql.update
 import java.awt.Color
 
 fun Guild.searchMembers(query: String): List<Member> = members.filter {
-    "${it.asMention} ${it.effectiveName.toLowerCase()} ${it.user.name.toLowerCase()}#${it.user.discriminator} ${it.user.id}".indexOf(query.toLowerCase()) > -1
+    "<@!${it.user.idLong}> ${it.asMention} ${it.effectiveName.toLowerCase()} ${it.user.name.toLowerCase()}#${it.user.discriminator} ${it.user.id}".indexOf(query.toLowerCase()) > -1
 }
 
 fun Guild.searchTextChannels(query: String): List<TextChannel> = textChannels.filter {
