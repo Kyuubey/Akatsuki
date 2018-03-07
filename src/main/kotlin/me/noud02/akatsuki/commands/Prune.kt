@@ -31,6 +31,7 @@ import me.noud02.akatsuki.entities.Context
 import me.noud02.akatsuki.extensions.await
 import me.noud02.akatsuki.utils.I18n
 import net.dv8tion.jda.core.Permission
+import kotlin.math.min
 
 @Load
 @Argument("messages", "number")
@@ -43,9 +44,10 @@ class Prune : AsyncCommand() {
 
     override suspend fun asyncRun(ctx: Context) {
         val history = ctx.channel.iterableHistory.await()
+        val toClean = min(50, ctx.args["messages"] as Int)
         var messages = 0
 
-        (1..ctx.args["messages"] as Int)
+        (0 until toClean)
                 .map { history[it] }
                 .filterNot {
                     (ctx.flags.argMap.containsKey("bots") || ctx.flags.argMap.containsKey("b")) && !it.author.isBot
@@ -58,7 +60,7 @@ class Prune : AsyncCommand() {
         ctx.send(
                 I18n.parse(
                         ctx.lang.getString("pruned_messages"),
-                        mapOf("num" to ctx.args["messages"] as Int)
+                        mapOf("num" to messages)
                 )
         )
     }
