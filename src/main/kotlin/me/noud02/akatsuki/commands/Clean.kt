@@ -45,18 +45,15 @@ class Clean : AsyncCommand() {
     override suspend fun asyncRun(ctx: Context) {
         val msgs = ctx.channel.getHistoryAround(ctx.msg, 100).await()
 
-        val botmsgs = msgs
-                .retrievedHistory
-                .filter { it.author.id == ctx.selfMember!!.user.id }
-                .subList(0, min(ctx.args.getOrDefault("messages", 10) as Int, 10))
+        val botmsgs = msgs.retrievedHistory.filter { it.author.id == ctx.selfMember!!.user.id }
+        val sub = botmsgs.subList(0, min(botmsgs.size, min(ctx.args.getOrDefault("messages", 10) as Int, 10)))
+        sub.forEach { it.delete().await() }
 
-        botmsgs
-                .forEach { it.delete().await() }
 
         ctx.send(
                 I18n.parse(
                         ctx.lang.getString("cleaned_messages"),
-                        mapOf("num" to botmsgs.size)
+                        mapOf("num" to sub.size)
                 )
         )
     }
