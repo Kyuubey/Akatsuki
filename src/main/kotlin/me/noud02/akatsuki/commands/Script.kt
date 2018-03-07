@@ -57,7 +57,7 @@ class TestCommand : Command() {
 )
 @Flag("owner", 'o', "Make the custom command server owner only.")
 class AddCommand : Command() {
-    override val desc = "Add custom scripts"
+    override val desc = "Add custom scripts."
     override val guildOnly = true
 
     override fun run(ctx: Context) {
@@ -197,7 +197,7 @@ class EditCommand : Command() {
 @Alias("cmd", "customcommand", "c", "s")
 @Perm(Permission.ADMINISTRATOR, true)
 class Script : Command() {
-    override val desc = "Execute custom scripts."
+    override val desc = "Execute custom scripts. (https://github.com/noud02/Akatsuki/blob/master/SCRIPT_DOCS.md)"
     override val guildOnly = true
 
     init {
