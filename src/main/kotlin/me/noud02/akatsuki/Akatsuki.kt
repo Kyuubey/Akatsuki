@@ -26,7 +26,6 @@
 package me.noud02.akatsuki
 
 import io.sentry.Sentry
-import io.sentry.SentryClientFactory
 import lavalink.client.io.Lavalink
 import me.aurieh.ares.exposed.async.asyncTransaction
 import me.noud02.akatsuki.db.schema.*
