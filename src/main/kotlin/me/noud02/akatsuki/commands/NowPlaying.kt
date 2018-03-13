@@ -67,7 +67,7 @@ class NowPlaying : ThreadedCommand() {
 
             val duration = "%02d:%02d:%02d".format(durHours, durMins, durSecs)
 
-            val posMillis = manager.player.playingTrack.position
+            val posMillis = manager.player.trackPosition
             val posSecs = (posMillis / 1000) % 60
             val posMins = (posMillis / 60000) % 60
             val posHours = (posMillis / 3600000) % 24
