@@ -59,7 +59,13 @@ data class PresenceConfig(
         val type: String
 )
 
+data class LavalinkNodeConfig(
+        val url: String,
+        val password: String
+)
+
 data class Config(
+        val id: String,
         val token: String,
         val description: String,
         val owners: List<String>,
@@ -68,5 +74,6 @@ data class Config(
         val database: DatabaseConfig,
         val api: APIConfig,
         val site: SiteConfig,
-        val backend: BackendConfig
+        val backend: BackendConfig,
+        val lavalink: List<LavalinkNodeConfig>
 )

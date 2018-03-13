@@ -27,6 +27,7 @@ package me.noud02.akatsuki.music
 
 import com.sedmelluq.discord.lavaplayer.player.DefaultAudioPlayerManager
 import com.sedmelluq.discord.lavaplayer.source.AudioSourceManagers
+import me.noud02.akatsuki.Akatsuki
 import me.noud02.akatsuki.entities.Context
 import me.noud02.akatsuki.utils.Logger
 import net.dv8tion.jda.core.entities.VoiceChannel
@@ -47,10 +48,13 @@ object MusicManager {
 
     fun join(ctx: Context): GuildMusicManager {
         logger.info("New voice connection in guild ${ctx.guild!!.name}!")
-        val manager = GuildMusicManager(playerManager, ctx.event.textChannel, ctx.member!!.voiceState.channel as VoiceChannel)
+        val manager = GuildMusicManager(ctx.event.textChannel, ctx.member!!.voiceState.channel as VoiceChannel)
         musicManagers[ctx.guild.id] = manager
-        ctx.guild.audioManager.openAudioConnection(ctx.member.voiceState?.channel)
-        ctx.guild.audioManager.sendingHandler = manager.sendingHandler
+        val link = Akatsuki.lavalink.getLink(ctx.guild)
+        link.connect(ctx.member.voiceState?.channel)
+        link.changeNode(Akatsuki.lavalink.loadBalancer.determineBestSocket(ctx.guild.idLong))
+        logger.info("Connecting to ${link.node?.remoteUri}")
+
         return manager
     }
 
@@ -59,7 +63,7 @@ object MusicManager {
         val manager = musicManagers[guild] ?: return false
         manager.player.stopTrack()
         manager.scheduler.queue.clear()
-        manager.voiceChannel.guild.audioManager.closeAudioConnection()
+        Akatsuki.lavalink.getLink(guild).destroy()
         musicManagers.remove(guild)
         return true
     }

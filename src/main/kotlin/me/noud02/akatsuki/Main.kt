@@ -39,6 +39,7 @@ fun main (args: Array<String>) {
 
     val config: Config = if (System.getenv("USE_ENV") != null || System.getenv("DYNO") != null) {
         Config(
+                System.getenv("BOT_ID"),
                 System.getenv("BOT_TOKEN"),
                 System.getenv("BOT_DESCRIPTION"),
                 System.getenv("BOT_OWNERS").split("::"),
@@ -61,13 +62,14 @@ fun main (args: Array<String>) {
                             pgUrl.split(":")[1].split("@")[0],
                             pgUrl.split("@")[1].split("/")[0]
                     )
-                } else
+                } else {
                     DatabaseConfig(
                             System.getenv("DATABASE_NAME"),
                             System.getenv("DATABASE_USER"),
                             System.getenv("DATABASE_PASS"),
                             System.getenv("DATABASE_HOST")
-                    ),
+                    )
+                },
                 APIConfig(
                         System.getenv("GOOGLE_API_KEY"),
                         System.getenv("WEEBSH_API_KEY"),
@@ -79,27 +81,41 @@ fun main (args: Array<String>) {
                 ),
                 SiteConfig(
                         System.getenv("SITE_HOST"),
-                        System.getenv("SITE_SSL").toBoolean(),
+                        System.getenv("SITE_SSL")?.toBoolean() ?: false,
                         System.getenv("SITE_PORT").toInt()
                 ),
-                if (System.getenv("DYNO") != null)
+                if (System.getenv("DYNO") != null) {
                     BackendConfig(
                             "${System.getenv("HEROKU_APP_NAME")}.herokuapp.com",
                             false,
                             System.getenv("PORT").toInt()
                     )
-                else
+                } else {
                     BackendConfig(
                             System.getenv("BACKEND_HOST"),
-                            System.getenv("BACKEND_SSL").toBoolean(),
+                            System.getenv("BACKEND_SSL")?.toBoolean() ?: false,
                             System.getenv("BACKEND_PORT").toInt()
                     )
+                },
+                System.getenv("LAVALINK_NODES").split("::").map {
+                    val urlRegex = "url=([^$]+)".toRegex()
+                    val passwordRegex = "password=([^$]+)".toRegex()
+
+                    val url = urlRegex.find(it)?.groupValues?.get(1) ?: ""
+                    val password = passwordRegex.find(it)?.groupValues?.get(1) ?: ""
+
+                    LavalinkNodeConfig(url, password)
+                }
         )
     } else {
         mapper.readValue(File("./config.yml"))
     }
 
+    val shardsTotal = System.getenv("TOTAL_SHARDS")?.toInt() ?: 4
+    val firstShard = System.getenv("FIRST_SHARD")?.toInt() ?: 0
+    val lastShard = System.getenv("LAST_SHARD")?.toInt() ?: 3
+
     val bot = Akatsuki(config)
 
-    bot.build(0, 3, 4)
+    bot.build(firstShard, lastShard, shardsTotal)
 }

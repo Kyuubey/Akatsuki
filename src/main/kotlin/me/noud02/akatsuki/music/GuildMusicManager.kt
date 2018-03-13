@@ -25,15 +25,14 @@
 
 package me.noud02.akatsuki.music
 
-import com.sedmelluq.discord.lavaplayer.player.AudioPlayer
-import com.sedmelluq.discord.lavaplayer.player.AudioPlayerManager
+import lavalink.client.player.IPlayer
+import me.noud02.akatsuki.Akatsuki
 import net.dv8tion.jda.core.entities.TextChannel
 import net.dv8tion.jda.core.entities.VoiceChannel
 
-class GuildMusicManager(manager: AudioPlayerManager, val textChannel: TextChannel, val voiceChannel: VoiceChannel) {
-    val player: AudioPlayer = manager.createPlayer()
+class GuildMusicManager(val textChannel: TextChannel, val voiceChannel: VoiceChannel) {
+    val player: IPlayer = Akatsuki.lavalink.getLink(textChannel.guild.id).player
     val scheduler = TrackScheduler(player, this)
-    val sendingHandler = AudioPlayerSendHandler(player)
     val voteSkip = mutableListOf<String>()
 
     var autoplay = false

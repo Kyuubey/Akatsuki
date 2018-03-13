@@ -27,6 +27,7 @@ package me.noud02.akatsuki
 
 import io.sentry.Sentry
 import io.sentry.SentryClientFactory
+import lavalink.client.io.Lavalink
 import me.aurieh.ares.exposed.async.asyncTransaction
 import me.noud02.akatsuki.db.schema.*
 import me.noud02.akatsuki.entities.Config
@@ -39,6 +40,7 @@ import net.dv8tion.jda.core.AccountType
 import net.dv8tion.jda.core.JDA
 import net.dv8tion.jda.core.JDABuilder
 import org.jetbrains.exposed.sql.*
+import java.net.URI
 import java.util.concurrent.ExecutorService
 import java.util.concurrent.Executors
 import kotlin.reflect.jvm.jvmName
@@ -76,27 +78,50 @@ class Akatsuki(private val config: Config) {
     }
 
     fun build() {
+        lavalink = Lavalink(
+                config.id,
+                1,
+                { jda!! }
+        )
+
         jda = JDABuilder(AccountType.BOT).apply {
             setToken(config.token)
             addEventListener(EventListener())
+            addEventListener(lavalink)
         }.buildAsync()
+
+        for (node in config.lavalink) {
+            lavalink.addNode(URI(node.url), node.password)
+        }
 
         Akatsuki.jda = jda
     }
 
     fun build(firstShard: Int, lastShard: Int, total: Int) {
+        lavalink = Lavalink(
+                config.id,
+                total,
+                { shardManager.getShardById(it) }
+        )
+
         shardManager = DefaultShardManagerBuilder().apply {
             setToken(config.token)
             addEventListeners(EventListener())
+            addEventListeners(lavalink)
             setAutoReconnect(true)
             setShardsTotal(total)
             setShards(firstShard, lastShard)
         }.build()
+
+        for (node in config.lavalink) {
+            lavalink.addNode(URI(node.url), node.password)
+        }
     }
 
     companion object {
         lateinit var config: Config
         lateinit var shardManager: ShardManager
+        lateinit var lavalink: Lavalink
         var jda: JDA? = null
 
         val logger = Logger(Akatsuki::class.jvmName)

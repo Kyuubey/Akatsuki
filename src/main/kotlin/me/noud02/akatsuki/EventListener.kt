@@ -80,9 +80,14 @@ class EventListener : ListenerAdapter() {
     override fun onReady(event: ReadyEvent) {
         logger.info("Ready!")
 
-        if (Akatsuki.shardManager.shards.all { it.status == JDA.Status.CONNECTED || it.status == JDA.Status.LOADING_SUBSYSTEMS }) {
+        if (Akatsuki.jda == null) {
+            if (Akatsuki.shardManager.shards.all { it.status == JDA.Status.CONNECTED || it.status == JDA.Status.LOADING_SUBSYSTEMS }) {
+                startPresenceTimer()
+                // startReminderChecker()
+                updateStats()
+            }
+        } else {
             startPresenceTimer()
-            // startReminderChecker()
             updateStats()
         }
     }

@@ -69,21 +69,13 @@ class Play : Command() {
         if (MusicManager.musicManagers[ctx.guild!!.id] == null) {
             val manager = MusicManager.join(ctx)
 
-            ctx.guild.audioManager.connectionListener = object : ConnectionListener {
-                override fun onStatusChange(status: ConnectionStatus) {
-                    if (status == ConnectionStatus.CONNECTED)
-                        play(ctx, manager)
-                }
-
-                override fun onUserSpeaking(user: User, speaking: Boolean) { return }
-                override fun onPing(ping: Long) { return }
-            }
+            play(ctx, manager)
         } else {
             play(ctx, MusicManager.musicManagers[ctx.guild.id]!!)
         }
     }
 
-    fun play(ctx: Context, manager: GuildMusicManager) {
+    private fun play(ctx: Context, manager: GuildMusicManager) {
         val search = ctx.rawArgs.joinToString(" ")
 
         MusicManager.playerManager.loadItemOrdered(manager, search, object : AudioLoadResultHandler {
