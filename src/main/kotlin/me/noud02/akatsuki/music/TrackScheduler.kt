@@ -26,30 +26,37 @@
 package me.noud02.akatsuki.music
 
 import com.sedmelluq.discord.lavaplayer.player.AudioLoadResultHandler
-import com.sedmelluq.discord.lavaplayer.player.AudioPlayer
-import com.sedmelluq.discord.lavaplayer.player.event.AudioEventAdapter
 import com.sedmelluq.discord.lavaplayer.tools.FriendlyException
 import com.sedmelluq.discord.lavaplayer.track.AudioPlaylist
 import com.sedmelluq.discord.lavaplayer.track.AudioTrack
 import com.sedmelluq.discord.lavaplayer.track.AudioTrackEndReason
+import lavalink.client.player.IPlayer
+import lavalink.client.player.event.PlayerEventListenerAdapter
 import me.noud02.akatsuki.Akatsuki
 import me.noud02.akatsuki.utils.Http
 import net.dv8tion.jda.core.EmbedBuilder
-import okhttp3.HttpUrl
-import okhttp3.Request
 import org.json.JSONObject
 import java.awt.Color
+import java.lang.Exception
 import java.util.concurrent.LinkedBlockingQueue
 import kotlin.concurrent.timerTask
 
-class TrackScheduler(private val player: AudioPlayer, private val manager: GuildMusicManager) : AudioEventAdapter() {
+class TrackScheduler(private val player: IPlayer, private val manager: GuildMusicManager) : PlayerEventListenerAdapter() {
     val queue = LinkedBlockingQueue<AudioTrack>()
 
     fun add(track: AudioTrack) {
-        if (!player.startTrack(track, true)) queue.offer(track)
+        if (player.playingTrack == null) {
+            player.playTrack(track)
+        } else {
+            queue.offer(track)
+        }
     }
 
-    fun next() = player.startTrack(queue.poll(), false)
+    fun next() {
+        if (queue.peek() != null) {
+            player.playTrack(queue.poll())
+        }
+    }
 
     fun shuffle() {
         val tracks = queue.shuffled()
@@ -59,7 +66,7 @@ class TrackScheduler(private val player: AudioPlayer, private val manager: Guild
         queue += tracks
     }
 
-    override fun onTrackStart(player: AudioPlayer, track: AudioTrack) {
+    override fun onTrackStart(player: IPlayer, track: AudioTrack) {
         val nextTrack = queue.peek()
         val embed = EmbedBuilder()
 
@@ -73,7 +80,7 @@ class TrackScheduler(private val player: AudioPlayer, private val manager: Guild
         manager.textChannel.sendMessage(embed.build()).queue()
     }
 
-    override fun onTrackEnd(player: AudioPlayer, track: AudioTrack, endReason: AudioTrackEndReason) {
+    override fun onTrackEnd(player: IPlayer, track: AudioTrack, endReason: AudioTrackEndReason) {
         if (endReason.mayStartNext) {
             val nextTrack = queue.peek()
             val embed = EmbedBuilder()
@@ -118,6 +125,6 @@ class TrackScheduler(private val player: AudioPlayer, private val manager: Guild
         }
     }
 
-    override fun onTrackException(player: AudioPlayer, track: AudioTrack, exception: FriendlyException)
+    override fun onTrackException(player: IPlayer, track: AudioTrack, exception: Exception)
             = manager.textChannel.sendMessage("Error occurred while playing music: ${exception.message}").queue()
 }

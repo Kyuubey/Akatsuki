@@ -1,3 +1,4 @@
+id: bot id
 token: super secret token
 description: my super detailed bot description
 owners:
@@ -35,3 +36,6 @@ backend:
   host: localhost
   ssl: false
   port: 5050
+lavalink:
+  - url: ws://example.com
+    password: hunter2
